@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function ClientReviews() {
 
   const { user } = useAuth();
@@ -29,7 +31,7 @@ function ClientReviews() {
     const token = localStorage.getItem("access_token");
 
     const response = await fetch(
-      "http://127.0.0.1:8000/reviews/my",
+      `${API_URL}/reviews/my`,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -101,7 +103,7 @@ function ClientReviews() {
       const token = localStorage.getItem("access_token");
 
       const response = await fetch(
-        "http://127.0.0.1:8000/reviews/",
+        `${API_URL}/reviews/`,
         {
           method: "POST",
 

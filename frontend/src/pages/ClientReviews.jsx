@@ -1,93 +1,99 @@
+
 import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
+
+import ClientLayout from "../components/ClientLayout";
+
+import "./ClientReviews.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 function ClientReviews() {
-
-  const { user } = useAuth();
-
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [selectedProject, setSelectedProject] = useState(null);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState("");
 
+  /* =========================================================
+     CARREGAR PROJETOS
+  ========================================================= */
+
   useEffect(() => {
     loadProjects();
   }, []);
 
   async function loadProjects() {
+    try {
+      setLoading(true);
+      setError("");
 
-  try {
+      const token = localStorage.getItem("access_token");
 
-    setLoading(true);
-    setError("");
-
-    const token = localStorage.getItem("access_token");
-
-    const response = await fetch(
-      `${API_URL}/reviews/my`,
-      {
+      const response = await fetch(`${API_URL}/reviews/my`, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    );
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (!response.ok) {
+      if (!response.ok) {
+        const data = await response.json();
+
+        throw new Error(
+          data.detail ||
+            "Não foi possível carregar os projetos."
+        );
+      }
+
       const data = await response.json();
 
-      throw new Error(
-        data.detail || "Não foi possível carregar os projetos."
+      setProjects(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Erro ao carregar projetos:", error);
+
+      setError(
+        error.message ||
+          "Não foi possível carregar os projetos."
       );
+    } finally {
+      setLoading(false);
     }
-
-    const data = await response.json();
-
-    setProjects(data);
-
-  } catch (error) {
-
-    console.error(error);
-    setError(error.message);
-
-  } finally {
-
-    setLoading(false);
-
-  }
   }
 
- 
-
+  /* =========================================================
+     ABRIR MODAL
+  ========================================================= */
 
   function openReview(project) {
-
     setSelectedProject(project);
     setRating(5);
     setComment("");
     setSuccess("");
     setError("");
-
   }
 
+  /* =========================================================
+     FECHAR MODAL
+  ========================================================= */
 
   function closeReview() {
+    if (sending) {
+      return;
+    }
 
     setSelectedProject(null);
     setComment("");
     setRating(5);
-
+    setSuccess("");
   }
 
+  /* =========================================================
+     ENVIAR AVALIAÇÃO
+  ========================================================= */
 
   async function submitReview(event) {
-
     event.preventDefault();
 
     if (!selectedProject) {
@@ -95,176 +101,206 @@ function ClientReviews() {
     }
 
     try {
-
       setSending(true);
       setError("");
       setSuccess("");
 
       const token = localStorage.getItem("access_token");
 
-      const response = await fetch(
-        `${API_URL}/reviews/`,
-        {
-          method: "POST",
+      const response = await fetch(`${API_URL}/reviews/`, {
+        method: "POST",
 
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
 
-          body: JSON.stringify({
-            project_id: selectedProject.id,
-            rating: rating,
-            comment: comment
-          })
-        }
-      );
+        body: JSON.stringify({
+          project_id: selectedProject.id,
+          rating: rating,
+          comment: comment,
+        }),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.detail || "Não foi possível enviar a avaliação."
+          data.detail ||
+            "Não foi possível enviar a avaliação."
         );
       }
 
-      setSuccess("Avaliação enviada com sucesso! ⭐");
+      setSuccess(
+        "Avaliação enviada com sucesso! ⭐"
+      );
 
       setProjects((currentProjects) =>
         currentProjects.map((project) =>
           project.id === selectedProject.id
             ? {
                 ...project,
-                reviewed: true
+                reviewed: true,
               }
             : project
         )
       );
 
       setTimeout(() => {
-        closeReview();
+        setSelectedProject(null);
+        setSuccess("");
       }, 1500);
-
     } catch (error) {
+      console.error(
+        "Erro ao enviar avaliação:",
+        error
+      );
 
-      console.error(error);
-      setError(error.message);
-
+      setError(
+        error.message ||
+          "Não foi possível enviar a avaliação."
+      );
     } finally {
-
       setSending(false);
-
     }
   }
 
+  /* =========================================================
+     LOADING
+  ========================================================= */
 
   if (loading) {
-
     return (
-      <div className="dashboard">
-        <main className="dashboard-content">
-          <p>Carregando projetos...</p>
-        </main>
-      </div>
-    );
+      <ClientLayout
+        activePage="reviews"
+        title="Avaliações"
+        subtitle="Avalie os serviços que já foram concluídos."
+        label="ÁREA DO CLIENTE"
+      >
+        <div className="client-reviews-page">
+          <div className="reviews-loading-card">
+            <div className="reviews-loading-icon">
+              ⭐
+            </div>
 
-  }
-
-
-  return (
-
-    <div className="dashboard">
-
-      {/* SIDEBAR */}
-
-      <aside className="sidebar">
-
-        <div className="logo">
-          Mão<span>NaObra</span>
-        </div>
-
-        <nav>
-
-          <a href="/client">
-            🏠 Visão geral
-          </a>
-
-          <a href="/client/requests">
-            📋 Meus pedidos
-          </a>
-
-          <a href="/client/favorites">
-            ❤️ Favoritos
-          </a>
-
-          <a href="/client/reviews">
-            ⭐ Avaliações
-          </a>
-
-          <a href="/client/profile">
-            👤 Meu perfil
-          </a>
-
-        </nav>
-
-        <a
-          href="/"
-          className="sidebar-logout"
-        >
-          Voltar ao início
-        </a>
-
-      </aside>
-
-
-      {/* CONTEÚDO */}
-
-      <main className="dashboard-content">
-
-        <div className="dashboard-header">
-
-          <div>
-
-            <span className="section-label">
-              AVALIAÇÕES
-            </span>
-
-            <h1>
-              Avalie os profissionais
-            </h1>
+            <h3>
+              Carregando suas avaliações...
+            </h3>
 
             <p>
-              Avalie os serviços que já foram concluídos.
+              Estamos buscando os seus projetos.
             </p>
+          </div>
+        </div>
+      </ClientLayout>
+    );
+  }
 
+  /* =========================================================
+     PÁGINA
+  ========================================================= */
+
+  return (
+    <ClientLayout
+      activePage="reviews"
+      title="Avaliações"
+      subtitle="Avalie os serviços que já foram concluídos."
+      label="ÁREA DO CLIENTE"
+    >
+      <div className="client-reviews-page">
+
+        {/* ===================================================
+            RESUMO / HERO DE AVALIAÇÕES
+        =================================================== */}
+
+        <div className="reviews-intro-card">
+
+          <span className="reviews-background-icon icon-one">
+            ⭐
+          </span>
+
+          <span className="reviews-background-icon icon-two">
+            💬
+          </span>
+
+          <span className="reviews-background-icon icon-three">
+            ✨
+          </span>
+
+          <div className="reviews-intro-icon">
+            ⭐
+          </div>
+
+          <div className="reviews-intro-content">
+            <h2>
+              Avaliações
+            </h2>
+
+            <p>
+              Avalie os profissionais que realizaram
+              os seus projetos e compartilhe a sua
+              experiência com outros clientes.
+            </p>
+          </div>
+
+          <div className="reviews-count">
+            <strong>
+              {projects.length}
+            </strong>
+
+            <span>
+              {projects.length === 1
+                ? "Projeto"
+                : "Projetos"}
+            </span>
           </div>
 
         </div>
 
+        {/* ===================================================
+            ERRO
+        =================================================== */}
 
         {error && (
+          <div className="reviews-alert reviews-alert-error">
 
-          <div className="error-message">
-            {error}
+            <span className="reviews-alert-icon">
+              !
+            </span>
+
+            <span>
+              {error}
+            </span>
+
           </div>
-
         )}
 
+        {/* ===================================================
+            SUCESSO
+        =================================================== */}
 
         {success && (
+          <div className="reviews-alert reviews-alert-success">
 
-          <div className="success-message">
-            {success}
+            <span className="reviews-alert-icon">
+              ✓
+            </span>
+
+            <span>
+              {success}
+            </span>
+
           </div>
-
         )}
 
+        {/* ===================================================
+            NENHUM PROJETO
+        =================================================== */}
 
         {projects.length === 0 ? (
+          <div className="reviews-empty">
 
-          <div className="empty-state">
-
-            <div className="empty-icon">
+            <div className="reviews-empty-icon">
               ⭐
             </div>
 
@@ -277,18 +313,32 @@ function ClientReviews() {
               poderá avaliar o profissional.
             </p>
 
-          </div>
+            <a
+              href="/client/providers"
+              className="reviews-empty-button"
+            >
+              🔎 Procurar profissionais
+            </a>
 
+          </div>
         ) : (
 
-          <section className="dashboard-section">
+          /* =================================================
+             PROJETOS
+          ================================================= */
 
-            <div className="section-header">
+          <section className="reviews-section">
+
+            <div className="reviews-section-header">
 
               <div>
 
+                <span className="reviews-section-label">
+                  SEUS PROJETOS
+                </span>
+
                 <h2>
-                  Seus projetos
+                  Projetos e avaliações
                 </h2>
 
                 <p>
@@ -300,19 +350,21 @@ function ClientReviews() {
 
             </div>
 
-
-            <div className="projects-list">
+            <div className="reviews-list">
 
               {projects.map((project) => (
-
-                <div
-                  className="project-card"
+                <article
+                  className="review-project-card"
                   key={project.id}
                 >
 
-                  <div>
+                  {/* =======================================
+                      CONTEÚDO
+                  ======================================= */}
 
-                    <span className="section-label">
+                  <div className="review-project-info">
+
+                    <span className="review-project-label">
                       PROJETO #{project.id}
                     </span>
 
@@ -320,38 +372,57 @@ function ClientReviews() {
                       {project.title}
                     </h3>
 
-                    <p>
-                      {project.description}
-                    </p>
+                    {project.description && (
+                      <p className="review-project-description">
+                        {project.description}
+                      </p>
+                    )}
 
-                    <span>
-                      📍 {project.location}
-                    </span>
+                    {project.location && (
+                      <span className="review-location">
+                        📍 {project.location}
+                      </span>
+                    )}
+
+                    {/* PROFISSIONAL */}
 
                     {project.provider && (
-                      <div className="provider-info">
+                      <div className="review-provider">
 
-                        <strong>
-                          👤 {project.provider.name}
-                        </strong>
+                        <div className="review-provider-avatar">
+                          👤
+                        </div>
 
-                        <span>
-                          💼 {project.provider.profession}
-                        </span>
+                        <div className="review-provider-info">
 
-                        {project.provider.is_verified && (
-                          <span className="verified-provider">
-                              ✓ Verificado
-                          </span>
-                        )}
+                          <strong>
+                            {project.provider.name}
+                          </strong>
+
+                          {project.provider.profession && (
+                            <span>
+                              💼 {project.provider.profession}
+                            </span>
+                          )}
+
+                          {project.provider.is_verified && (
+                            <span className="verified-provider">
+                              ✓ Profissional verificado
+                            </span>
+                          )}
+
+                        </div>
 
                       </div>
                     )}
 
                   </div>
 
+                  {/* =======================================
+                      AÇÕES
+                  ======================================= */}
 
-                  <div className="project-actions">
+                  <div className="review-project-actions">
 
                     <span
                       className={
@@ -360,146 +431,238 @@ function ClientReviews() {
                           : "status-pending"
                       }
                     >
-                      {project.status}
+                      {project.status === "COMPLETED"
+                        ? "CONCLUÍDO"
+                        : project.status}
                     </span>
 
-
-                    {project.status === "COMPLETED" && !project.reviewed && (
-
-                      <button
-                        className="register-btn"
-                        onClick={() => openReview(project)}
-                      >
-                        ⭐ Avaliar
-                      </button>
-
-                    )}
-
+                    {project.status === "COMPLETED" &&
+                      !project.reviewed && (
+                        <button
+                          type="button"
+                          className="review-button"
+                          onClick={() =>
+                            openReview(project)
+                          }
+                        >
+                          ⭐ Avaliar
+                        </button>
+                      )}
 
                     {project.reviewed && (
-
                       <span className="reviewed-label">
-                        ✅ Avaliado
+                        ✓ Avaliação enviada
                       </span>
-
                     )}
 
                   </div>
 
-                </div>
-
+                </article>
               ))}
 
             </div>
 
           </section>
-
         )}
 
+        {/* ===================================================
+            MODAL
+        =================================================== */}
 
-      </main>
+        {selectedProject && (
+          <div
+            className="modal-overlay"
+            onMouseDown={(event) => {
+              if (
+                event.target === event.currentTarget &&
+                !sending
+              ) {
+                closeReview();
+              }
+            }}
+          >
 
+            <div className="review-modal">
 
-      {/* MODAL DE AVALIAÇÃO */}
+              {/* BOTÃO FECHAR */}
 
-      {selectedProject && (
+              <button
+                type="button"
+                className="modal-close"
+                onClick={closeReview}
+                disabled={sending}
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
 
-        <div className="modal-overlay">
+              {/* CABEÇALHO */}
 
-          <div className="review-modal">
+              <div className="review-modal-header">
 
-            <button
-              className="modal-close"
-              onClick={closeReview}
-            >
-              ✕
-            </button>
+                <div className="review-modal-icon">
+                  ⭐
+                </div>
 
-            <span className="section-label">
-              AVALIAR PROFISSIONAL
-            </span>
+                <div>
 
-            <h2>
-              {selectedProject.provider?.name || "Profissional"}
-            </h2>
+                  <span className="review-modal-label">
+                    AVALIAR PROFISSIONAL
+                  </span>
 
-            {selectedProject.provider?.profession && (
-              <p className="provider-profession">
-                💼 {selectedProject.provider.profession}
+                  <h2>
+                    {selectedProject.provider?.name ||
+                      "Profissional"}
+                  </h2>
+
+                </div>
+
+              </div>
+
+              {selectedProject.provider?.profession && (
+                <p className="provider-profession">
+                  💼 {selectedProject.provider.profession}
+                </p>
+              )}
+
+              <div className="review-modal-project">
+
+                <span>
+                  PROJETO
+                </span>
+
+                <strong>
+                  {selectedProject.title}
+                </strong>
+
+              </div>
+
+              <p className="review-question">
+                Como foi o serviço realizado?
               </p>
-            )}
 
-            <p>
-              Projeto: <strong>{selectedProject.title}</strong>
-            </p>
+              {/* ESTRELAS */}
 
-            <p>
-              Como foi o serviço realizado?
-            </p>
+              <div className="rating-container">
 
+                <div className="rating-stars">
 
-            {/* ESTRELAS */}
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      className={
+                        star <= rating
+                          ? "star active"
+                          : "star"
+                      }
+                      onClick={() =>
+                        setRating(star)
+                      }
+                      disabled={sending}
+                      aria-label={`${star} estrelas`}
+                    >
+                      ★
+                    </button>
+                  ))}
 
-            <div className="rating-stars">
+                </div>
 
-              {[1, 2, 3, 4, 5].map((star) => (
+                <span className="rating-hint">
+                  {rating === 5
+                    ? "Excelente"
+                    : rating === 4
+                    ? "Muito bom"
+                    : rating === 3
+                    ? "Bom"
+                    : rating === 2
+                    ? "Pode melhorar"
+                    : "Insatisfatório"}
+                </span>
+
+              </div>
+
+              {/* FORMULÁRIO */}
+
+              <form
+                onSubmit={submitReview}
+                className="review-form"
+              >
+
+                <label htmlFor="review-comment">
+                  Comentário
+                </label>
+
+                <textarea
+                  id="review-comment"
+                  value={comment}
+                  onChange={(event) =>
+                    setComment(event.target.value)
+                  }
+                  placeholder="Conte como foi sua experiência com este profissional..."
+                  maxLength={1000}
+                  rows={5}
+                  disabled={sending}
+                />
+
+                <div className="review-character-count">
+                  {comment.length}/1000
+                </div>
+
+                {success && (
+                  <div className="reviews-alert reviews-alert-success">
+
+                    <span className="reviews-alert-icon">
+                      ✓
+                    </span>
+
+                    <span>
+                      {success}
+                    </span>
+
+                  </div>
+                )}
+
+                {error && (
+                  <div className="reviews-alert reviews-alert-error">
+
+                    <span className="reviews-alert-icon">
+                      !
+                    </span>
+
+                    <span>
+                      {error}
+                    </span>
+
+                  </div>
+                )}
 
                 <button
-                  key={star}
-                  type="button"
-                  className={
-                    star <= rating
-                      ? "star active"
-                      : "star"
-                  }
-                  onClick={() => setRating(star)}
+                  type="submit"
+                  className="review-submit-button"
+                  disabled={sending}
                 >
-                  ★
+                  {sending ? (
+                    <>
+                      <span className="review-spinner" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      ⭐ Enviar avaliação
+                    </>
+                  )}
                 </button>
 
-              ))}
+              </form>
 
             </div>
 
-
-            <form onSubmit={submitReview}>
-
-              <label>
-                Comentário
-              </label>
-
-              <textarea
-                value={comment}
-                onChange={(event) =>
-                  setComment(event.target.value)
-                }
-                placeholder="Conte como foi sua experiência..."
-                maxLength={1000}
-                rows={5}
-              />
-
-
-              <button
-                type="submit"
-                className="register-btn"
-                disabled={sending}
-              >
-                {sending
-                  ? "Enviando..."
-                  : "Enviar avaliação"
-                }
-              </button>
-
-            </form>
-
           </div>
+        )}
 
-        </div>
-
-      )}
-
-    </div>
-
+      </div>
+    </ClientLayout>
   );
 }
 

@@ -320,3 +320,85 @@ export async function createProviderProfile(profileData) {
 
   return data;
 }
+
+
+export async function getMyServices() {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(`${API_URL}/services/my`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : "Erro ao buscar os seus serviços."
+    );
+  }
+
+  return data;
+}
+
+
+export async function updateService(
+serviceId,
+serviceData
+) {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `${API_URL}/services/${serviceId}`,
+  {
+    method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+      },
+    body: JSON.stringify(serviceData),
+  }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : "Erro ao atualizar o serviço."
+    );
+  }
+
+  return data;
+}
+
+
+export async function toggleServiceStatus(serviceId) {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `${API_URL}/services/${serviceId}/status`,
+  {
+  method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : "Erro ao alterar o estado do serviço."
+    );
+  }
+
+  return data;
+}

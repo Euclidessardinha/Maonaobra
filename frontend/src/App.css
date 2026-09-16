@@ -5043,3 +5043,28 @@ footer p {
   }
 
 }
+
+
+/* =========================================
+   TROCA DE MODO
+========================================= */
+
+.mode-switch-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.client-mode-btn {
+  background: #e8f0ff;
+  color: #173b70;
+}
+
+.client-mode-btn:hover {
+  background: #d7e5ff;
+  transform: translateY(-1px);
+}

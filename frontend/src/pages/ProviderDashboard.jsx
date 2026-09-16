@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 
 import { useAuth } from "../context/AuthContext";
@@ -13,26 +14,26 @@ import {
   updateRequestStatus
 } from "../api/provider";
 
+import "./ProviderDashboard.css";
+
 
 function ProviderDashboard() {
 
   const { user, logout } = useAuth();
 
+  function handleClientMode() {
+    window.location.href = "/client";
+  }
+
   const [requests, setRequests] = useState([]);
-
   const [openProjects, setOpenProjects] = useState([]);
-
   const [services, setServices] = useState([]);
-
   const [reviews, setReviews] = useState(null);
 
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-
   const [updatingRequest, setUpdatingRequest] = useState(null);
 
-  // Menu mobile
   const [menuOpen, setMenuOpen] = useState(false);
 
 
@@ -43,15 +44,7 @@ function ProviderDashboard() {
       try {
 
         setLoading(true);
-
         setError("");
-
-        /*
-         * Primeiro buscamos:
-         * - pedidos
-         * - serviços
-         * - perfil profissional
-         */
 
         const [
           requestsData,
@@ -59,38 +52,21 @@ function ProviderDashboard() {
           providerProfile,
           openProjectsData
         ] = await Promise.all([
-
           getProviderRequests(),
-
           getServices(),
-
           getMyProviderProfile(),
-
           getOpenProjects()
-
         ]);
-
-
-        /*
-         * Agora que temos o ID correto
-         * do ProviderProfile, buscamos
-         * as avaliações.
-         */
 
         const reviewsData =
           await getProviderReviews(
             providerProfile.id
           );
 
-
         setRequests(requestsData);
-
         setServices(servicesData);
-
         setReviews(reviewsData);
-
         setOpenProjects(openProjectsData);
-
 
       } catch (error) {
 
@@ -112,87 +88,59 @@ function ProviderDashboard() {
 
     }
 
-
     loadDashboard();
 
   }, []);
 
-
-  /*
-   * Fechar menu com ESC
-   */
 
   useEffect(() => {
 
     function handleEscape(event) {
 
       if (event.key === "Escape") {
-
         setMenuOpen(false);
-
       }
 
     }
-
 
     document.addEventListener(
       "keydown",
       handleEscape
     );
 
-
     return () => {
-
       document.removeEventListener(
         "keydown",
         handleEscape
       );
-
     };
 
   }, []);
 
 
-  /*
-   * Bloquear scroll quando o menu
-   * mobile estiver aberto
-   */
-
   useEffect(() => {
 
     if (menuOpen) {
-
       document.body.style.overflow = "hidden";
-
     } else {
-
       document.body.style.overflow = "";
-
     }
 
-
     return () => {
-
       document.body.style.overflow = "";
-
     };
 
   }, [menuOpen]);
 
 
   const closeMenu = () => {
-
     setMenuOpen(false);
-
   };
 
 
   const handleLogout = () => {
-
     setMenuOpen(false);
-
     logout();
-
   };
 
 
@@ -210,27 +158,26 @@ function ProviderDashboard() {
     );
 
 
-  async function handleRequestStatus(requestId, status) {
+  async function handleRequestStatus(
+    requestId,
+    status
+  ) {
 
     try {
 
       setUpdatingRequest(requestId);
-
       setError("");
 
-      const result = await updateRequestStatus(
-        requestId,
-        status
-      );
-
+      const result =
+        await updateRequestStatus(
+          requestId,
+          status
+        );
 
       console.log(
         "Status atualizado:",
         result
       );
-
-
-      // Atualizar o pedido na lista
 
       setRequests((currentRequests) =>
         currentRequests.map((request) =>
@@ -243,7 +190,6 @@ function ProviderDashboard() {
         )
       );
 
-
     } catch (error) {
 
       console.error(
@@ -251,12 +197,10 @@ function ProviderDashboard() {
         error
       );
 
-
       setError(
         error.message ||
         "Erro ao atualizar o pedido."
       );
-
 
     } finally {
 
@@ -267,37 +211,74 @@ function ProviderDashboard() {
   }
 
 
+  function getInitials(name) {
+
+    if (!name) {
+      return "P";
+    }
+
+    const parts =
+      name.trim().split(" ");
+
+    if (parts.length === 1) {
+      return parts[0]
+        .substring(0, 2)
+        .toUpperCase();
+    }
+
+    return (
+      parts[0][0] +
+      parts[parts.length - 1][0]
+    ).toUpperCase();
+
+  }
+
+
+  function getStatusLabel(status) {
+
+    const labels = {
+      PENDING: "Pendente",
+      ACCEPTED: "Aceito",
+      IN_PROGRESS: "Em andamento",
+      COMPLETED: "Concluído",
+      REJECTED: "Rejeitado",
+      CANCELLED: "Cancelado"
+    };
+
+    return labels[status] || status;
+
+  }
+
+
   return (
 
-    <div className="dashboard provider-dashboard">
+    <div className="provider-dashboard-page">
 
 
       {/* =========================================
           HEADER MOBILE
       ========================================= */}
 
-      <header className="mobile-dashboard-header">
+      <header className="provider-mobile-header">
 
         <button
-          className="hamburger-btn"
+          className="provider-hamburger"
           onClick={() => setMenuOpen(true)}
           aria-label="Abrir menu"
           aria-expanded={menuOpen}
         >
-          ☰
+          <span></span>
+          <span></span>
+          <span></span>
         </button>
 
 
-        <div className="mobile-dashboard-logo">
-
+        <div className="provider-mobile-logo">
           Mão<span>NaObra</span>
-
         </div>
 
 
-        {/* Espaço para manter o logo centralizado */}
-
-        <div className="mobile-dashboard-notification">
+        <div className="provider-mobile-notification">
           <NotificationBell />
         </div>
 
@@ -311,7 +292,7 @@ function ProviderDashboard() {
       {menuOpen && (
 
         <div
-          className="sidebar-overlay"
+          className="provider-sidebar-overlay"
           onClick={closeMenu}
           aria-hidden="true"
         />
@@ -324,90 +305,304 @@ function ProviderDashboard() {
       ========================================= */}
 
       <aside
-        className={`sidebar ${
-          menuOpen ? "sidebar-open" : ""
-        }`}
+        className={
+          `provider-sidebar ${
+            menuOpen
+              ? "provider-sidebar-open"
+              : ""
+          }`
+        }
       >
 
-
-        {/* BOTÃO FECHAR MOBILE */}
-
         <button
-          className="sidebar-close"
+          className="provider-sidebar-close"
           onClick={closeMenu}
           aria-label="Fechar menu"
         >
-          ✕
+          ×
         </button>
 
 
-        <div className="logo">
-          Mão<span>NaObra</span>
+        {/* LOGO */}
+
+        <div className="provider-sidebar-brand">
+
+          <div className="provider-brand-mark">
+            M
+          </div>
+
+          <div>
+
+            <div className="provider-brand-name">
+              Mão<span>NaObra</span>
+            </div>
+
+            <div className="provider-brand-area">
+              Área profissional
+            </div>
+
+          </div>
+
         </div>
 
 
-        <nav>
+        {/* IDENTIDADE DO PRESTADOR */}
 
+        <div className="provider-area-badge">
+
+          <div className="provider-area-icon">
+            🛠️
+          </div>
+
+          <div>
+
+            <strong>
+              ÁREA DO PRESTADOR
+            </strong>
+
+            <span>
+              Gerencie o seu trabalho
+            </span>
+
+          </div>
+
+        </div>
+
+
+        {/* NAVEGAÇÃO */}
+
+        <div className="provider-nav-title">
+          MENU PRINCIPAL
+        </div>
+
+
+        <nav className="provider-sidebar-nav">
 
           <a
             href="/provider"
             onClick={closeMenu}
-            className="active"
+            className="provider-nav-link active"
           >
-            🏠 Visão geral
+            <span className="provider-nav-icon">
+              ◈
+            </span>
+
+            <span>
+              Visão geral
+            </span>
           </a>
 
 
           <a
             href="/provider/services"
             onClick={closeMenu}
+            className="provider-nav-link"
           >
-            🔧 Meus serviços
+            <span className="provider-nav-icon">
+              🔧
+            </span>
+
+            <span>
+              Meus serviços
+            </span>
           </a>
 
 
           <a
             href="/provider/services/new"
             onClick={closeMenu}
+            className="provider-nav-link"
           >
-            ➕ Criar serviço
+            <span className="provider-nav-icon">
+              ＋
+            </span>
+
+            <span>
+              Criar serviço
+            </span>
           </a>
 
 
           <a
             href="/provider/requests"
             onClick={closeMenu}
+            className="provider-nav-link"
           >
-            📋 Pedidos recebidos
+            <span className="provider-nav-icon">
+              ▣
+            </span>
+
+            <span>
+              Pedidos recebidos
+            </span>
+
+            {requests.length > 0 && (
+              <span className="provider-nav-count">
+                {requests.length}
+              </span>
+            )}
+
+          </a>
+
+
+          <a
+            href="/provider/projects"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+            <span className="provider-nav-icon">
+              ◉
+            </span>
+
+            <span>
+              Projetos disponíveis
+            </span>
           </a>
 
 
           <a
             href="/provider/chat"
             onClick={closeMenu}
+            className="provider-nav-link"
           >
-            💬 Mensagens
+            <span className="provider-nav-icon">
+              ◌
+            </span>
+
+            <span>
+              Mensagens
+            </span>
           </a>
+
+
+          <a
+            href="/provider/reviews"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+            <span className="provider-nav-icon">
+              ★
+            </span>
+
+            <span>
+              Avaliações
+            </span>
+          </a>
+
+
+          <div className="provider-nav-divider"></div>
+
+
+          <div className="provider-nav-title">
+            CONTA
+          </div>
 
 
           <a
             href="/provider/profile"
             onClick={closeMenu}
+            className="provider-nav-link"
           >
-            👤 Meu perfil
+            <span className="provider-nav-icon">
+              ○
+            </span>
+
+            <span>
+              Meu perfil
+            </span>
           </a>
 
+
+          <a
+            href="/"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+            <span className="provider-nav-icon">
+              ⌂
+            </span>
+
+            <span>
+              Página inicial
+            </span>
+          </a>
 
         </nav>
 
 
-        <button
-          onClick={handleLogout}
-          className="sidebar-logout"
-        >
-          Sair
-        </button>
+        {/* PARTE INFERIOR */}
 
+        <div className="provider-sidebar-bottom">
+
+
+          {/* MUDAR PARA CLIENTE */}
+
+          <button
+            type="button"
+            className="provider-client-mode"
+            onClick={handleClientMode}
+          >
+
+            <span className="provider-client-mode-icon">
+              👤
+            </span>
+
+            <span>
+
+              <strong>
+                Modo Cliente
+              </strong>
+
+              <small>
+                Procurar profissionais
+              </small>
+
+            </span>
+
+            <span className="provider-client-arrow">
+              →
+            </span>
+
+          </button>
+
+
+          {/* UTILIZADOR */}
+
+          <div className="provider-sidebar-user">
+
+            <div className="provider-user-avatar">
+              {getInitials(user?.name)}
+            </div>
+
+            <div className="provider-user-info">
+
+              <strong>
+                {user?.name || "Prestador"}
+              </strong>
+
+              <span>
+                Prestador
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <button
+            onClick={handleLogout}
+            className="provider-logout"
+          >
+
+            <span>
+              ↪
+            </span>
+
+            Sair da conta
+
+          </button>
+
+        </div>
 
       </aside>
 
@@ -416,59 +611,62 @@ function ProviderDashboard() {
           MAIN
       ========================================= */}
 
-      <main className="dashboard-content">
+      <main className="provider-main">
 
 
         {/* =====================================
             HEADER
         ===================================== */}
 
-        <div className="dashboard-header provider-dashboard-header">
+        <header className="provider-topbar">
 
+          <div className="provider-page-heading">
 
-          <div>
-
-            <span className="section-label">
-              ÁREA DO PRESTADOR
-            </span>
-
+            <div className="provider-heading-label">
+              <span className="provider-heading-dot"></span>
+              PAINEL PROFISSIONAL
+            </div>
 
             <h1>
-              Olá, {user?.name} 👋
+              Olá, {user?.name || "Prestador"} 👋
             </h1>
 
-
             <p>
-              Gerencie seus serviços e pedidos.
+              Gerencie seus serviços, pedidos e
+              encontre novas oportunidades.
             </p>
 
           </div>
 
 
-          {/* AÇÕES DO HEADER */}
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "15px"
-            }}
-          >
+          <div className="provider-header-actions">
 
             <NotificationBell />
 
 
+            <button
+              type="button"
+              className="provider-header-client-btn"
+              onClick={handleClientMode}
+            >
+              👤
+              <span>
+                Área do Cliente
+              </span>
+            </button>
+
+
             <a
               href="/provider/services/new"
-              className="register-btn"
+              className="provider-create-btn"
             >
-              + Criar serviço
+              <span>＋</span>
+              Criar serviço
             </a>
 
           </div>
 
-
-        </div>
+        </header>
 
 
         {/* =====================================
@@ -477,8 +675,14 @@ function ProviderDashboard() {
 
         {error && (
 
-          <div className="error-message">
+          <div className="provider-error-message">
+
+            <span>
+              !
+            </span>
+
             {error}
+
           </div>
 
         )}
@@ -490,11 +694,17 @@ function ProviderDashboard() {
 
         {loading ? (
 
-          <div className="empty-state">
+          <div className="provider-loading">
+
+            <div className="provider-spinner"></div>
 
             <h3>
-              Carregando seus dados...
+              Preparando o seu painel...
             </h3>
+
+            <p>
+              Estamos a carregar os seus dados.
+            </p>
 
           </div>
 
@@ -504,110 +714,221 @@ function ProviderDashboard() {
 
 
             {/* =====================================
+                WELCOME / OPPORTUNITY HERO
+            ===================================== */}
+
+            <section className="provider-welcome-card">
+
+              <div className="provider-welcome-content">
+
+                <div className="provider-welcome-eyebrow">
+                  <span>✦</span>
+                  OPORTUNIDADES PARA SI
+                </div>
+
+                <h2>
+                  Transforme suas habilidades
+                  em novas oportunidades.
+                </h2>
+
+                <p>
+                  Publique os seus serviços, encontre
+                  projetos e conecte-se com clientes
+                  que precisam do seu trabalho.
+                </p>
+
+                <div className="provider-welcome-actions">
+
+                  <a
+                    href="/provider/projects"
+                    className="provider-welcome-primary"
+                  >
+                    Explorar projetos
+                    <span>→</span>
+                  </a>
+
+                  <a
+                    href="/provider/services/new"
+                    className="provider-welcome-secondary"
+                  >
+                    Criar serviço
+                  </a>
+
+                </div>
+
+              </div>
+
+
+              <div className="provider-welcome-decoration">
+
+                <div className="provider-welcome-ring">
+                  🛠️
+                </div>
+
+                <div className="provider-welcome-floating-card">
+                  <strong>
+                    {openProjects.length}
+                  </strong>
+
+                  <span>
+                    projetos disponíveis
+                  </span>
+                </div>
+
+              </div>
+
+            </section>
+
+
+            {/* =====================================
                 ESTATÍSTICAS
             ===================================== */}
 
-            <div className="stats-grid">
+            <section className="provider-stats-grid">
 
 
-              {/* SERVIÇOS */}
+              <div className="provider-stat-card">
 
-              <div className="stat-card">
+                <div className="provider-stat-icon orange">
+                  🔧
+                </div>
 
-                <span>🔧</span>
+                <div className="provider-stat-content">
 
-                <h2>
-                  {services.length}
-                </h2>
+                  <span>
+                    SERVIÇOS
+                  </span>
 
-                <p>
-                  Serviços
-                </p>
+                  <strong>
+                    {services.length}
+                  </strong>
 
-              </div>
+                  <small>
+                    Serviços publicados
+                  </small>
 
-
-              {/* PEDIDOS */}
-
-              <div className="stat-card">
-
-                <span>📋</span>
-
-                <h2>
-                  {requests.length}
-                </h2>
-
-                <p>
-                  Pedidos recebidos
-                </p>
+                </div>
 
               </div>
 
 
-              {/* EM ANDAMENTO */}
+              <div className="provider-stat-card">
 
-              <div className="stat-card">
+                <div className="provider-stat-icon blue">
+                  ▣
+                </div>
 
-                <span>🔄</span>
+                <div className="provider-stat-content">
 
-                <h2>
-                  {inProgressRequests.length}
-                </h2>
+                  <span>
+                    PEDIDOS
+                  </span>
 
-                <p>
-                  Em andamento
-                </p>
+                  <strong>
+                    {requests.length}
+                  </strong>
 
-              </div>
+                  <small>
+                    Pedidos recebidos
+                  </small>
 
-
-              {/* CONCLUÍDOS */}
-
-              <div className="stat-card">
-
-                <span>✅</span>
-
-                <h2>
-                  {completedRequests.length}
-                </h2>
-
-                <p>
-                  Concluídos
-                </p>
+                </div>
 
               </div>
 
 
-              {/* AVALIAÇÃO */}
+              <div className="provider-stat-card">
 
-              <div className="stat-card">
+                <div className="provider-stat-icon purple">
+                  ◌
+                </div>
 
-                <span>⭐</span>
+                <div className="provider-stat-content">
 
-                <h2>
-                  {reviews?.average_rating ?? 0}
-                </h2>
+                  <span>
+                    EM ANDAMENTO
+                  </span>
 
-                <p>
-                  Avaliação média
-                </p>
+                  <strong>
+                    {inProgressRequests.length}
+                  </strong>
+
+                  <small>
+                    Trabalhos ativos
+                  </small>
+
+                </div>
 
               </div>
 
 
-            </div>
+              <div className="provider-stat-card">
+
+                <div className="provider-stat-icon green">
+                  ✓
+                </div>
+
+                <div className="provider-stat-content">
+
+                  <span>
+                    CONCLUÍDOS
+                  </span>
+
+                  <strong>
+                    {completedRequests.length}
+                  </strong>
+
+                  <small>
+                    Trabalhos concluídos
+                  </small>
+
+                </div>
+
+              </div>
+
+
+              <div className="provider-stat-card">
+
+                <div className="provider-stat-icon gold">
+                  ★
+                </div>
+
+                <div className="provider-stat-content">
+
+                  <span>
+                    AVALIAÇÃO
+                  </span>
+
+                  <strong>
+                    {reviews?.average_rating ?? 0}
+                  </strong>
+
+                  <small>
+                    Média dos clientes
+                  </small>
+
+                </div>
+
+              </div>
+
+
+            </section>
 
 
             {/* =====================================
                 PROJETOS DISPONÍVEIS
             ===================================== */}
 
-            <section className="dashboard-section">
+            <section className="provider-section">
 
 
-              <div className="section-header">
+              <div className="provider-section-header">
 
                 <div>
+
+                  <div className="provider-section-kicker">
+                    OPORTUNIDADES
+                  </div>
 
                   <h2>
                     Projetos disponíveis
@@ -620,15 +941,24 @@ function ProviderDashboard() {
 
                 </div>
 
+
+                <a
+                  href="/provider/projects"
+                  className="provider-section-link"
+                >
+                  Ver todos
+                  <span>→</span>
+                </a>
+
               </div>
 
 
               {openProjects.length === 0 ? (
 
-                <div className="empty-state">
+                <div className="provider-empty-state">
 
-                  <div className="empty-icon">
-                    🔎
+                  <div className="provider-empty-icon">
+                    ◉
                   </div>
 
                   <h3>
@@ -644,18 +974,35 @@ function ProviderDashboard() {
 
               ) : (
 
-                <div className="request-list">
+                <div className="provider-project-list">
 
                   {openProjects
                     .slice(0, 5)
                     .map((project) => (
 
-                      <div
-                        className="request-card"
+                      <article
+                        className="provider-project-card"
                         key={project.id}
                       >
 
-                        <div>
+                        <div className="provider-project-icon">
+                          ◉
+                        </div>
+
+
+                        <div className="provider-project-info">
+
+                          <div className="provider-project-top">
+
+                            <span className="provider-open-label">
+                              ABERTO
+                            </span>
+
+                            <span className="provider-project-category">
+                              {project.category}
+                            </span>
+
+                          </div>
 
                           <h3>
                             {project.title}
@@ -665,53 +1012,39 @@ function ProviderDashboard() {
                             {project.description}
                           </p>
 
-                          <p>
-                            📂 {project.category}
-                          </p>
 
-                          <p>
-                            📍 {project.location}
-                          </p>
+                          <div className="provider-project-meta">
 
-                          <p>
-                            💰{" "}
+                            <span>
+                              📍 {project.location}
+                            </span>
 
-                            {project.budget !== null &&
-                            project.budget !== undefined
+                            <span>
+                              💰{" "}
+                              {project.budget !== null &&
+                              project.budget !== undefined
+                                ? `${project.budget} MT`
+                                : "Orçamento não definido"}
+                            </span>
 
-                              ? `${project.budget} MT`
-
-                              : "Orçamento não definido"}
-
-                          </p>
+                          </div>
 
                         </div>
 
 
-                        <div>
-
-                          <span className="status-badge status-open">
-                            ABERTO
-                          </span>
-
-                          <br />
-
+                        <div className="provider-project-action">
 
                           <a
                             href={`/provider/projects/${project.id}`}
-                            className="register-btn"
-                            style={{
-                              marginTop: "10px",
-                              display: "inline-block"
-                            }}
+                            className="provider-view-project"
                           >
                             Ver projeto
+                            <span>→</span>
                           </a>
 
                         </div>
 
-
-                      </div>
+                      </article>
 
                     ))}
 
@@ -723,30 +1056,37 @@ function ProviderDashboard() {
 
 
             {/* =====================================
-                PEDIDOS
+                PEDIDOS RECENTES
             ===================================== */}
 
-            <section className="dashboard-section">
+            <section className="provider-section">
 
 
-              <div className="section-header">
+              <div className="provider-section-header">
 
                 <div>
+
+                  <div className="provider-section-kicker">
+                    CLIENTES
+                  </div>
 
                   <h2>
                     Pedidos recentes
                   </h2>
 
                   <p>
-                    Solicitações recebidas
-                    dos clientes.
+                    Solicitações recebidas dos clientes.
                   </p>
 
                 </div>
 
 
-                <a href="/provider/requests">
-                  Ver todos →
+                <a
+                  href="/provider/requests"
+                  className="provider-section-link"
+                >
+                  Ver todos
+                  <span>→</span>
                 </a>
 
               </div>
@@ -754,10 +1094,10 @@ function ProviderDashboard() {
 
               {requests.length === 0 ? (
 
-                <div className="empty-state">
+                <div className="provider-empty-state">
 
-                  <div className="empty-icon">
-                    📋
+                  <div className="provider-empty-icon">
+                    ▣
                   </div>
 
                   <h3>
@@ -773,57 +1113,71 @@ function ProviderDashboard() {
 
               ) : (
 
-                <div className="request-list">
+                <div className="provider-request-list">
 
                   {requests
                     .slice(0, 5)
                     .map((request) => (
 
-                      <div
-                        className="request-card"
+                      <article
+                        className="provider-request-card"
                         key={request.id}
                       >
 
-                        <div>
+                        <div className="provider-request-client">
 
-                          <h3>
-                            {request.service?.title}
-                          </h3>
+                          <div className="provider-client-avatar">
+                            {getInitials(
+                              request.client?.name
+                            )}
+                          </div>
 
-                          <p>
-                            Cliente:{" "}
-                            {request.client?.name}
-                          </p>
+                          <div>
 
-                          <p>
-                            📍 {request.location}
-                          </p>
+                            <h3>
+                              {request.service?.title}
+                            </h3>
 
-                          <p>
-                            💰{" "}
-                            {request.agreed_price} MT
-                          </p>
+                            <p>
+                              Cliente:{" "}
+                              {request.client?.name}
+                            </p>
+
+                          </div>
 
                         </div>
 
 
-                        <div>
+                        <div className="provider-request-details">
+
+                          <span>
+                            📍 {request.location}
+                          </span>
+
+                          <strong>
+                            💰 {request.agreed_price} MT
+                          </strong>
+
+                        </div>
+
+
+                        <div className="provider-request-actions">
 
                           <span
                             className={
-                              `status-badge status-${request.status?.toLowerCase()}`
+                              `provider-status-badge status-${request.status?.toLowerCase()}`
                             }
                           >
-                            {request.status}
+                            {getStatusLabel(request.status)}
                           </span>
 
 
                           {request.status === "PENDING" && (
 
-                            <div style={{ marginTop: "10px" }}>
+                            <div className="provider-action-buttons">
 
                               <button
-                                className="primary-button"
+                                className="provider-accept-btn"
                                 disabled={
                                   updatingRequest === request.id
                                 }
@@ -835,13 +1189,14 @@ function ProviderDashboard() {
                                 }
                               >
                                 {updatingRequest === request.id
-                                  ? "Atualizando..."
-                                  : "✅ Aceitar"}
+                                  ? "..."
+                                  : "✓ Aceitar"}
                               </button>
 
 
                               <button
                                 type="button"
+                                className="provider-reject-btn"
                                 disabled={
                                   updatingRequest === request.id
                                 }
@@ -851,11 +1206,8 @@ function ProviderDashboard() {
                                     "REJECTED"
                                   )
                                 }
-                                style={{
-                                  marginLeft: "8px"
-                                }}
                               >
-                                ❌ Rejeitar
+                                Rejeitar
                               </button>
 
                             </div>
@@ -866,7 +1218,7 @@ function ProviderDashboard() {
                           {request.status === "ACCEPTED" && (
 
                             <button
-                              className="primary-button"
+                              className="provider-primary-action"
                               disabled={
                                 updatingRequest === request.id
                               }
@@ -879,7 +1231,7 @@ function ProviderDashboard() {
                             >
                               {updatingRequest === request.id
                                 ? "Atualizando..."
-                                : "🔄 Iniciar serviço"}
+                                : "↻ Iniciar serviço"}
                             </button>
 
                           )}
@@ -888,7 +1240,7 @@ function ProviderDashboard() {
                           {request.status === "IN_PROGRESS" && (
 
                             <button
-                              className="primary-button"
+                              className="provider-primary-action"
                               disabled={
                                 updatingRequest === request.id
                               }
@@ -901,14 +1253,14 @@ function ProviderDashboard() {
                             >
                               {updatingRequest === request.id
                                 ? "Atualizando..."
-                                : "✅ Concluir serviço"}
+                                : "✓ Concluir serviço"}
                             </button>
 
                           )}
 
                         </div>
 
-                      </div>
+                      </article>
 
                     ))}
 
@@ -923,26 +1275,35 @@ function ProviderDashboard() {
                 SERVIÇOS
             ===================================== */}
 
-            <section className="dashboard-section">
+            <section className="provider-section">
 
 
-              <div className="section-header">
+              <div className="provider-section-header">
 
                 <div>
 
+                  <div className="provider-section-kicker">
+                    O SEU NEGÓCIO
+                  </div>
+
                   <h2>
-                    Serviços
+                    Meus serviços
                   </h2>
 
                   <p>
-                    Serviços cadastrados na plataforma.
+                    Serviços que você disponibiliza
+                    aos clientes.
                   </p>
 
                 </div>
 
 
-                <a href="/provider/services">
-                  Ver todos →
+                <a
+                  href="/provider/services"
+                  className="provider-section-link"
+                >
+                  Ver todos
+                  <span>→</span>
                 </a>
 
               </div>
@@ -950,9 +1311,9 @@ function ProviderDashboard() {
 
               {services.length === 0 ? (
 
-                <div className="empty-state">
+                <div className="provider-empty-state">
 
-                  <div className="empty-icon">
+                  <div className="provider-empty-icon">
                     🔧
                   </div>
 
@@ -961,34 +1322,43 @@ function ProviderDashboard() {
                   </h3>
 
                   <p>
-                    Crie seu primeiro serviço.
+                    Crie seu primeiro serviço e comece
+                    a receber pedidos.
                   </p>
-
 
                   <a
                     href="/provider/services/new"
-                    className="register-btn"
+                    className="provider-empty-action"
                   >
                     Criar serviço
+                    <span>→</span>
                   </a>
 
                 </div>
 
               ) : (
 
-                <div className="service-grid">
+                <div className="provider-service-grid">
 
                   {services
                     .slice(0, 6)
                     .map((service) => (
 
-                      <div
-                        className="service-card"
+                      <article
+                        className="provider-service-card"
                         key={service.id}
                       >
 
-                        <div className="service-icon">
-                          🔧
+                        <div className="provider-service-card-top">
+
+                          <div className="provider-service-icon">
+                            🔧
+                          </div>
+
+                          <span className="provider-service-active">
+                            Ativo
+                          </span>
+
                         </div>
 
 
@@ -1002,12 +1372,20 @@ function ProviderDashboard() {
                         </p>
 
 
-                        <strong>
-                          {service.price} MT
-                        </strong>
+                        <div className="provider-service-bottom">
+
+                          <strong>
+                            {service.price} MT
+                          </strong>
+
+                          <span>
+                            por serviço
+                          </span>
+
+                        </div>
 
 
-                        <div className="service-meta">
+                        <div className="provider-service-meta">
 
                           <span>
                             {service.category?.name}
@@ -1019,7 +1397,7 @@ function ProviderDashboard() {
 
                         </div>
 
-                      </div>
+                      </article>
 
                     ))}
 
@@ -1034,19 +1412,24 @@ function ProviderDashboard() {
                 AVALIAÇÕES
             ===================================== */}
 
-            <section className="dashboard-section">
+            <section className="provider-section">
 
 
-              <div className="section-header">
+              <div className="provider-section-header">
 
                 <div>
+
+                  <div className="provider-section-kicker">
+                    REPUTAÇÃO
+                  </div>
 
                   <h2>
                     Avaliações dos clientes
                   </h2>
 
                   <p>
-                    Veja a reputação do seu trabalho.
+                    Veja como os clientes avaliam
+                    o seu trabalho.
                   </p>
 
                 </div>
@@ -1055,8 +1438,12 @@ function ProviderDashboard() {
                 {reviews &&
                 reviews.total_reviews > 0 && (
 
-                  <a href="/provider/reviews">
-                    Ver todas →
+                  <a
+                    href="/provider/reviews"
+                    className="provider-section-link"
+                  >
+                    Ver todas
+                    <span>→</span>
                   </a>
 
                 )}
@@ -1067,10 +1454,10 @@ function ProviderDashboard() {
               {!reviews ||
               reviews.total_reviews === 0 ? (
 
-                <div className="empty-state">
+                <div className="provider-empty-state">
 
-                  <div className="empty-icon">
-                    ⭐
+                  <div className="provider-empty-icon">
+                    ★
                   </div>
 
                   <h3>
@@ -1087,19 +1474,23 @@ function ProviderDashboard() {
 
               ) : (
 
-                <div className="reviews-dashboard-summary">
+                <div className="provider-reviews-summary">
 
 
-                  <div className="rating-average">
+                  <div className="provider-rating-box">
+
+                    <span className="provider-rating-label">
+                      AVALIAÇÃO MÉDIA
+                    </span>
 
                     <strong>
                       {reviews.average_rating}
                     </strong>
 
 
-                    <div className="stars">
+                    <div className="provider-stars">
 
-                      {"⭐".repeat(
+                      {"★".repeat(
                         Math.round(
                           reviews.average_rating
                         )
@@ -1115,7 +1506,7 @@ function ProviderDashboard() {
                     </div>
 
 
-                    <span>
+                    <span className="provider-review-count">
 
                       {reviews.total_reviews}{" "}
 
@@ -1128,57 +1519,48 @@ function ProviderDashboard() {
                   </div>
 
 
-                  <div className="latest-review">
+                  <div className="provider-latest-review">
 
-                    {reviews.reviews?.[0] && (
+                    <div className="provider-review-heading">
 
-                      <>
+                      <div className="provider-review-client-avatar">
+                        {getInitials(
+                          reviews.reviews?.[0]?.client?.name
+                        )}
+                      </div>
 
-                        <div className="latest-review-header">
+                      <div>
 
-                          <strong>
-                            {
-                              reviews
-                                .reviews[0]
-                                .client?.name
-                            }
-                          </strong>
+                        <strong>
+                          {
+                            reviews
+                              .reviews?.[0]
+                              ?.client?.name
+                          }
+                        </strong>
 
+                        <div className="provider-stars small">
 
-                          <span className="stars">
-
-                            {"⭐".repeat(
-                              reviews
-                                .reviews[0]
-                                .rating
-                            )}
-
-                          </span>
+                          {"★".repeat(
+                            reviews
+                              .reviews?.[0]
+                              ?.rating || 0
+                          )}
 
                         </div>
 
+                      </div>
 
-                        {reviews
-                          .reviews[0]
-                          .comment ? (
+                    </div>
 
-                          <p>
-                            "{reviews
-                              .reviews[0]
-                              .comment}"
-                          </p>
 
-                        ) : (
-
-                          <p>
-                            Cliente não deixou comentário.
-                          </p>
-
-                        )}
-
-                      </>
-
-                    )}
+                    <p>
+                      {reviews
+                        .reviews?.[0]
+                        ?.comment
+                        ? `"${reviews.reviews[0].comment}"`
+                        : "Cliente não deixou comentário."}
+                    </p>
 
                   </div>
 
@@ -1203,3 +1585,4 @@ function ProviderDashboard() {
 
 
 export default ProviderDashboard;
+

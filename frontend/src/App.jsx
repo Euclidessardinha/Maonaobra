@@ -23,6 +23,7 @@ import ClientRequests from "./pages/ClientRequests";
 import ClientProjectCreate from "./pages/ClientProjectCreate";
 
 import ProviderServiceCreate from "./pages/ProviderServiceCreate";
+import ProviderServices from "./pages/ProviderServices";
 
 import ClientChat from "./pages/ClientChat";
 import ProviderChat from "./pages/ProviderChat";
@@ -39,1066 +40,1100 @@ import AdminDashboard from "./pages/AdminDashboard";
 
 import "./App.css";
 
+import ClientFavorites from "./pages/ClientFavorites";
+import ClientProfile from "./pages/ClientProfile";
 
 /* =========================================================
-   PÁGINA INICIAL
+PÁGINA INICIAL
 ========================================================= */
 
 function HomePage({
-  user,
-  loading,
-  logout
+user,
+loading,
+logout
 }) {
 
-  const [search, setSearch] = useState("");
-  const [location, setLocation] = useState("");
+const [search, setSearch] = useState("");
+const [location, setLocation] = useState("");
 
-  const [categories, setCategories] = useState([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
+const [categories, setCategories] = useState([]);
+const [loadingCategories, setLoadingCategories] = useState(true);
 
+/* =======================================================
+CARREGAR CATEGORIAS
+======================================================= */
 
-  /* =======================================================
-     CARREGAR CATEGORIAS
-  ======================================================= */
-
-  useEffect(() => {
-
-    async function loadCategories() {
-
-      try {
-
-        const data = await getCategories();
-
-        setCategories(data);
-
-      } catch (error) {
-
-        console.error(
-          "Erro ao carregar categorias:",
-          error
-        );
-
-      } finally {
-
-        setLoadingCategories(false);
-
-      }
-
-    }
-
-    loadCategories();
-
-  }, []);
+useEffect(() => {
 
 
-  /* =======================================================
-     PESQUISAR PROFISSIONAIS
-  ======================================================= */
+async function loadCategories() {
 
-  function handleSearch(event) {
+  try {
 
-    event.preventDefault();
+    const data = await getCategories();
 
+    setCategories(data);
 
-    const params = new URLSearchParams();
+  } catch (error) {
 
+    console.error(
+      "Erro ao carregar categorias:",
+      error
+    );
 
-    if (search.trim()) {
+  } finally {
 
-      params.set(
-        "search",
-        search.trim()
-      );
-
-    }
-
-
-    if (location.trim()) {
-
-      params.set(
-        "location",
-        location.trim()
-      );
-
-    }
-
-
-    const query = params.toString();
-
-
-    if (query) {
-
-      window.location.href =
-        `/client/providers?${query}`;
-
-    } else {
-
-      window.location.href =
-        "/client/providers";
-
-    }
+    setLoadingCategories(false);
 
   }
 
+}
 
-  /* =======================================================
-     IR PARA A ÁREA DO UTILIZADOR
-  ======================================================= */
+loadCategories();
 
-  function handleGoToDashboard() {
 
-    if (!user) {
+}, []);
 
-      window.location.href = "/login";
+/* =======================================================
+PESQUISAR PROFISSIONAIS
+======================================================= */
 
-      return;
+function handleSearch(event) {
 
-    }
 
-    if (user.role === "ADMIN") {
-      window.location.href = "/admin";
-      return;
-    }
+event.preventDefault();
 
+const params = new URLSearchParams();
 
-    if (user.is_provider) {
+if (search.trim()) {
 
-      window.location.href = "/provider";
+  params.set(
+    "search",
+    search.trim()
+  );
 
-      return;
+}
 
-    }
+if (location.trim()) {
 
+  params.set(
+    "location",
+    location.trim()
+  );
 
-    window.location.href = "/client";
+}
 
-  }
+const query = params.toString();
 
+if (query) {
 
-  /* =======================================================
-     RENDER
-  ======================================================= */
+  window.location.href =
+    `/client/providers?${query}`;
 
-  return (
+} else {
 
-    <div className="app">
+  window.location.href =
+    "/client/providers";
 
+}
 
-      {/* ===================================================
-          NAVBAR
-      =================================================== */}
 
-      <header className="navbar">
+}
 
+/* =======================================================
+IR PARA A ÁREA DO UTILIZADOR
+======================================================= */
 
-        <div className="logo home-logo">
-          <img src="/favicon-mao4.png" alt="Mao na obra" />
+function handleGoToDashboard() {
 
-          <div>Mão</div><span>NaObra</span>
 
-        </div>
+if (!user) {
 
+  window.location.href = "/login";
 
-        <nav>
+  return;
 
-          <a href="#inicio">
-            Início
-          </a>
+}
 
+if (user.role === "ADMIN") {
+  window.location.href = "/admin";
+  return;
+}
 
-          <a href="#servicos">
-            Serviços
-          </a>
+if (user.is_provider) {
 
+  window.location.href = "/provider";
 
-          <a href="/categories">
-            Categorias
-          </a>
+  return;
 
-        </nav>
+}
 
+window.location.href = "/client";
 
-        <div className="nav-actions">
 
+}
 
-          {loading ? (
+/* =======================================================
+RENDER
+======================================================= */
 
-            <span>
-              Carregando...
-            </span>
+return (
 
-          ) : user ? (
 
-            <>
+<div className="app">
 
-              <span className="user-name">
 
-                Olá, {user.name}
+  {/* ===================================================
+      NAVBAR
+  =================================================== */}
 
-              </span>
+  <header className="navbar">
 
+    <div className="logo home-logo">
+      <img src="/favicon-mao4.png" alt="Mao na obra" />
 
-              <button
-                type="button"
-                className="register-btn"
-                onClick={handleGoToDashboard}
-              >
-                Minha área
-              </button>
+      <div>Mão</div><span>NaObra</span>
 
+    </div>
 
-              <button
-                type="button"
-                className="login-btn"
-                onClick={logout}
-              >
-                Sair
-              </button>
 
-            </>
+    <nav>
 
-          ) : (
+      <a href="#inicio">
+        Início
+      </a>
 
-            <>
+      <a href="#servicos">
+        Serviços
+      </a>
 
-              <a
-                href="/login"
-                className="login-btn"
-              >
-                Entrar
-              </a>
+      <a href="/categories">
+        Categorias
+      </a>
 
+    </nav>
 
-              <a
-                href="/register"
-                className="register-btn"
-              >
-                Criar conta
-              </a>
 
-            </>
+    <div className="nav-actions">
 
-          )}
+      {loading ? (
 
-        </div>
+        <span>
+          Carregando...
+        </span>
 
-      </header>
+      ) : user ? (
 
+        <>
 
-      {/* ===================================================
-          HERO
-      =================================================== */}
+          <span className="user-name">
 
-      <section
-        className="hero"
-        id="inicio"
-      >
+            Olá, {user.name}
 
-
-        <div className="hero-content">
-
-          <span className="hero-badge">
-            🔧 Serviços perto de você
           </span>
 
 
-          <h1>
-
-            Encontre o profissional
-
-            <br />
-
-            certo para o seu serviço.
-
-          </h1>
-
-
-          <p>
-
-            Conectamos clientes a profissionais
-            qualificados para realizar serviços
-            de forma simples, rápida e segura.
-
-          </p>
-
-
-          {/* =================================================
-              PESQUISA
-          ================================================= */}
-
-          <form
-            className="search-box"
-            onSubmit={handleSearch}
+          <button
+            type="button"
+            className="register-btn"
+            onClick={handleGoToDashboard}
           >
+            Minha área
+          </button>
 
 
-            <div className="search-field">
-
-
-              <span>
-                🔍
-              </span>
-
-
-              <div>
-
-                <small>
-                  O que você precisa?
-                </small>
-
-
-                <input
-                  type="text"
-                  placeholder="Ex: eletricista"
-                  value={search}
-                  onChange={(event) =>
-                    setSearch(event.target.value)
-                  }
-                />
-
-              </div>
-
-            </div>
-
-
-            <div className="search-field">
-
-
-              <span>
-                📍
-              </span>
-
-
-              <div>
-
-                <small>
-                  Localização
-                </small>
-
-
-                <input
-                  type="text"
-                  placeholder="Ex: Beira"
-                  value={location}
-                  onChange={(event) =>
-                    setLocation(event.target.value)
-                  }
-                />
-
-              </div>
-
-            </div>
-
-
-            <button
-              type="submit"
-              className="search-btn"
-            >
-              Procurar
-            </button>
-
-
-          </form>
-
-
-          {/* =================================================
-              AÇÕES PRINCIPAIS
-          ================================================= */}
-
-          <div
-            className="hero-actions"
-            style={{
-              display: "flex",
-              gap: "14px",
-              flexWrap: "wrap",
-              marginTop: "24px"
-            }}
+          <button
+            type="button"
+            className="login-btn"
+            onClick={logout}
           >
+            Sair
+          </button>
+
+        </>
+
+      ) : (
+
+        <>
+
+          <a
+            href="/login"
+            className="login-btn"
+          >
+            Entrar
+          </a>
 
 
-            <button
-              type="button"
-              className="register-btn"
-              onClick={() => {
-                window.location.href =
-                  "/client/providers";
-              }}
-            >
-              🔎 Encontrar profissionais
-            </button>
+          <a
+            href="/register"
+            className="register-btn"
+          >
+            Criar conta
+          </a>
+
+        </>
+
+      )}
+
+    </div>
+
+  </header>
 
 
-            {!user && (
+  {/* ===================================================
+      HERO
+  =================================================== */}
 
-              <button
-                type="button"
-                className="secondary-btn"
-                onClick={() => {
-                  window.location.href =
-                    "/register";
-                }}
-              >
-                🔨 Quero ser profissional
-              </button>
+  <section
+    className="hero"
+    id="inicio"
+  >
 
-            )}
+    <div className="hero-content">
 
-
-            {user && (
-
-              <button
-                type="button"
-                className="secondary-btn"
-                onClick={handleGoToDashboard}
-              >
-                Ir para minha área →
-              </button>
-
-            )}
-
-          </div>
+      <span className="hero-badge">
+        🔧 Serviços perto de você
+      </span>
 
 
-        </div>
+      <h1>
 
-      </section>
+        Encontre o profissional
+
+        <br />
+
+        certo para o seu serviço.
+
+      </h1>
 
 
-      {/* ===================================================
-          CATEGORIAS
-      =================================================== */}
+      <p>
 
-      <section
-        className="categories"
-        id="categorias"
+        Conectamos clientes a profissionais
+        qualificados para realizar serviços
+        de forma simples, rápida e segura.
+
+      </p>
+
+
+      {/* =================================================
+          PESQUISA
+      ================================================= */}
+
+      <form
+        className="search-box"
+        onSubmit={handleSearch}
       >
 
+        <div className="search-field">
 
-        <div className="section-header">
-
+          <span>
+            🔍
+          </span>
 
           <div>
 
-            <span className="section-label">
-              EXPLORE
-            </span>
+            <small>
+              O que você precisa?
+            </small>
 
-
-            <h2>
-              Encontre serviços por categoria
-            </h2>
+            <input
+              type="text"
+              placeholder="Ex: eletricista"
+              value={search}
+              onChange={(event) =>
+                setSearch(event.target.value)
+              }
+            />
 
           </div>
-
 
         </div>
 
 
-        <div className="category-grid">
+        <div className="search-field">
 
+          <span>
+            📍
+          </span>
 
-          {loadingCategories ? (
+          <div>
 
-            <p>
-              Carregando categorias...
-            </p>
+            <small>
+              Localização
+            </small>
 
-          ) : categories.length === 0 ? (
+            <input
+              type="text"
+              placeholder="Ex: Beira"
+              value={location}
+              onChange={(event) =>
+                setLocation(event.target.value)
+              }
+            />
 
-            <p>
-              Nenhuma categoria encontrada.
-            </p>
-
-          ) : (
-
-            categories
-              .slice(0, 6)
-              .map((category) => (
-
-                <a
-                  href={`/client/providers?category=${category.id}`}
-                  className="category-card"
-                  key={category.id}
-                >
-
-
-                  <div className="category-icon">
-                    🔧
-                  </div>
-
-
-                  <h3>
-                    {category.name}
-                  </h3>
-
-
-                  <p>
-                    {category.description}
-                  </p>
-
-
-                  <span
-                    style={{
-                      display: "inline-block",
-                      marginTop: "12px",
-                      fontWeight: "600"
-                    }}
-                  >
-                    Ver profissionais →
-                  </span>
-
-
-                </a>
-
-              ))
-
-          )}
+          </div>
 
         </div>
 
 
-        {/* =================================================
-            VER TODAS AS CATEGORIAS
-        ================================================= */}
+        <button
+          type="submit"
+          className="search-btn"
+        >
+          Procurar
+        </button>
 
-        {categories.length > 6 && (
-
-          <div className="categories-action">
-
-
-            <a
-              href="/categories"
-              className="view-all-btn"
-            >
-              Ver todas as categorias →
-            </a>
+      </form>
 
 
-          </div>
+      {/* =================================================
+          AÇÕES PRINCIPAIS
+      ================================================= */}
+
+      <div
+        className="hero-actions"
+        style={{
+          display: "flex",
+          gap: "14px",
+          flexWrap: "wrap",
+          marginTop: "24px"
+        }}
+      >
+
+        <button
+          type="button"
+          className="register-btn"
+          onClick={() => {
+            window.location.href =
+              "/client/providers";
+          }}
+        >
+          🔎 Encontrar profissionais
+        </button>
+
+
+        {!user && (
+
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={() => {
+              window.location.href =
+                "/register";
+            }}
+          >
+            🔨 Quero ser profissional
+          </button>
 
         )}
 
 
-      </section>
-
-
-      {/* ===================================================
-          COMO FUNCIONA
-      =================================================== */}
-
-      <section
-        className="how-it-works"
-        id="servicos"
-      >
-
-
-        <span className="section-label">
-          SIMPLES E RÁPIDO
-        </span>
-
-
-        <h2>
-          Como funciona?
-        </h2>
-
-
-        <div className="steps">
-
-
-          <div className="step">
-
-
-            <div className="step-number">
-              1
-            </div>
-
-
-            <h3>
-              Procure
-            </h3>
-
-
-            <p>
-              Encontre o serviço que você precisa.
-            </p>
-
-
-            <button
-              type="button"
-              className="secondary-btn"
-              onClick={() => {
-                window.location.href =
-                  "/client/providers";
-              }}
-            >
-              Procurar profissionais
-            </button>
-
-
-          </div>
-
-
-          <div className="step">
-
-
-            <div className="step-number">
-              2
-            </div>
-
-
-            <h3>
-              Escolha
-            </h3>
-
-
-            <p>
-              Compare profissionais e avaliações.
-            </p>
-
-
-          </div>
-
-
-          <div className="step">
-
-
-            <div className="step-number">
-              3
-            </div>
-
-
-            <h3>
-              Solicite
-            </h3>
-
-
-            <p>
-              Envie seu pedido ao profissional.
-            </p>
-
-
-          </div>
-
-
-          <div className="step">
-
-
-            <div className="step-number">
-              4
-            </div>
-
-
-            <h3>
-              Resolva
-            </h3>
-
-
-            <p>
-              Acompanhe o serviço até a conclusão.
-            </p>
-
-
-          </div>
-
-
-        </div>
-
-
-      </section>
-
-
-      {/* ===================================================
-          FOOTER
-      =================================================== */}
-
-      <footer>
-
-
-        <div className="logo">
-          Mão<span>NaObra</span>
-        </div>
-
-
-        <p>
-          Conectando pessoas a profissionais.
-        </p>
-
-
-        <p className="copyright">
-          © 2026 MãoNaObra. Todos os direitos reservados.
-        </p>
-
-
-      </footer>
-
+        {user && (
+
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={handleGoToDashboard}
+          >
+            Ir para minha área →
+          </button>
+
+        )}
+
+      </div>
 
     </div>
 
-  );
+  </section>
+
+
+  {/* ===================================================
+      CATEGORIAS
+  =================================================== */}
+
+  <section
+    className="categories"
+    id="categorias"
+  >
+
+    <div className="section-header">
+
+      <div>
+
+        <span className="section-label">
+          EXPLORE
+        </span>
+
+        <h2>
+          Encontre serviços por categoria
+        </h2>
+
+      </div>
+
+    </div>
+
+
+    <div className="category-grid">
+
+      {loadingCategories ? (
+
+        <p>
+          Carregando categorias...
+        </p>
+
+      ) : categories.length === 0 ? (
+
+        <p>
+          Nenhuma categoria encontrada.
+        </p>
+
+      ) : (
+
+        categories
+          .slice(0, 6)
+          .map((category) => (
+
+            <a
+              href={`/client/providers?category=${category.id}`}
+              className="category-card"
+              key={category.id}
+            >
+
+              <div className="category-icon">
+                🔧
+              </div>
+
+              <h3>
+                {category.name}
+              </h3>
+
+              <p>
+                {category.description}
+              </p>
+
+              <span
+                style={{
+                  display: "inline-block",
+                  marginTop: "12px",
+                  fontWeight: "600"
+                }}
+              >
+                Ver profissionais →
+              </span>
+
+            </a>
+
+          ))
+
+      )}
+
+    </div>
+
+
+    {/* =================================================
+        VER TODAS AS CATEGORIAS
+    ================================================= */}
+
+    {categories.length > 6 && (
+
+      <div className="categories-action">
+
+        <a
+          href="/categories"
+          className="view-all-btn"
+        >
+          Ver todas as categorias →
+        </a>
+
+      </div>
+
+    )}
+
+  </section>
+
+
+  {/* ===================================================
+      COMO FUNCIONA
+  =================================================== */}
+
+  <section
+    className="how-it-works"
+    id="servicos"
+  >
+
+    <span className="section-label">
+      SIMPLES E RÁPIDO
+    </span>
+
+    <h2>
+      Como funciona?
+    </h2>
+
+
+    <div className="steps">
+
+      <div className="step">
+
+        <div className="step-number">
+          1
+        </div>
+
+        <h3>
+          Procure
+        </h3>
+
+        <p>
+          Encontre o serviço que você precisa.
+        </p>
+
+        <button
+          type="button"
+          className="secondary-btn"
+          onClick={() => {
+            window.location.href =
+              "/client/providers";
+          }}
+        >
+          Procurar profissionais
+        </button>
+
+      </div>
+
+
+      <div className="step">
+
+        <div className="step-number">
+          2
+        </div>
+
+        <h3>
+          Escolha
+        </h3>
+
+        <p>
+          Compare profissionais e avaliações.
+        </p>
+
+      </div>
+
+
+      <div className="step">
+
+        <div className="step-number">
+          3
+        </div>
+
+        <h3>
+          Solicite
+        </h3>
+
+        <p>
+          Envie seu pedido ao profissional.
+        </p>
+
+      </div>
+
+
+      <div className="step">
+
+        <div className="step-number">
+          4
+        </div>
+
+        <h3>
+          Resolva
+        </h3>
+
+        <p>
+          Acompanhe o serviço até a conclusão.
+        </p>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  {/* ===================================================
+      FOOTER
+  =================================================== */}
+
+  <footer>
+
+    <div className="logo">
+      Mão<span>NaObra</span>
+    </div>
+
+    <p>
+      Conectando pessoas a profissionais.
+    </p>
+
+    <p className="copyright">
+      © 2026 MãoNaObra. Todos os direitos reservados.
+    </p>
+
+  </footer>
+
+</div>
+
+
+);
 
 }
 
-
 /* =========================================================
-   APP PRINCIPAL
+APP PRINCIPAL
 ========================================================= */
 
 function App() {
 
-  const {
-    user,
-    loading,
-    logout
-  } = useAuth();
+const {
+user,
+loading,
+logout
+} = useAuth();
 
+const path =
+window.location.pathname;
 
-  const path =
-    window.location.pathname;
+/* =======================================================
+LOGIN
+======================================================= */
 
+if (path === "/login") {
 
-  /* =======================================================
-     LOGIN
-  ======================================================= */
 
-  if (path === "/login") {
+return <Login />;
 
-    return <Login />;
-
-  }
-
-
-  /* =======================================================
-     REGISTRO
-  ======================================================= */
-
-  if (path === "/register") {
-
-    return <Register />;
-
-  }
-
-
-  /* =======================================================
-     CLIENTE — CRIAR PROJETO
-  ======================================================= */
-
-  if (path === "/client/projects/new") {
-
-    return (
-
-      <ProtectedRoute
-        allowedRoles={["CLIENT"]}
-      >
-
-        <ClientProjectCreate />
-
-      </ProtectedRoute>
-
-    );
-
-  }
-
-
-  /* =======================================================
-     CLIENTE — PROJETO
-  ======================================================= */
-
-  if (path.startsWith("/client/projects/")) {
-
-    return (
-
-      <ProtectedRoute
-        allowedRoles={["CLIENT"]}
-      >
-
-        <ClientProject />
-
-      </ProtectedRoute>
-
-    );
-
-  }
-
-
-  /* =======================================================
-     CLIENTE — PROFISSIONAIS
-  ======================================================= */
-
-  if (path === "/client/providers") {
-
-    return (
-
-      <ProtectedRoute
-        allowedRoles={["CLIENT"]}
-      >
-
-        <ClientProviders />
-
-      </ProtectedRoute>
-
-    );
-
-  }
-
-
-  /* =======================================================
-     CLIENTE — PERFIL DO PROFISSIONAL
-  ======================================================= */
-
-  if (path.startsWith("/client/providers/")) {
-
-    return (
-
-      <ProtectedRoute
-        allowedRoles={["CLIENT"]}
-      >
-
-        <ClientProviderProfile />
-
-      </ProtectedRoute>
-
-    );
-
-  }
-
-
-  /* =======================================================
-     CLIENTE — SOLICITAÇÕES
-  ======================================================= */
-
-  if (path === "/client/requests") {
-
-    return (
-
-      <ProtectedRoute
-        allowedRoles={["CLIENT"]}
-      >
-
-        <ClientRequests />
-
-      </ProtectedRoute>
-
-    );
-
-  }
-
-
-  /* =======================================================
-     CLIENTE — CHAT
-  ======================================================= */
-
-  if (path === "/client/chat") {
-
-    return (
-
-      <ProtectedRoute
-        allowedRoles={["CLIENT"]}
-      >
-
-        <ClientChat />
-
-      </ProtectedRoute>
-
-    );
-
-  }
-
-
-  /* =======================================================
-     CLIENTE — AVALIAÇÕES
-  ======================================================= */
-
-  if (path === "/client/reviews") {
-
-    return (
-
-      <ProtectedRoute
-        allowedRoles={["CLIENT"]}
-      >
-
-        <ClientReviews />
-
-      </ProtectedRoute>
-
-    );
-
-  }
-
-
-  if (path === "/admin") {
-    return (
-      <ProtectedRoute allowedRoles={["ADMIN"]}>
-        <AdminDashboard />
-      </ProtectedRoute>
-    );
-  }
-
-
-  /* =======================================================
-     CLIENTE — DASHBOARD
-  ======================================================= */
-
-  if (path === "/client") {
-
-    return (
-
-      <ProtectedRoute
-        allowedRoles={["CLIENT"]}
-      >
-
-        <ClientDashboard />
-
-      </ProtectedRoute>
-
-    );
-
-  }
-
-
-
-    /* =======================================================
-     PROVIDER — CRIAR PERFIL PROFISSIONAL
-  ======================================================= */
-
-  if (path === "/provider/profile/create") {
-
-    return (
-
-      <ProtectedRoute
-        allowedRoles={["CLIENT"]}
-      >
-
-        <CreateProviderProfile />
-
-      </ProtectedRoute>
-
-    );
-
-  }
-
-
-
-  /* =======================================================
-     PROVIDER — PROJETO
-  ======================================================= */
-
-  if (path.startsWith("/provider/projects/")) {
-
-    return (
-
-      <ProviderRoute>
-
-        <ProviderProject />
-
-      </ProviderRoute>
-
-    );
-
-  }
-
-
-  /* =======================================================
-     PROVIDER — AVALIAÇÕES
-  ======================================================= */
-
-  if (path === "/provider/reviews") {
-
-    return (
-
-      <ProviderRoute>
-
-        <ProviderReviews />
-
-      </ProviderRoute>
-
-    );
-
-  }
-
-
-  /* =======================================================
-     PROVIDER — CRIAR SERVIÇO
-  ======================================================= */
-
-  if (path === "/provider/services/new") {
-
-    return (
-
-      <ProviderRoute>
-
-        <ProviderServiceCreate />
-
-      </ProviderRoute>
-
-    );
-
-  }
-
-
-  /* =======================================================
-     PROVIDER — CHAT
-  ======================================================= */
-
-  if (path === "/provider/chat") {
-
-    return (
-
-      <ProviderRoute>
-
-        <ProviderChat />
-
-      </ProviderRoute>
-
-    );
-
-  }
-
-
-  /* =======================================================
-     PROVIDER — DASHBOARD
-  ======================================================= */
-
-  if (path === "/provider") {
-
-    return (
-
-      <ProviderRoute>
-
-        <ProviderDashboard />
-
-      </ProviderRoute>
-
-    );
-
-  }
-
-
-  /* =======================================================
-     CATEGORIAS
-  ======================================================= */
-
-  if (path === "/categories") {
-
-    return <CategoriesPage />;
-
-  }
-
-
-  /* =======================================================
-     PÁGINA INICIAL
-  ======================================================= */
-
-  return (
-
-    <HomePage
-      user={user}
-      loading={loading}
-      logout={logout}
-    />
-
-  );
 
 }
 
+/* =======================================================
+REGISTRO
+======================================================= */
+
+if (path === "/register") {
+
+
+return <Register />;
+
+
+}
+
+/* =======================================================
+CLIENTE — CRIAR PROJETO
+======================================================= */
+
+if (path === "/client/projects/new") {
+
+
+return (
+
+  <ProtectedRoute
+    allowedRoles={["CLIENT"]}
+  >
+
+    <ClientProjectCreate />
+
+  </ProtectedRoute>
+
+);
+
+
+}
+
+/* =======================================================
+CLIENTE — PROJETO
+======================================================= */
+
+if (path.startsWith("/client/projects/")) {
+
+
+return (
+
+  <ProtectedRoute
+    allowedRoles={["CLIENT"]}
+  >
+
+    <ClientProject />
+
+  </ProtectedRoute>
+
+);
+
+
+}
+
+/* =======================================================
+CLIENTE — PROFISSIONAIS
+======================================================= */
+
+if (path === "/client/providers") {
+
+
+return (
+
+  <ProtectedRoute
+    allowedRoles={["CLIENT"]}
+  >
+
+    <ClientProviders />
+
+  </ProtectedRoute>
+
+);
+
+
+}
+
+/* =======================================================
+CLIENTE — PERFIL DO PROFISSIONAL
+======================================================= */
+
+if (path.startsWith("/client/providers/")) {
+
+
+return (
+
+  <ProtectedRoute
+    allowedRoles={["CLIENT"]}
+  >
+
+    <ClientProviderProfile />
+
+  </ProtectedRoute>
+
+);
+
+
+}
+
+/* =======================================================
+CLIENTE — SOLICITAÇÕES
+======================================================= */
+
+if (path === "/client/requests") {
+
+
+return (
+
+  <ProtectedRoute
+    allowedRoles={["CLIENT"]}
+  >
+
+    <ClientRequests />
+
+  </ProtectedRoute>
+
+);
+
+
+}
+
+/* =======================================================
+CLIENTE — FAVORITOS
+======================================================= */
+
+if (path === "/client/favorites") {
+
+
+return (
+
+  <ProtectedRoute
+    allowedRoles={["CLIENT"]}
+  >
+
+    <ClientFavorites />
+
+  </ProtectedRoute>
+
+);
+
+
+}
+
+/* =======================================================
+CLIENTE — CHAT
+======================================================= */
+
+if (path === "/client/chat") {
+
+
+return (
+
+  <ProtectedRoute
+    allowedRoles={["CLIENT"]}
+  >
+
+    <ClientChat />
+
+  </ProtectedRoute>
+
+);
+
+
+}
+
+/* =======================================================
+CLIENTE — AVALIAÇÕES
+======================================================= */
+
+if (path === "/client/reviews") {
+
+
+return (
+
+  <ProtectedRoute
+    allowedRoles={["CLIENT"]}
+  >
+
+    <ClientReviews />
+
+  </ProtectedRoute>
+
+);
+
+
+}
+
+/* =======================================================
+ADMIN
+======================================================= */
+
+if (path === "/admin") {
+
+
+return (
+
+  <ProtectedRoute
+    allowedRoles={["ADMIN"]}
+  >
+
+    <AdminDashboard />
+
+  </ProtectedRoute>
+
+);
+
+
+}
+
+/* =======================================================
+CLIENTE — PERFIL
+======================================================= */
+
+if (path === "/client/profile") {
+
+
+return (
+
+  <ProtectedRoute
+    allowedRoles={["CLIENT"]}
+  >
+
+    <ClientProfile />
+
+  </ProtectedRoute>
+
+);
+
+
+}
+
+/* =======================================================
+CLIENTE — DASHBOARD
+======================================================= */
+
+if (path === "/client") {
+
+
+return (
+
+  <ProtectedRoute
+    allowedRoles={["CLIENT"]}
+  >
+
+    <ClientDashboard />
+
+  </ProtectedRoute>
+
+);
+
+
+}
+
+/* =======================================================
+PROVIDER — CRIAR PERFIL PROFISSIONAL
+======================================================= */
+
+if (path === "/provider/profile/create") {
+
+
+return (
+
+  <ProtectedRoute
+    allowedRoles={["CLIENT"]}
+  >
+
+    <CreateProviderProfile />
+
+  </ProtectedRoute>
+
+);
+
+
+}
+
+/* =======================================================
+PROVIDER — PROJETO
+======================================================= */
+
+if (path.startsWith("/provider/projects/")) {
+
+
+return (
+
+  <ProviderRoute>
+
+    <ProviderProject />
+
+  </ProviderRoute>
+
+);
+
+
+}
+
+/* =======================================================
+PROVIDER — AVALIAÇÕES
+======================================================= */
+
+if (path === "/provider/reviews") {
+
+
+return (
+
+  <ProviderRoute>
+
+    <ProviderReviews />
+
+  </ProviderRoute>
+
+);
+
+
+}
+
+/* =======================================================
+PROVIDER — MEUS SERVIÇOS
+======================================================= */
+
+if (path === "/provider/services") {
+
+
+return (
+
+  <ProviderRoute>
+
+    <ProviderServices />
+
+  </ProviderRoute>
+
+);
+
+
+}
+
+/* =======================================================
+PROVIDER — CRIAR SERVIÇO
+======================================================= */
+
+if (path === "/provider/services/new") {
+
+
+return (
+
+  <ProviderRoute>
+
+    <ProviderServiceCreate />
+
+  </ProviderRoute>
+
+);
+
+
+}
+
+/* =======================================================
+PROVIDER — CHAT
+======================================================= */
+
+if (path === "/provider/chat") {
+
+
+return (
+
+  <ProviderRoute>
+
+    <ProviderChat />
+
+  </ProviderRoute>
+
+);
+
+
+}
+
+/* =======================================================
+PROVIDER — DASHBOARD
+======================================================= */
+
+if (path === "/provider") {
+
+
+return (
+
+  <ProviderRoute>
+
+    <ProviderDashboard />
+
+  </ProviderRoute>
+
+);
+
+
+}
+
+/* =======================================================
+CATEGORIAS
+======================================================= */
+
+if (path === "/categories") {
+
+
+return <CategoriesPage />;
+
+
+}
+
+/* =======================================================
+PÁGINA INICIAL
+======================================================= */
+
+return (
+
+
+<HomePage
+  user={user}
+  loading={loading}
+  logout={logout}
+/>
+
+
+);
+
+}
 
 export default App;

@@ -1,0 +1,795 @@
+
+/* =========================================================
+   CLIENT LAYOUT
+   MãoNaObra — Área do Cliente
+========================================================= */
+
+.client-layout {
+  --client-primary: #2563eb;
+  --client-primary-dark: #1d4ed8;
+  --client-primary-light: #eff6ff;
+  --client-text: #0f172a;
+  --client-text-soft: #64748b;
+  --client-border: #e2e8f0;
+  --client-bg: #f8fafc;
+  --client-sidebar: #ffffff;
+
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(37, 99, 235, 0.04),
+      transparent 30%
+    ),
+    var(--client-bg);
+
+  color: var(--client-text);
+  font-family: inherit;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.client-layout-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: 270px;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  background: rgba(255, 255, 255, 0.96);
+
+  border-right: 1px solid rgba(226, 232, 240, 0.9);
+
+  box-shadow:
+    8px 0 30px rgba(15, 23, 42, 0.035);
+
+  z-index: 1000;
+
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+
+  overflow-y: auto;
+}
+
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+.client-layout-logo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  padding: 25px 24px 18px;
+
+  font-size: 21px;
+  letter-spacing: -0.5px;
+}
+
+.client-layout-logo img {
+  width: 42px;
+  height: 42px;
+
+  object-fit: contain;
+
+  border-radius: 11px;
+
+  box-shadow:
+    0 5px 14px rgba(37, 99, 235, 0.14);
+}
+
+.client-layout-logo strong {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.client-layout-logo span {
+  color: var(--client-primary);
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   ÁREA DO CLIENTE
+========================================================= */
+
+.client-layout-area-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  margin: 6px 18px 16px;
+  padding: 11px 13px;
+
+  border-radius: 11px;
+
+  background: var(--client-primary-light);
+
+  color: var(--client-primary);
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: 0.6px;
+}
+
+.client-layout-area-title span {
+  font-size: 15px;
+}
+
+.client-layout-area-title strong {
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   NAVEGAÇÃO
+========================================================= */
+
+.client-layout-nav {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  padding: 0 13px;
+}
+
+.client-layout-nav-item {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-height: 47px;
+
+  padding: 0 14px;
+
+  border-radius: 11px;
+
+  color: #64748b;
+
+  text-decoration: none;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.client-layout-nav-item:hover {
+  background: #f8fafc;
+
+  color: var(--client-primary);
+
+  transform: translateX(2px);
+}
+
+.client-layout-nav-item span:first-child {
+  width: 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 17px;
+
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   ITEM ATIVO
+========================================================= */
+
+.client-layout-nav-item.active {
+  background:
+    linear-gradient(
+      135deg,
+      #eff6ff,
+      #f5f9ff
+    );
+
+  color: var(--client-primary);
+
+  font-weight: 700;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(37, 99, 235, 0.07);
+}
+
+.client-layout-nav-item.active::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 9px;
+  bottom: 9px;
+
+  width: 3px;
+
+  border-radius: 0 5px 5px 0;
+
+  background: var(--client-primary);
+}
+
+
+/* =========================================================
+   PARTE INFERIOR
+========================================================= */
+
+.client-layout-sidebar-bottom {
+  margin-top: auto;
+
+  padding: 14px 13px 20px;
+
+  border-top: 1px solid #f1f5f9;
+}
+
+.client-layout-sidebar-bottom
+.client-layout-nav-item {
+  margin-bottom: 5px;
+}
+
+
+/* =========================================================
+   BOTÃO SAIR
+========================================================= */
+
+.client-layout-logout {
+  width: 100%;
+
+  min-height: 47px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 0 14px;
+
+  border: none;
+  border-radius: 11px;
+
+  background: transparent;
+
+  color: #64748b;
+
+  font-family: inherit;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  text-align: left;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.client-layout-logout:hover {
+  background: #fff1f2;
+
+  color: #dc2626;
+
+  transform: translateX(2px);
+}
+
+.client-layout-logout span:first-child {
+  width: 22px;
+
+  display: flex;
+  justify-content: center;
+
+  font-size: 17px;
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.client-layout-main {
+  min-height: 100vh;
+
+  margin-left: 270px;
+
+  width: calc(100% - 270px);
+}
+
+
+/* =========================================================
+   HEADER MOBILE
+========================================================= */
+
+.client-layout-mobile-header {
+  display: none;
+}
+
+
+/* =========================================================
+   HEADER DA PÁGINA
+========================================================= */
+
+.client-layout-page-header {
+  min-height: 108px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 25px;
+
+  padding: 28px 42px;
+
+  background: rgba(255, 255, 255, 0.88);
+
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+
+  backdrop-filter: blur(12px);
+}
+
+.client-layout-page-heading {
+  min-width: 0;
+}
+
+.client-layout-section-label {
+  margin: 0 0 6px;
+
+  color: var(--client-primary);
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: 0.8px;
+}
+
+.client-layout-page-heading h1 {
+  margin: 0;
+
+  color: #0f172a;
+
+  font-size: 28px;
+  line-height: 1.2;
+
+  font-weight: 800;
+
+  letter-spacing: -0.7px;
+}
+
+.client-layout-page-heading p:not(.client-layout-section-label) {
+  margin: 7px 0 0;
+
+  color: #64748b;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+}
+
+.client-layout-page-action {
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   CONTEÚDO
+========================================================= */
+
+.client-layout-content {
+  width: 100%;
+
+  max-width: 1500px;
+
+  margin: 0 auto;
+
+  padding: 32px 42px 50px;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   OVERLAY MOBILE
+========================================================= */
+
+.client-layout-overlay {
+  display: none;
+}
+
+
+/* =========================================================
+   HAMBURGER
+========================================================= */
+
+.client-layout-hamburger {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  padding: 0;
+
+  border: 1px solid #e2e8f0;
+
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.06);
+
+  flex-shrink: 0;
+}
+
+.client-layout-hamburger span {
+  display: block;
+
+  width: 18px;
+  height: 2px;
+
+  border-radius: 10px;
+
+  background: #334155;
+
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+
+/* =========================================================
+   MOBILE TITLE
+========================================================= */
+
+.client-layout-mobile-title {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+}
+
+.client-layout-mobile-title p {
+  margin: 0 0 1px;
+
+  color: var(--client-primary);
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.5px;
+}
+
+.client-layout-mobile-title strong {
+  color: #0f172a;
+
+  font-size: 16px;
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   MOBILE USER
+========================================================= */
+
+.client-layout-mobile-user {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #1d4ed8
+    );
+
+  color: white;
+
+  font-size: 14px;
+  font-weight: 800;
+
+  flex-shrink: 0;
+
+  box-shadow:
+    0 5px 14px rgba(37, 99, 235, 0.22);
+}
+
+
+/* =========================================================
+   TABLETS
+========================================================= */
+
+@media (max-width: 1100px) {
+
+  .client-layout-sidebar {
+    width: 240px;
+  }
+
+  .client-layout-main {
+    margin-left: 240px;
+
+    width: calc(100% - 240px);
+  }
+
+  .client-layout-page-header {
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+
+  .client-layout-content {
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE / TABLET PEQUENO
+========================================================= */
+
+@media (max-width: 900px) {
+
+  /*
+     IMPORTANTE:
+     O sidebar deixa de ocupar espaço fixo.
+     Ele passa a ser um drawer lateral.
+  */
+
+  .client-layout-sidebar {
+    width: 280px;
+
+    max-width: 86vw;
+
+    transform: translateX(-105%);
+
+    box-shadow:
+      15px 0 40px rgba(15, 23, 42, 0.15);
+
+    z-index: 2000;
+  }
+
+  .client-layout-sidebar-open {
+    transform: translateX(0);
+  }
+
+
+  .client-layout-main {
+    margin-left: 0;
+
+    width: 100%;
+
+    min-height: 100vh;
+  }
+
+
+  /*
+     HEADER MOBILE
+  */
+
+  .client-layout-mobile-header {
+    position: sticky;
+
+    top: 0;
+
+    z-index: 1500;
+
+    height: 68px;
+
+    display: grid;
+
+    grid-template-columns: 42px 1fr 36px;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 0 18px;
+
+    background:
+      rgba(255, 255, 255, 0.96);
+
+    border-bottom: 1px solid #e2e8f0;
+
+    box-shadow:
+      0 4px 18px rgba(15, 23, 42, 0.04);
+
+    backdrop-filter: blur(14px);
+
+    box-sizing: border-box;
+  }
+
+
+  /*
+     OVERLAY
+  */
+
+  .client-layout-overlay {
+    display: block;
+
+    position: fixed;
+
+    inset: 0;
+
+    background:
+      rgba(15, 23, 42, 0.48);
+
+    z-index: 1900;
+
+    backdrop-filter: blur(2px);
+  }
+
+
+  /*
+     PAGE HEADER
+  */
+
+  .client-layout-page-header {
+    min-height: auto;
+
+    align-items: flex-start;
+
+    padding: 25px 22px;
+
+    gap: 18px;
+  }
+
+
+  .client-layout-page-heading h1 {
+    font-size: 24px;
+  }
+
+
+  .client-layout-content {
+    padding: 25px 22px 40px;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+  .client-layout-mobile-header {
+    height: 64px;
+
+    padding: 0 14px;
+
+    grid-template-columns: 40px 1fr 34px;
+
+    gap: 10px;
+  }
+
+  .client-layout-hamburger {
+    width: 40px;
+    height: 40px;
+  }
+
+  .client-layout-mobile-user {
+    width: 34px;
+    height: 34px;
+
+    font-size: 13px;
+  }
+
+  .client-layout-mobile-title strong {
+    font-size: 15px;
+  }
+
+  .client-layout-mobile-title p {
+    font-size: 8px;
+  }
+
+
+  .client-layout-page-header {
+    display: block;
+
+    padding: 21px 16px;
+  }
+
+  .client-layout-page-heading h1 {
+    font-size: 22px;
+
+    letter-spacing: -0.4px;
+  }
+
+  .client-layout-page-heading p:not(.client-layout-section-label) {
+    font-size: 13px;
+  }
+
+  .client-layout-page-action {
+    margin-top: 16px;
+  }
+
+
+  .client-layout-content {
+    padding: 20px 16px 35px;
+  }
+
+
+  .client-layout-sidebar {
+    width: 285px;
+
+    max-width: 88vw;
+  }
+
+
+  .client-layout-logo {
+    padding: 22px 20px 17px;
+  }
+
+}
+
+
+/* =========================================================
+   ECRÃS MUITO PEQUENOS
+========================================================= */
+
+@media (max-width: 380px) {
+
+  .client-layout-mobile-header {
+    grid-template-columns: 38px 1fr 32px;
+
+    padding: 0 11px;
+
+    gap: 8px;
+  }
+
+  .client-layout-hamburger {
+    width: 38px;
+    height: 38px;
+  }
+
+  .client-layout-mobile-user {
+    width: 32px;
+    height: 32px;
+  }
+
+  .client-layout-mobile-title strong {
+    font-size: 14px;
+  }
+
+  .client-layout-page-header {
+    padding: 18px 13px;
+  }
+
+  .client-layout-content {
+    padding: 17px 13px 30px;
+  }
+
+}
+

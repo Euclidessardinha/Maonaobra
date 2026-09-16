@@ -1,8 +1,8 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Literal
 
-
 class UserCreate(BaseModel):
+
 
     name: str = Field(
         min_length=2,
@@ -26,9 +26,33 @@ class UserCreate(BaseModel):
 
 class UserLogin(BaseModel):
 
+
     email: EmailStr
 
     password: str = Field(
         min_length=8,
         max_length=100
     )
+
+
+# =========================================================
+
+# ATUALIZAR PERFIL DO USUÁRIO
+
+# =========================================================
+
+class UserUpdate(BaseModel):
+
+
+    name: str = Field(
+        min_length=2,
+        max_length=100
+    )
+
+    email: EmailStr
+
+    phone: str = Field(
+        min_length=8,
+        max_length=30
+    )
+

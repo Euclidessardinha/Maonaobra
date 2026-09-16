@@ -1,713 +1,972 @@
-
 import { useEffect, useState } from "react";
+
 import { getProviderById } from "../api/providers";
 import { getProviderReviews } from "../api/provider";
 import { getServices } from "../api/provider";
 import { createServiceRequest } from "../api/requests";
 import { createConversation } from "../api/chat";
 
+import {
+getMyFavorites,
+addFavorite,
+removeFavorite
+} from "../api/favorites";
+
+import ClientLayout from "../components/ClientLayout";
+
+import "./ClientProviderProfile.css";
+
 function ClientProviderProfile() {
+// =========================
+// ID DO PROFISSIONAL
+// =========================
 
-  // Obter o ID do profissional diretamente da URL
-  // Exemplo: /client/providers/4
-  const path = window.location.pathname;
-  const id = path.split("/").filter(Boolean).pop();
+const path = window.location.pathname;
+const id = path.split("/").filter(Boolean).pop();
 
-  const [services, setServices] = useState([]);
-  const [provider, setProvider] = useState(null);
-  const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [selectedService, setSelectedService] = useState(null);
-  const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
+// =========================
+// ESTADOS
+// =========================
 
-  const [startingChat, setStartingChat] = useState(false);
-  const [chatError, setChatError] = useState("");
+const [services, setServices] = useState([]);
+const [provider, setProvider] = useState(null);
+const [reviews, setReviews] = useState([]);
 
-  const [requestedDate, setRequestedDate] = useState("");
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState("");
 
-  const [submitting, setSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
+const [selectedService, setSelectedService] = useState(null);
+const [description, setDescription] = useState("");
+const [location, setLocation] = useState("");
 
-  useEffect(() => {
+const [startingChat, setStartingChat] = useState(false);
+const [chatError, setChatError] = useState("");
 
-    async function loadProvider() {
+const [requestedDate, setRequestedDate] = useState("");
 
-      try {
+const [submitting, setSubmitting] = useState(false);
+const [successMessage, setSuccessMessage] = useState("");
 
-        setLoading(true);
-        setError("");
+// =========================
+// FAVORITOS
+// =========================
 
-        const selectedProvider = await getProviderById(id);
+const [isFavorited, setIsFavorited] = useState(false);
+const [favoriteLoading, setFavoriteLoading] = useState(false);
+const [favoriteError, setFavoriteError] = useState("");
 
-        setProvider(selectedProvider);
+// =========================
+// CARREGAR PROFISSIONAL
+// =========================
 
-        const reviewData = await getProviderReviews(
-          selectedProvider.id
-        );
-
-        setReviews(reviewData.reviews || []);
-
-        const allServices = await getServices();
-
-        const providerServices = allServices.filter(
-            (service) =>
-                service.provider?.id === selectedProvider.id
-        );
-
-        setServices(providerServices);
-
-      } catch (err) {
-
-        setError(
-          err.message || "Erro ao carregar profissional."
-        );
-
-      } finally {
-
-        setLoading(false);
-
-      }
-
-    }
-
-    loadProvider();
-
-  }, [id]);
+useEffect(() => {
+async function loadProvider() {
+try {
+setLoading(true);
+setError("");
 
 
-    async function handleStartChat() {
-    console.log("BOTAO DE CHAT CLICADO");
+    const selectedProvider = await getProviderById(id);
 
-    if (!provider) {
-      return;
-    }
+    setProvider(selectedProvider);
+
+    // =========================
+    // AVALIAÇÕES
+    // =========================
+
+    const reviewData = await getProviderReviews(
+      selectedProvider.id
+    );
+
+    setReviews(reviewData.reviews || []);
+
+    // =========================
+    // SERVIÇOS
+    // =========================
+
+    const allServices = await getServices();
+
+    const providerServices = allServices.filter(
+      (service) =>
+        service.provider?.id === selectedProvider.id
+    );
+
+    setServices(providerServices);
+
+    // =========================
+    // VERIFICAR FAVORITO
+    // =========================
 
     try {
-      setStartingChat(true);
-      setChatError("");
+      const favorites = await getMyFavorites();
 
-      const conversation = await createConversation(
-        provider.id
+      const alreadyFavorited = favorites.some(
+        (favorite) =>
+          favorite.provider?.id === selectedProvider.id
       );
 
-      window.location.href =
-        `/client/chat?conversation=${conversation.id}`;
-
-    } catch (error) {
+      setIsFavorited(alreadyFavorited);
+    } catch (favoriteErr) {
       console.error(
-        "Erro ao iniciar conversa:",
-        error
+        "Erro ao verificar favorito:",
+        favoriteErr
       );
 
-      setChatError(
-        error.message ||
-        "Erro ao iniciar conversa."
-      );
-
-    } finally {
-      setStartingChat(false);
+      setIsFavorited(false);
     }
-  }
-
-
-  if (loading) {
-
-    return (
-      <div className="dashboard">
-
-        <main className="main-content">
-
-          <p>
-            Carregando perfil do profissional...
-          </p>
-
-        </main>
-
-      </div>
+  } catch (err) {
+    console.error(
+      "Erro ao carregar profissional:",
+      err
     );
 
-  }
-
-
-  if (error) {
-
-    return (
-      <div className="dashboard">
-
-        <main className="main-content">
-
-          <div className="error-message">
-            {error}
-          </div>
-
-          <a href="/client/providers">
-            ← Voltar aos profissionais
-          </a>
-
-        </main>
-
-      </div>
+    setError(
+      err.message ||
+      "Erro ao carregar profissional."
     );
-
+  } finally {
+    setLoading(false);
   }
+}
+
+loadProvider();
 
 
-  return (
+}, [id]);
 
-    <div className="dashboard">
+// =========================
+// INICIAIS DO PROFISSIONAL
+// =========================
 
-      <aside className="sidebar">
-
-        <div className="logo">
-          Mão<span>NaObra</span>
-        </div>
-
-        <nav>
-
-          <a href="/client">
-            🏠 Visão geral
-          </a>
-
-          <a href="/client/providers">
-            👷 Profissionais
-          </a>
-
-          <a href="/client/reviews">
-            ⭐ Avaliações
-          </a>
-
-        </nav>
-
-      </aside>
+function getProviderInitials(name) {
+if (!name) {
+return "P";
+}
 
 
-      <main className="main-content">
+const parts = name
+  .trim()
+  .split(/\s+/)
+  .filter(Boolean);
 
+if (parts.length === 1) {
+  return parts[0].charAt(0).toUpperCase();
+}
+
+return (
+  parts[0].charAt(0) +
+  parts[parts.length - 1].charAt(0)
+).toUpperCase();
+
+
+}
+
+// =========================
+// FAVORITAR / DESFAVORITAR
+// =========================
+
+async function handleToggleFavorite() {
+if (!provider || favoriteLoading) {
+return;
+}
+
+
+try {
+  setFavoriteLoading(true);
+  setFavoriteError("");
+
+  if (isFavorited) {
+    await removeFavorite(provider.id);
+    setIsFavorited(false);
+  } else {
+    await addFavorite(provider.id);
+    setIsFavorited(true);
+  }
+} catch (err) {
+  console.error(
+    "Erro ao atualizar favorito:",
+    err
+  );
+
+  setFavoriteError(
+    err.message ||
+    "Não foi possível atualizar os favoritos."
+  );
+} finally {
+  setFavoriteLoading(false);
+}
+
+
+}
+
+// =========================
+// INICIAR CHAT
+// =========================
+
+async function handleStartChat() {
+console.log("BOTAO DE CHAT CLICADO");
+
+
+if (!provider) {
+  return;
+}
+
+try {
+  setStartingChat(true);
+  setChatError("");
+
+  const conversation = await createConversation(
+    provider.id
+  );
+
+  window.location.href =
+    `/client/chat?conversation=${conversation.id}`;
+} catch (error) {
+  console.error(
+    "Erro ao iniciar conversa:",
+    error
+  );
+
+  setChatError(
+    error.message ||
+    "Erro ao iniciar conversa."
+  );
+} finally {
+  setStartingChat(false);
+}
+
+
+}
+
+// =========================
+// LOADING
+// =========================
+
+if (loading) {
+return ( <ClientLayout
+     activePage="providers"
+     title="Perfil do profissional"
+     subtitle="Estamos a carregar as informações deste profissional."
+   > <div className="provider-profile-page-state"> <div className="provider-profile-loading-card"> <div className="provider-profile-spinner"></div>
+
+
+        <h2>
+          Carregando perfil...
+        </h2>
+
+        <p>
+          Estamos a buscar as informações deste profissional.
+        </p>
+      </div>
+    </div>
+  </ClientLayout>
+);
+
+
+}
+
+// =========================
+// ERROR
+// =========================
+
+if (error || !provider) {
+return ( <ClientLayout
+     activePage="providers"
+     title="Perfil do profissional"
+     subtitle="Informações do profissional"
+   > <div className="provider-profile-page-state"> <div className="provider-profile-error-card"> <div className="provider-profile-error-icon">
+! </div>
+
+
+        <h2>
+          Não foi possível carregar o perfil
+        </h2>
+
+        <p>
+          {error || "Profissional não encontrado."}
+        </p>
+
+        <a href="/client/providers">
+          ← Voltar aos profissionais
+        </a>
+      </div>
+    </div>
+  </ClientLayout>
+);
+
+
+}
+
+const providerInitials = getProviderInitials(
+provider.name
+);
+
+return (
+<ClientLayout
+activePage="providers"
+title="Perfil do profissional"
+subtitle="Conheça o profissional, veja os serviços e entre em contacto."
+action={ <a
+       href="/client/providers"
+       className="provider-profile-header-action"
+     >
+← Voltar aos profissionais </a>
+}
+> <div className="provider-profile-content">
+
+
+    {/* =========================
+        HERO DO PROFISSIONAL
+    ========================= */}
+
+    <section className="provider-profile-hero">
+
+      <div className="provider-hero-decoration provider-hero-decoration-one"></div>
+
+      <div className="provider-hero-decoration provider-hero-decoration-two"></div>
+
+      <div className="provider-hero-watermark">
+        {providerInitials}
+      </div>
+
+      <div className="provider-hero-top">
 
         <a
           href="/client/providers"
-          className="back-link"
+          className="provider-profile-back"
         >
           ← Voltar aos profissionais
         </a>
 
+        <div className="provider-profile-status">
+          <span className="status-dot"></span>
+          Perfil profissional
+        </div>
 
-        {/* PERFIL */}
+      </div>
 
-        <section className="provider-profile-header">
+      <div className="provider-hero-main">
 
-          <div className="provider-avatar">
+        <div className="provider-hero-avatar-wrapper">
 
-            {provider.name
-              ? provider.name.charAt(0).toUpperCase()
-              : "P"}
-
+          <div className="provider-hero-avatar">
+            {providerInitials}
           </div>
 
+          {provider.is_verified && (
+            <div
+              className="provider-avatar-verified"
+              title="Profissional verificado"
+            >
+              ✓
+            </div>
+          )}
 
-          <div className="provider-profile-info">
+        </div>
 
-            <h1>
-              {provider.name}
-            </h1>
+        <div className="provider-hero-info">
 
-            <h2>
-              {provider.profession}
-            </h2>
+          <div className="provider-hero-label">
+            PROFISSIONAL
+          </div>
 
-            <p>
+          <h1>
+            {provider.name}
+          </h1>
+
+          <h2>
+            {provider.profession}
+          </h2>
+
+          <div className="provider-hero-meta">
+
+            <span>
               📍 {provider.location || "Localização não informada"}
-            </p>
+            </span>
 
             {provider.is_verified && (
-
-              <span className="verified-badge">
-                ✓ Profissional verificado
+              <span className="hero-verified">
+                ✓ Verificado
               </span>
-
             )}
 
           </div>
 
-        </section>
+        </div>
 
+        <div className="provider-hero-actions">
 
-        {/* ESTATÍSTICAS */}
-
-        <section className="provider-profile-stats">
-
-
-          <div className="profile-stat-card">
-
-            <span className="stat-icon">
-              ⭐
+          <button
+            type="button"
+            className={`favorite-profile-button ${
+              isFavorited ? "favorited" : ""
+            }`}
+            onClick={handleToggleFavorite}
+            disabled={favoriteLoading}
+          >
+            <span className="favorite-profile-heart">
+              {favoriteLoading
+                ? "..."
+                : isFavorited
+                  ? "♥"
+                  : "♡"}
             </span>
-
-            <strong>
-              {provider.average_rating || "0.0"}
-            </strong>
 
             <span>
-              Avaliação média
+              {favoriteLoading
+                ? "A atualizar..."
+                : isFavorited
+                  ? "Favoritado"
+                  : "Adicionar aos favoritos"}
             </span>
+          </button>
 
-          </div>
+        </div>
 
+      </div>
 
-          <div className="profile-stat-card">
+    </section>
 
-            <span className="stat-icon">
-              💬
-            </span>
+    {favoriteError && (
+      <div className="favorite-profile-error">
+        {favoriteError}
+      </div>
+    )}
 
-            <strong>
-              {provider.total_reviews || 0}
-            </strong>
+    {/* =========================
+        ESTATÍSTICAS
+    ========================= */}
 
-            <span>
-              Avaliações
-            </span>
+    <section className="provider-profile-stats">
 
-          </div>
+      <div className="profile-stat-card">
+        <span className="stat-icon">
+          ⭐
+        </span>
 
+        <strong>
+          {provider.average_rating || "0.0"}
+        </strong>
 
-          <div className="profile-stat-card">
+        <span>
+          Avaliação média
+        </span>
+      </div>
 
-            <span className="stat-icon">
-              🏆
-            </span>
+      <div className="profile-stat-card">
+        <span className="stat-icon">
+          💬
+        </span>
 
-            <strong>
-              {provider.experience_years || 0}
-            </strong>
+        <strong>
+          {provider.total_reviews || 0}
+        </strong>
 
-            <span>
-              Anos de experiência
-            </span>
+        <span>
+          Avaliações
+        </span>
+      </div>
 
-          </div>
+      <div className="profile-stat-card">
+        <span className="stat-icon">
+          🏆
+        </span>
 
+        <strong>
+          {provider.experience_years || 0}
+        </strong>
 
-          <div className="profile-stat-card">
+        <span>
+          Anos de experiência
+        </span>
+      </div>
 
-            <span className="stat-icon">
-              💰
-            </span>
+      <div className="profile-stat-card">
+        <span className="stat-icon">
+          💰
+        </span>
 
-            <strong>
+        <strong>
+          {provider.hourly_rate
+            ? `${provider.hourly_rate} MT`
+            : "A combinar"}
+        </strong>
 
-              {provider.hourly_rate
-                ? `${provider.hourly_rate} MT`
-                : "A combinar"}
+        <span>
+          Preço por hora
+        </span>
+      </div>
 
-            </strong>
+    </section>
 
-            <span>
-              Preço por hora
-            </span>
+    {/* =========================
+        SOBRE
+    ========================= */}
 
-          </div>
+    <section className="provider-profile-section">
 
+      <div className="section-heading-premium">
 
-        </section>
-
-
-        {/* INFORMAÇÕES */}
-
-        <section className="provider-profile-section">
+        <div>
+          <span>
+            PERFIL PROFISSIONAL
+          </span>
 
           <h2>
             Sobre o profissional
           </h2>
+        </div>
+
+      </div>
+
+      <p>
+        {provider.bio ||
+          "Este profissional ainda não adicionou uma descrição."}
+      </p>
+
+    </section>
+
+    {/* =========================
+        SERVIÇOS
+    ========================= */}
+
+    <section className="provider-profile-section">
+
+      <div className="section-header">
+
+        <div>
+          <h2>
+            🔧 Serviços oferecidos
+          </h2>
+
+          <span className="section-description">
+            Serviços disponíveis para contratação
+          </span>
+        </div>
+
+        <span className="section-count">
+          {services.length} serviço(s)
+        </span>
+
+      </div>
+
+      {services.length === 0 ? (
+
+        <div className="empty-state">
+
+          <div className="empty-state-icon">
+            🔧
+          </div>
 
           <p>
-
-            {provider.bio ||
-              "Este profissional ainda não adicionou uma descrição."}
-
+            Este profissional ainda não possui
+            serviços cadastrados.
           </p>
 
-        </section>
+        </div>
 
+      ) : (
 
+        <div className="services-list">
 
+          {services.map((service) => (
 
-        {/* SERVIÇOS */}
+            <div
+              className="service-card"
+              key={service.id}
+            >
 
-        <section className="provider-profile-section">
+              <div className="service-card-content">
 
-            <div className="section-header">
-
-            <h2>
-                🔧 Serviços oferecidos
-            </h2>
-
-            <span>
-                {services.length} serviço(s)
-            </span>
-
-            </div>
-
-
-            {services.length === 0 ? (
-
-                <div className="empty-state">
-
-                <p>
-                     Este profissional ainda não possui serviços cadastrados.
-                </p>
-
-                </div>
-
-            ) : (
-
-                <div className="services-list">
-
-                    {services.map((service) => (
-
-                <div
-                    className="service-card"
-                    key={service.id}
-                >
-
-                <div>
-
-                    <h3>
-                        {service.title}
-                    </h3>
-
-                    <p>
-                        {service.description}
-                    </p>
-
+                <div className="service-card-icon">
+                  🔧
                 </div>
 
                 <div>
+                  <h3>
+                    {service.title}
+                  </h3>
 
-                    <strong>
-                        {service.price} MT
-                    </strong>
-
-                    <p>
-                        Preço do serviço
-                    </p>
-
-                    <button
-                        className="primary-button"
-                        onClick={() => {
-                            setSelectedService(service);
-                            setSuccessMessage("");
-                            setError("");
-                        }}
-                    >
-                        🔵 Solicitar este serviço
-                    </button>
-
-                    <button className="secondary-btn" onClick={handleStartChat} disabled={startingChat}>
-                      {startingChat ? "Abrindo conversa..." : "💬 Enviar mensagem"}
-                    </button>
-
+                  <p>
+                    {service.description}
+                  </p>
                 </div>
 
-            </div>
+              </div>
 
-                ))}
+              <div className="service-card-actions">
 
-            </div>
+                <div className="service-price">
+                  <strong>
+                    {service.price} MT
+                  </strong>
 
-            )}
-
-        </section>
-
-
-
-            {successMessage && (
-                <div className="success-message">
-                    {successMessage}
-                </div>
-            )}
-
-
-
-        {selectedService && (
-
-            <section className="provider-profile-section">
-
-                <div className="section-header">
-
-                    <h2>
-                        📋 Solicitar serviço
-                    </h2>
-
-                    <button
-                        type="button"
-                        onClick={() => setSelectedService(null)}
-                    >
-                        ✕ Fechar
-                    </button>
-
+                  <span>
+                    Preço do serviço
+                  </span>
                 </div>
 
-
-                <div className="request-selected-service">
-
-                    <h3>
-                        {selectedService.title}
-                    </h3>
-
-                    <p>
-                        {selectedService.description}
-                    </p>
-
-                    <strong>
-                        {selectedService.price} MT
-                    </strong>
-
-                </div>
-
-
-                <form
-                    onSubmit={async (event) => {
-
-                        event.preventDefault();
-
-                        try {
-
-                            setSubmitting(true);
-                            setError("");
-                            setSuccessMessage("");
-
-                            console.log("Enviando solicitação...");
-                            console.log("Serviço:", selectedService);
-                            console.log("Descrição:", description);
-                            console.log("Localização:", location);
-                            console.log("Data:", requestedDate);
-
-                            const result = await createServiceRequest(
-                                selectedService.id,
-                                description,
-                                location,
-                                requestedDate || null
-                            );
-
-                            console.log("Resposta da API:", result);
-                            console.log("Mensagem:", result.message);
-                            console.log("Pedido criado:", result.request)
-                            setSuccessMessage(
-                                result.message ||
-                                "Solicitação enviada com sucesso!"
-                        );
-
-                        setDescription("");
-                        setLocation("");
-                        setRequestedDate("");
-
-                        setSelectedService(null);
-
-                    } catch (err) {
-
-                        setError(
-                        err.message ||
-                        "Erro ao enviar solicitação."
-                    );
-
-                    } finally {
-
-                        setSubmitting(false);
-
-                    }
-
-                }}
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => {
+                    setSelectedService(service);
+                    setSuccessMessage("");
+                    setError("");
+                    setChatError("");
+                  }}
                 >
+                  🔵 Solicitar este serviço
+                </button>
 
-      <div className="form-group">
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  onClick={handleStartChat}
+                  disabled={startingChat}
+                >
+                  {startingChat
+                    ? "Abrindo conversa..."
+                    : "💬 Enviar mensagem"}
+                </button>
 
-        <label>
-          Descreva o serviço que precisa
-        </label>
+              </div>
 
-        <textarea
-          value={description}
-          onChange={(event) =>
-            setDescription(event.target.value)
-          }
-          placeholder="Explique detalhadamente o que precisa..."
-          minLength={10}
-          maxLength={2000}
-          required
-        />
+            </div>
 
-      </div>
+          ))}
 
-
-      <div className="form-group">
-
-        <label>
-          Localização
-        </label>
-
-        <input
-          type="text"
-          value={location}
-          onChange={(event) =>
-            setLocation(event.target.value)
-          }
-          placeholder="Ex: Beira, Macurungo"
-          minLength={2}
-          maxLength={200}
-          required
-        />
-
-      </div>
-
-
-      <div className="form-group">
-
-        <label>
-          Data pretendida
-        </label>
-
-        <input
-          type="datetime-local"
-          value={requestedDate}
-          onChange={(event) =>
-            setRequestedDate(event.target.value)
-          }
-        />
-
-      </div>
-
-
-      {error && (
-
-        <div className="error-message">
-          {error}
         </div>
 
       )}
 
-      {chatError && (
-        <div className="error-message">
-          {chatError}
-        </div>
-      )}
+    </section>
 
+    {/* =========================
+        SUCESSO
+    ========================= */}
 
-      <button
-        type="submit"
-        className="primary-button"
-        disabled={submitting}
-      >
+    {successMessage && (
+      <div className="success-message">
+        <span>✓</span>
+        {successMessage}
+      </div>
+    )}
 
-        {submitting
-          ? "Enviando..."
-          : "📨 Enviar solicitação"}
+    {/* =========================
+        SOLICITAR SERVIÇO
+    ========================= */}
 
-      </button>
+    {selectedService && (
 
-    </form>
+      <section className="provider-profile-section request-section">
 
-  </section>
+        <div className="section-header">
 
-)}
-
-
-
-
-        {/* AVALIAÇÕES */}
-
-        <section className="provider-profile-section">
-
-
-          <div className="section-header">
-
+          <div>
             <h2>
-              ⭐ Avaliações dos clientes
+              📋 Solicitar serviço
             </h2>
 
-            <span>
-              {reviews.length} avaliação(ões)
+            <span className="section-description">
+              Envie os detalhes para este profissional.
             </span>
+          </div>
+
+          <button
+            type="button"
+            className="close-section-button"
+            onClick={() => setSelectedService(null)}
+          >
+            ✕ Fechar
+          </button>
+
+        </div>
+
+        <div className="request-selected-service">
+
+          <div>
+            <span>
+              SERVIÇO SELECIONADO
+            </span>
+
+            <h3>
+              {selectedService.title}
+            </h3>
+
+            <p>
+              {selectedService.description}
+            </p>
+          </div>
+
+          <strong>
+            {selectedService.price} MT
+          </strong>
+
+        </div>
+
+        <form
+          onSubmit={async (event) => {
+            event.preventDefault();
+
+            try {
+              setSubmitting(true);
+              setError("");
+              setSuccessMessage("");
+
+              console.log(
+                "Enviando solicitação..."
+              );
+
+              console.log(
+                "Serviço:",
+                selectedService
+              );
+
+              console.log(
+                "Descrição:",
+                description
+              );
+
+              console.log(
+                "Localização:",
+                location
+              );
+
+              console.log(
+                "Data:",
+                requestedDate
+              );
+
+              const result =
+                await createServiceRequest(
+                  selectedService.id,
+                  description,
+                  location,
+                  requestedDate || null
+                );
+
+              console.log(
+                "Resposta da API:",
+                result
+              );
+
+              console.log(
+                "Mensagem:",
+                result.message
+              );
+
+              console.log(
+                "Pedido criado:",
+                result.request
+              );
+
+              setSuccessMessage(
+                result.message ||
+                "Solicitação enviada com sucesso!"
+              );
+
+              setDescription("");
+              setLocation("");
+              setRequestedDate("");
+
+              setSelectedService(null);
+
+            } catch (err) {
+              setError(
+                err.message ||
+                "Erro ao enviar solicitação."
+              );
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+
+          <div className="form-group">
+
+            <label>
+              Descreva o serviço que precisa
+            </label>
+
+            <textarea
+              value={description}
+              onChange={(event) =>
+                setDescription(event.target.value)
+              }
+              placeholder="Explique detalhadamente o que precisa..."
+              minLength={10}
+              maxLength={2000}
+              required
+            />
 
           </div>
 
+          <div className="form-group">
 
-          {reviews.length === 0 ? (
+            <label>
+              Localização
+            </label>
 
-            <div className="empty-state">
+            <input
+              type="text"
+              value={location}
+              onChange={(event) =>
+                setLocation(event.target.value)
+              }
+              placeholder="Ex: Beira, Macurungo"
+              minLength={2}
+              maxLength={200}
+              required
+            />
 
-              <p>
-                Este profissional ainda não possui avaliações.
-              </p>
+          </div>
 
+          <div className="form-group">
+
+            <label>
+              Data pretendida
+            </label>
+
+            <input
+              type="datetime-local"
+              value={requestedDate}
+              onChange={(event) =>
+                setRequestedDate(event.target.value)
+              }
+            />
+
+          </div>
+
+          {error && (
+            <div className="error-message">
+              {error}
             </div>
+          )}
 
-          ) : (
+          {chatError && (
+            <div className="error-message">
+              {chatError}
+            </div>
+          )}
 
-            <div className="reviews-list">
+          <button
+            type="submit"
+            className="primary-button request-submit-button"
+            disabled={submitting}
+          >
+            {submitting
+              ? "Enviando..."
+              : "📨 Enviar solicitação"}
+          </button>
 
-              {reviews.map((review) => (
+        </form>
 
-                <div
-                  className="review-card"
-                  key={review.id}
-                >
+      </section>
 
-                  <div className="review-header">
+    )}
 
-                    <strong>
-                      {review.client_name || "Cliente"}
-                    </strong>
+    {/* =========================
+        AVALIAÇÕES
+    ========================= */}
 
-                    <span>
+    <section className="provider-profile-section">
 
-                      {new Date(
-                        review.created_at
-                      ).toLocaleDateString("pt-PT")}
+      <div className="section-header">
 
-                    </span>
+        <div>
 
+          <h2>
+            ⭐ Avaliações dos clientes
+          </h2>
+
+          <span className="section-description">
+            Opiniões de clientes que contrataram este profissional
+          </span>
+
+        </div>
+
+        <span className="section-count">
+          {reviews.length} avaliação(ões)
+        </span>
+
+      </div>
+
+      {reviews.length === 0 ? (
+
+        <div className="empty-state">
+
+          <div className="empty-state-icon">
+            ⭐
+          </div>
+
+          <p>
+            Este profissional ainda não possui avaliações.
+          </p>
+
+        </div>
+
+      ) : (
+
+        <div className="reviews-list">
+
+          {reviews.map((review) => (
+
+            <div
+              className="review-card"
+              key={review.id}
+            >
+
+              <div className="review-header">
+
+                <div className="review-client">
+
+                  <div className="review-client-avatar">
+                    {(review.client_name || "C")
+                      .charAt(0)
+                      .toUpperCase()}
                   </div>
 
-
-                  <div className="review-stars">
-
-                    {"★".repeat(review.rating)}
-                    {"☆".repeat(5 - review.rating)}
-
-                  </div>
-
-
-                  {review.comment && (
-
-                    <p>
-                      "{review.comment}"
-                    </p>
-
-                  )}
+                  <strong>
+                    {review.client_name || "Cliente"}
+                  </strong>
 
                 </div>
 
-              ))}
+                <span>
+                  {new Date(
+                    review.created_at
+                  ).toLocaleDateString("pt-PT")}
+                </span>
+
+              </div>
+
+              <div className="review-stars">
+                {"★".repeat(review.rating)}
+                {"☆".repeat(5 - review.rating)}
+              </div>
+
+              {review.comment && (
+                <p>
+                  "{review.comment}"
+                </p>
+              )}
 
             </div>
 
-          )}
+          ))}
 
-        </section>
+        </div>
+
+      )}
+
+    </section>
+
+  </div>
+</ClientLayout>
 
 
-
-
-      </main>
-
-    </div>
-
-  );
-
+);
 }
 
 export default ClientProviderProfile;
-

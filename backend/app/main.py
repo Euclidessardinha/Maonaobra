@@ -22,9 +22,6 @@ import asyncio
 
 from contextlib import asynccontextmanager
 
-from app.services.notification_email_worker import (
-    notification_email_worker
-)
 
 
 
@@ -47,38 +44,11 @@ from app.routes.admin import router as admin_router
 Base.metadata.create_all(bind=engine)
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    worker_task = asyncio.create_task(
-        notification_email_worker()
-    )
-
-    print(
-        "[EMAIL WORKER] Serviço de notificações por "
-        "e-mail iniciado."
-    )
-
-    try:
-        yield
-    finally:
-        worker_task.cancel()
-
-        try:
-            await worker_task
-        except asyncio.CancelledError:
-            pass
-
-        print(
-            "[EMAIL WORKER] Serviço de notificações "
-            "por e-mail encerrado."
-        )
-
 
 app = FastAPI(
     title="MãoNaObra MZ API",
     description="Marketplace inteligente de serviços",
-    version="1.0.0",
-    lifespan=lifespan
+    version="1.0.0"
 )
 
 app.add_middleware(

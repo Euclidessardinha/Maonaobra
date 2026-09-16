@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 
 import { useAuth } from "../context/AuthContext";
@@ -11,7 +12,6 @@ import {
   getConversationMessages,
   sendMessage
 } from "../api/chat";
-
 
 
 function ProviderChat() {
@@ -41,6 +41,10 @@ function ProviderChat() {
 
   const [error, setError] =
     useState("");
+
+  // Controla apenas a visualização do chat no telemóvel
+  const [mobileChatOpen, setMobileChatOpen] =
+    useState(false);
 
 
   // =========================================================
@@ -137,6 +141,8 @@ function ProviderChat() {
           setSelectedConversation(
             conversationFromNotification
           );
+
+          setMobileChatOpen(true);
 
         } else {
 
@@ -266,19 +272,10 @@ function ProviderChat() {
 
       try {
 
-        // ==========================================
-        // CARREGAR MENSAGENS
-        // ==========================================
-
         await loadMessages(
           selectedConversation.id
         );
 
-
-        // ==========================================
-        // MARCAR TODAS AS NOTIFICAÇÕES
-        // DESTA CONVERSA COMO LIDAS
-        // ==========================================
 
         await markConversationNotificationsAsRead(
           selectedConversation.id
@@ -434,6 +431,35 @@ function ProviderChat() {
 
 
   // =========================================================
+  // SELECIONAR CONVERSA
+  // =========================================================
+
+  function handleSelectConversation(
+    conversation
+  ) {
+
+    setSelectedConversation(
+      conversation
+    );
+
+    // No telemóvel mostra a conversa
+    setMobileChatOpen(true);
+
+  }
+
+
+  // =========================================================
+  // VOLTAR PARA LISTA DE CONVERSAS
+  // =========================================================
+
+  function handleBackToConversations() {
+
+    setMobileChatOpen(false);
+
+  }
+
+
+  // =========================================================
   // INTERFACE
   // =========================================================
 
@@ -542,7 +568,7 @@ function ProviderChat() {
         =================================================== */}
 
         <section
-          className="dashboard-section"
+          className="dashboard-section chat-section"
           style={{
             padding: 0,
             overflow: "hidden"
@@ -550,12 +576,13 @@ function ProviderChat() {
         >
 
           <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "280px 1fr",
-              minHeight: "600px"
-            }}
+            className={
+              `chat-layout ${
+                mobileChatOpen
+                  ? "mobile-chat-open"
+                  : ""
+              }`
+            }
           >
 
 
@@ -564,6 +591,7 @@ function ProviderChat() {
             ================================================= */}
 
             <div
+              className="chat-conversations"
               style={{
                 borderRight:
                   "1px solid #e5e7eb",
@@ -630,7 +658,7 @@ function ProviderChat() {
                       key={conversation.id}
                       type="button"
                       onClick={() =>
-                        setSelectedConversation(
+                        handleSelectConversation(
                           conversation
                         )
                       }
@@ -696,16 +724,12 @@ function ProviderChat() {
             ================================================= */}
 
             <div
+              className="chat-window"
               style={{
                 display: "flex",
                 flexDirection: "column"
               }}
             >
-
-
-              {/* =================================================
-                  NENHUMA CONVERSA SELECIONADA
-              ================================================= */}
 
               {!selectedConversation ? (
 
@@ -756,12 +780,24 @@ function ProviderChat() {
                   =========================================== */}
 
                   <div
+                    className="chat-conversation-header"
                     style={{
                       padding: "20px",
                       borderBottom:
                         "1px solid #e5e7eb"
                     }}
                   >
+
+                    <button
+                      type="button"
+                      className="chat-back-button"
+                      onClick={
+                        handleBackToConversations
+                      }
+                    >
+                      ← Voltar
+                    </button>
+
 
                     <h2
                       style={{
@@ -792,6 +828,7 @@ function ProviderChat() {
                   =========================================== */}
 
                   <div
+                    className="chat-messages"
                     style={{
                       flex: 1,
                       padding: "20px",
@@ -865,6 +902,7 @@ function ProviderChat() {
                             >
 
                               <div
+                                className="chat-message-bubble"
                                 style={{
                                   maxWidth: "70%",
                                   padding:
@@ -938,6 +976,7 @@ function ProviderChat() {
                   =========================================== */}
 
                   <form
+                    className="chat-form"
                     onSubmit={
                       handleSendMessage
                     }

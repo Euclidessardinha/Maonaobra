@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -9,16 +8,10 @@ from app.models.favorite import Favorite
 from app.models.provider import ProviderProfile
 from app.models.user import User
 
-
 router = APIRouter(
     prefix="/favorites",
     tags=["Favorites"]
 )
-
-
-# ============================================================
-# ADICIONAR AOS FAVORITOS
-# ============================================================
 
 @router.post("/{provider_id}")
 def add_favorite(
@@ -28,11 +21,10 @@ def add_favorite(
 ):
     provider = (
         db.query(ProviderProfile)
-        .filter(
-            ProviderProfile.id == provider_id
-        )
+        .filter(ProviderProfile.id == provider_id)
         .first()
     )
+
 
     if not provider:
         raise HTTPException(
@@ -79,10 +71,6 @@ def add_favorite(
     }
 
 
-# ============================================================
-# REMOVER DOS FAVORITOS
-# ============================================================
-
 @router.delete("/{provider_id}")
 def remove_favorite(
     provider_id: int,
@@ -90,13 +78,14 @@ def remove_favorite(
     db: Session = Depends(get_db)
 ):
     favorite = (
-        db.query(Favorite)
-        .filter(
-            Favorite.client_id == current_user.id,
-            Favorite.provider_id == provider_id
-        )
-        .first()
+    db.query(Favorite)
+    .filter(
+    Favorite.client_id == current_user.id,
+    Favorite.provider_id == provider_id
     )
+    .first()
+    )
+
 
     if not favorite:
         raise HTTPException(
@@ -112,37 +101,42 @@ def remove_favorite(
     }
 
 
-# ============================================================
-# VER MEUS FAVORITOS
-# ============================================================
-
 @router.get("/my")
 def get_my_favorites(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     favorites = (
-        db.query(Favorite)
-        .filter(
-            Favorite.client_id == current_user.id
-        )
-        .order_by(
-            Favorite.created_at.desc()
-        )
-        .all()
+    db.query(Favorite)
+    .filter(Favorite.client_id == current_user.id)
+    .order_by(Favorite.created_at.desc())
+    .all()
     )
 
-    return [
-        {
+
+    result = []
+
+    for favorite in favorites:
+        provider = favorite.provider
+
+        if not provider:
+            continue
+
+        user = provider.user
+
+        result.append({
             "id": favorite.id,
             "provider": {
-                "id": favorite.provider.id,
-                "profession": favorite.provider.profession,
-                "location": favorite.provider.location,
-                "is_verified": favorite.provider.is_verified
+                "id": provider.id,
+                "name": user.name if user else "Prestador",
+                "profession": provider.profession,
+                "location": provider.location,
+                "experience_years": provider.experience_years,
+                "hourly_rate": provider.hourly_rate,
+                "is_verified": provider.is_verified
             },
             "created_at": favorite.created_at
-        }
-        for favorite in favorites
-    ]
+        })
+
+    return result
 

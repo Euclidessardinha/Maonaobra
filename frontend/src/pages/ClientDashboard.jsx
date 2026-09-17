@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 
 import { useAuth } from "../context/AuthContext";
@@ -25,6 +24,17 @@ function ClientDashboard() {
 
   const [switchingToProvider, setSwitchingToProvider] =
     useState(false);
+
+  /*
+   * Aba atualmente selecionada na área de projetos.
+   *
+   * OPEN          = Projetos abertos
+   * IN_PROGRESS   = Em andamento
+   * COMPLETED     = Concluídos
+   */
+
+  const [activeProjectTab, setActiveProjectTab] =
+    useState("OPEN");
 
 
   /* =========================================================
@@ -206,6 +216,12 @@ function ClientDashboard() {
   const totalProjects =
     projects.length;
 
+  const openProjects =
+    projects.filter(
+      (project) =>
+        project.status === "OPEN"
+    ).length;
+
   const inProgressProjects =
     projects.filter(
       (project) =>
@@ -222,6 +238,17 @@ function ClientDashboard() {
     user?.favorite_count ||
     user?.favorites_count ||
     0;
+
+
+  /* =========================================================
+     PROJETOS DA ABA ATUAL
+  ========================================================= */
+
+  const filteredProjects =
+    projects.filter(
+      (project) =>
+        project.status === activeProjectTab
+    );
 
 
   /* =========================================================
@@ -895,6 +922,101 @@ function ClientDashboard() {
             </div>
 
 
+            {/* =================================================
+                ABAS DOS PROJETOS
+            ================================================= */}
+
+            <div className="client-dashboard-project-tabs">
+
+
+              <button
+                type="button"
+                className={`client-dashboard-project-tab ${
+                  activeProjectTab === "OPEN"
+                    ? "active"
+                    : ""
+                }`}
+                onClick={() =>
+                  setActiveProjectTab("OPEN")
+                }
+              >
+
+                <span>
+                  📂
+                </span>
+
+                <span>
+                  Projetos abertos
+                </span>
+
+                <strong>
+                  {openProjects}
+                </strong>
+
+              </button>
+
+
+              <button
+                type="button"
+                className={`client-dashboard-project-tab ${
+                  activeProjectTab === "IN_PROGRESS"
+                    ? "active"
+                    : ""
+                }`}
+                onClick={() =>
+                  setActiveProjectTab("IN_PROGRESS")
+                }
+              >
+
+                <span>
+                  🔄
+                </span>
+
+                <span>
+                  Em andamento
+                </span>
+
+                <strong>
+                  {inProgressProjects}
+                </strong>
+
+              </button>
+
+
+              <button
+                type="button"
+                className={`client-dashboard-project-tab ${
+                  activeProjectTab === "COMPLETED"
+                    ? "active"
+                    : ""
+                }`}
+                onClick={() =>
+                  setActiveProjectTab("COMPLETED")
+                }
+              >
+
+                <span>
+                  ✅
+                </span>
+
+                <span>
+                  Concluídos
+                </span>
+
+                <strong>
+                  {completedProjects}
+                </strong>
+
+              </button>
+
+
+            </div>
+
+
+            {/* =================================================
+                ESTADOS DOS PROJETOS
+            ================================================= */}
+
             {loading ? (
 
               <div className="client-dashboard-state">
@@ -979,12 +1101,67 @@ function ClientDashboard() {
 
               </div>
 
+            ) : filteredProjects.length === 0 ? (
+
+              <div className="client-dashboard-empty">
+
+                <div className="client-dashboard-empty-icon">
+                  {activeProjectTab === "OPEN"
+                    ? "📂"
+                    : activeProjectTab === "IN_PROGRESS"
+                      ? "🔄"
+                      : "✅"}
+                </div>
+
+                <h3>
+
+                  {activeProjectTab === "OPEN"
+                    ? "Não tem projetos abertos"
+                    : activeProjectTab === "IN_PROGRESS"
+                      ? "Não tem projetos em andamento"
+                      : "Não tem projetos concluídos"}
+
+                </h3>
+
+                <p>
+
+                  {activeProjectTab === "OPEN"
+                    ? "Quando criar um novo projeto, ele aparecerá aqui."
+                    : activeProjectTab === "IN_PROGRESS"
+                      ? "Os projetos que estiverem em execução aparecerão aqui."
+                      : "Os projetos concluídos aparecerão aqui."}
+
+                </p>
+
+
+                {activeProjectTab === "OPEN" && (
+
+                  <button
+                    type="button"
+                    className="client-dashboard-primary-btn"
+                    onClick={() => {
+
+                      window.location.href =
+                        "/client/projects/new";
+
+                    }}
+                  >
+
+                    + Criar projeto
+
+                  </button>
+
+                )}
+
+
+              </div>
+
             ) : (
 
               <div className="client-dashboard-projects">
 
 
-                {projects
+                {filteredProjects
                   .slice(0, 5)
                   .map((project) => (
 

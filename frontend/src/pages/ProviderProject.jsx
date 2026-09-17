@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { getProject, createProposal } from "../api/provider";
 
+import "./ProviderProject.css";
+
+
 function ProviderProject() {
 
   const [project, setProject] = useState(null);
@@ -17,6 +20,10 @@ function ProviderProject() {
 
   const [success, setSuccess] = useState("");
 
+
+  /* =========================================================
+     CARREGAR PROJETO
+  ========================================================= */
 
   useEffect(() => {
 
@@ -63,12 +70,17 @@ function ProviderProject() {
   }, []);
 
 
+  /* =========================================================
+     ENVIAR PROPOSTA
+  ========================================================= */
+
   async function handleSubmitProposal(event) {
 
     event.preventDefault();
 
     setError("");
     setSuccess("");
+
 
     if (!price || Number(price) <= 0) {
 
@@ -79,6 +91,7 @@ function ProviderProject() {
       return;
     }
 
+
     if (!message.trim()) {
 
       setError(
@@ -87,6 +100,7 @@ function ProviderProject() {
 
       return;
     }
+
 
     try {
 
@@ -97,6 +111,7 @@ function ProviderProject() {
         Number(price),
         message
       );
+
 
       setSuccess(
         "Proposta enviada com sucesso! 🎉"
@@ -126,23 +141,34 @@ function ProviderProject() {
   }
 
 
+  /* =========================================================
+     LOADING
+  ========================================================= */
+
   if (loading) {
 
     return (
 
-      <div className="dashboard">
+      <div className="provider-project-page">
 
-        <main className="dashboard-content">
+        <div className="provider-project-loading">
 
-          <div className="empty-state">
+          <div className="provider-project-loading-logo">
 
-            <h3>
-              Carregando projeto...
-            </h3>
+            <div className="provider-project-loading-ring" />
+
+            <img
+              src="/favicon-mao4.png"
+              alt="MãoNaObra"
+            />
 
           </div>
 
-        </main>
+          <p>
+            Carregando projeto...
+          </p>
+
+        </div>
 
       </div>
 
@@ -151,26 +177,38 @@ function ProviderProject() {
   }
 
 
+  /* =========================================================
+     ERRO SEM PROJETO
+  ========================================================= */
+
   if (error && !project) {
 
     return (
 
-      <div className="dashboard">
+      <div className="provider-project-page">
 
-        <main className="dashboard-content">
+        <div className="provider-project-error-page">
 
-          <div className="error-message">
-            {error}
+          <div className="provider-project-error-icon">
+            ⚠️
           </div>
 
+          <h2>
+            Não foi possível carregar o projeto
+          </h2>
+
+          <p>
+            {error}
+          </p>
+
           <a
-            href="/provider"
-            className="register-btn"
+            href="/provider/projects"
+            className="provider-project-back-btn"
           >
-            ← Voltar
+            ← Voltar para projetos
           </a>
 
-        </main>
+        </div>
 
       </div>
 
@@ -184,290 +222,575 @@ function ProviderProject() {
   }
 
 
+  /* =========================================================
+     RENDER
+  ========================================================= */
+
   return (
 
-    <div className="dashboard">
-
-      {/* SIDEBAR */}
-
-      <aside className="sidebar">
-
-        <div className="logo">
-          Mão<span>NaObra</span>
-        </div>
-
-        <nav>
-
-          <a href="/provider">
-            🏠 Visão geral
-          </a>
-
-          <a href="/provider/services">
-            🔧 Meus serviços
-          </a>
-
-          <a href="/provider/services/new">
-            ➕ Criar serviço
-          </a>
-
-          <a href="/provider/requests">
-            📋 Pedidos recebidos
-          </a>
-
-          <a href="/provider/profile">
-            👤 Meu perfil
-          </a>
-
-        </nav>
-
-      </aside>
+    <div className="provider-project-page">
 
 
-      {/* CONTEÚDO */}
+      {/* =====================================================
+          TOPO
+      ===================================================== */}
 
-      <main className="dashboard-content">
+      <header className="provider-project-topbar">
 
-        {/* CABEÇALHO */}
+        <div className="provider-project-topbar-inner">
 
-        <div className="dashboard-header">
-
-          <div>
-
-            <span className="section-label">
-              PROJETO
-            </span>
-
-            <h1>
-              {project.title}
-            </h1>
-
-            <p>
-              Confira os detalhes e envie sua proposta.
-            </p>
-
-          </div>
 
           <a
-            href="/provider"
-            className="register-btn"
+            href="/provider/projects"
+            className="provider-project-back"
           >
-            ← Voltar
+
+            <span>
+              ←
+            </span>
+
+            <span>
+              Voltar para projetos
+            </span>
+
           </a>
 
-        </div>
 
+          <div className="provider-project-brand">
 
-        {/* ERRO */}
-
-        {error && (
-
-          <div className="error-message">
-            {error}
-          </div>
-
-        )}
-
-
-        {/* SUCESSO */}
-
-        {success && (
-
-            <div className="success-message">
-                {success}
-            </div>
-
-        )}
-
-        
-  
-
-        {/* DETALHES DO PROJETO */}
-
-        <section className="dashboard-section">
-
-          <div className="section-header">
+            <img
+              src="/favicon-mao4.png"
+              alt="MãoNaObra"
+            />
 
             <div>
 
-              <h2>
-                Detalhes do projeto
-              </h2>
+              <strong>
+                Mão
+              </strong>
 
-              <p>
-                Informações fornecidas pelo cliente.
-              </p>
+              <span>
+                NaObra
+              </span>
 
             </div>
-
-            <span className="status-badge status-open">
-              ABERTO
-            </span>
 
           </div>
 
 
-        <div className="project-details">
+        </div>
 
-            <div className="project-detail-item project-description">
+      </header>
 
-             <span>
-                📝 Descrição do projeto
-             </span>
 
-            <p>
-                {project.description}
+      {/* =====================================================
+          CONTEÚDO
+      ===================================================== */}
+
+      <main className="provider-project-container">
+
+
+        {/* ===================================================
+            BREADCRUMB
+        =================================================== */}
+
+        <div className="provider-project-breadcrumb">
+
+          <span>
+            Projetos
+          </span>
+
+          <span>
+            /
+          </span>
+
+          <strong>
+            Detalhes do projeto
+          </strong>
+
+        </div>
+
+
+        {/* ===================================================
+            HERO DO PROJETO
+        =================================================== */}
+
+        <section className="provider-project-hero">
+
+
+          <div className="provider-project-hero-main">
+
+
+            <div className="provider-project-category">
+
+              <span>
+                🛠️
+              </span>
+
+              <span>
+                {project.category || "Serviço"}
+              </span>
+
+            </div>
+
+
+            <h1>
+              {project.title ||
+                "Projeto sem título"}
+            </h1>
+
+
+            <p className="provider-project-hero-description">
+
+              Confira os detalhes fornecidos pelo cliente
+              e envie a sua proposta.
+
             </p>
 
+
+            <div className="provider-project-meta">
+
+
+              <div className="provider-project-meta-item">
+
+                <div className="provider-project-meta-icon">
+                  📍
+                </div>
+
+                <div>
+
+                  <span>
+                    Localização
+                  </span>
+
+                  <strong>
+                    {project.location ||
+                      "Não especificada"}
+                  </strong>
+
+                </div>
+
+              </div>
+
+
+              <div className="provider-project-meta-item">
+
+                <div className="provider-project-meta-icon">
+                  📅
+                </div>
+
+                <div>
+
+                  <span>
+                    Publicado em
+                  </span>
+
+                  <strong>
+
+                    {project.created_at
+                      ? new Date(
+                          project.created_at
+                        ).toLocaleDateString(
+                          "pt-MZ",
+                          {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric"
+                          }
+                        )
+                      : "Data não disponível"}
+
+                  </strong>
+
+                </div>
+
+              </div>
+
+
             </div>
 
+          </div>
 
-        <div className="project-info-grid">
 
-            <div className="project-detail-item">
+          <div className="provider-project-hero-side">
 
-            <span>
-                📂 Categoria
+
+            <span className="provider-project-status">
+
+              <span className="provider-project-status-dot" />
+
+              Aberto
+
             </span>
 
-            <strong>
-                {project.category}
-            </strong>
 
-            </div>
-
-
-            <div className="project-detail-item">
-
-                <span>
-                  📍 Localização
-                </span>
-
-                <strong>
-                 {project.location}
-                </strong>
-
-            </div>
+            <span className="provider-project-budget-label">
+              Orçamento do cliente
+            </span>
 
 
-            <div className="project-detail-item budget-item">
+            <strong className="provider-project-budget">
 
-                <span>
-                  💰 Orçamento
-                </span>
-
-            <strong>
-
-                {project.budget !== null &&
-                project.budget !== undefined
-                  ? `${project.budget} MT`
-                  : "Não definido"}
+              {project.budget !== null &&
+              project.budget !== undefined
+                ? `${Number(
+                    project.budget
+                  ).toLocaleString(
+                    "pt-MZ"
+                  )} MT`
+                : "Não definido"}
 
             </strong>
 
-        </div>
 
-        </div>
+            <span className="provider-project-budget-note">
+              Valor de referência do projeto
+            </span>
 
-        </div>
+
+          </div>
+
 
         </section>
 
 
-        {/* FORMULÁRIO DA PROPOSTA */}
+        {/* ===================================================
+            GRID PRINCIPAL
+        =================================================== */}
 
-        <section className="dashboard-section">
+        <div className="provider-project-grid">
 
-          <div className="section-header">
 
-            <div>
+          {/* =================================================
+              DETALHES
+          ================================================= */}
 
-              <h2>
-                Enviar proposta
-              </h2>
+          <section className="provider-project-card">
+
+
+            <div className="provider-project-card-header">
+
+              <div className="provider-project-card-icon">
+                📝
+              </div>
+
+              <div>
+
+                <span className="provider-project-card-label">
+                  INFORMAÇÕES
+                </span>
+
+                <h2>
+                  Sobre este projeto
+                </h2>
+
+              </div>
+
+            </div>
+
+
+            <div className="provider-project-description">
+
+              <h3>
+                Descrição do projeto
+              </h3>
 
               <p>
-                Mostre ao cliente quanto você cobra
-                e explique como pode realizar o projeto.
+
+                {project.description ||
+                  "O cliente não forneceu uma descrição detalhada."}
+
               </p>
 
             </div>
 
-          </div>
+
+            <div className="provider-project-details-grid">
 
 
-          <form
-            onSubmit={handleSubmitProposal}
-            className="proposal-form"
-          >
+              <div className="provider-project-detail">
 
-            <div className="proposal-info">
+                <span className="provider-project-detail-icon">
+                  📂
+                </span>
+
+                <div>
+
+                  <span>
+                    Categoria
+                  </span>
+
+                  <strong>
+                    {project.category ||
+                      "Não especificada"}
+                  </strong>
+
+                </div>
+
+              </div>
+
+
+              <div className="provider-project-detail">
+
+                <span className="provider-project-detail-icon">
+                  📍
+                </span>
+
+                <div>
+
+                  <span>
+                    Localização
+                  </span>
+
+                  <strong>
+                    {project.location ||
+                      "Não especificada"}
+                  </strong>
+
+                </div>
+
+              </div>
+
+
+              <div className="provider-project-detail">
+
+                <span className="provider-project-detail-icon">
+                  💰
+                </span>
+
+                <div>
+
+                  <span>
+                    Orçamento
+                  </span>
+
+                  <strong>
+
+                    {project.budget !== null &&
+                    project.budget !== undefined
+                      ? `${Number(
+                          project.budget
+                        ).toLocaleString(
+                          "pt-MZ"
+                        )} MT`
+                      : "Não definido"}
+
+                  </strong>
+
+                </div>
+
+              </div>
+
+
+              <div className="provider-project-detail">
+
+                <span className="provider-project-detail-icon">
+                  🔓
+                </span>
+
+                <div>
+
+                  <span>
+                    Estado
+                  </span>
+
+                  <strong>
+                    Projeto aberto
+                  </strong>
+
+                </div>
+
+              </div>
+
+
+            </div>
+
+
+          </section>
+
+
+          {/* =================================================
+              PROPOSTA
+          ================================================= */}
+
+          <section className="provider-project-card provider-project-proposal-card">
+
+
+            <div className="provider-project-card-header">
+
+              <div className="provider-project-card-icon proposal-icon">
+                💼
+              </div>
+
+              <div>
+
+                <span className="provider-project-card-label">
+                  OPORTUNIDADE
+                </span>
+
+                <h2>
+                  Enviar proposta
+                </h2>
+
+              </div>
+
+            </div>
+
+
+            <p className="provider-project-proposal-intro">
+
+              Apresente o seu valor e explique ao cliente
+              por que você é a pessoa certa para realizar
+              este projeto.
+
+            </p>
+
+
+            {/* ERRO */}
+
+            {error && (
+
+              <div className="provider-project-alert provider-project-alert-error">
 
                 <span>
-                   💼
+                  ⚠️
                 </span>
 
                 <p>
-                    Defina um preço competitivo e explique ao
-                    cliente por que você é a pessoa certa para
-                    realizar este projeto.
+                  {error}
                 </p>
-            </div>
 
-            <div className="form-group">
+              </div>
 
-              <label>
-                Valor da proposta (MT)
-              </label>
-
-              <input
-                type="number"
-                min="1"
-                step="0.01"
-                value={price}
-                onChange={(event) =>
-                  setPrice(event.target.value)
-                }
-                placeholder="Ex: 2500"
-                disabled={sending}
-              />
-
-            </div>
+            )}
 
 
-            <div className="form-group">
+            {/* SUCESSO */}
 
-              <label>
-                Mensagem para o cliente
-              </label>
+            {success && (
 
-              <textarea
-                value={message}
-                onChange={(event) =>
-                  setMessage(event.target.value)
-                }
-                placeholder="Explique sua experiência, prazo de execução e outros detalhes..."
-                rows="6"
-                disabled={sending}
-              />
+              <div className="provider-project-alert provider-project-alert-success">
 
-            </div>
+                <span>
+                  ✓
+                </span>
+
+                <p>
+                  {success}
+                </p>
+
+              </div>
+
+            )}
 
 
-            <button
-              type="submit"
-              className="register-btn"
-              disabled={sending}
+            <form
+              onSubmit={handleSubmitProposal}
+              className="provider-project-proposal-form"
             >
 
-              {sending
-                ? "Enviando..."
-                : "Enviar proposta"}
 
-            </button>
+              {/* PREÇO */}
 
-          </form>
+              <div className="provider-project-form-group">
 
-        </section>
+                <label htmlFor="proposal-price">
+                  Valor da proposta
+                </label>
+
+                <div className="provider-project-price-input">
+
+                  <input
+                    id="proposal-price"
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    value={price}
+                    onChange={(event) =>
+                      setPrice(event.target.value)
+                    }
+                    placeholder="Ex: 4.500"
+                    disabled={sending}
+                  />
+
+                  <span>
+                    MT
+                  </span>
+
+                </div>
+
+                <small>
+                  Defina o valor que pretende cobrar
+                  pelo projeto.
+                </small>
+
+              </div>
+
+
+              {/* MENSAGEM */}
+
+              <div className="provider-project-form-group">
+
+                <label htmlFor="proposal-message">
+                  Mensagem para o cliente
+                </label>
+
+                <textarea
+                  id="proposal-message"
+                  value={message}
+                  onChange={(event) =>
+                    setMessage(event.target.value)
+                  }
+                  placeholder="Explique a sua experiência, prazo de execução, materiais incluídos e outros detalhes importantes..."
+                  rows="7"
+                  disabled={sending}
+                />
+
+                <small>
+                  Uma boa mensagem ajuda o cliente a
+                  entender a sua proposta.
+                </small>
+
+              </div>
+
+
+              {/* BOTÃO */}
+
+              <button
+                type="submit"
+                className="provider-project-submit"
+                disabled={sending}
+              >
+
+                {sending ? (
+
+                  <>
+                    <span className="provider-project-button-spinner" />
+                    Enviando proposta...
+                  </>
+
+                ) : (
+
+                  <>
+                    Enviar proposta
+                    <span>
+                      →
+                    </span>
+                  </>
+
+                )}
+
+              </button>
+
+
+            </form>
+
+
+          </section>
+
+
+        </div>
+
 
       </main>
 
@@ -476,5 +799,6 @@ function ProviderProject() {
   );
 
 }
+
 
 export default ProviderProject;

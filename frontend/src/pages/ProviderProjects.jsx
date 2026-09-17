@@ -10,6 +10,7 @@ import {
 } from "../api/provider";
 
 import "./ProviderProjects.css";
+import { getCategories } from "../api/api";
 
 
 function ProviderProjects() {
@@ -17,6 +18,9 @@ function ProviderProjects() {
   const { user, logout } = useAuth();
 
   const [projects, setProjects] = useState([]);
+
+  const [availableCategories, setAvailableCategories] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -110,44 +114,56 @@ function ProviderProjects() {
 
   useEffect(() => {
 
-    async function loadProjects() {
+  async function loadProjectsAndCategories() {
 
-      try {
+    try {
 
-        setLoading(true);
-        setError("");
+      setLoading(true);
+      setError("");
 
-        const data = await getOpenProjects();
+      const [
+        projectsData,
+        categoriesData
+      ] = await Promise.all([
+        getOpenProjects(),
+        getCategories()
+      ]);
 
-        setProjects(
-          Array.isArray(data)
-            ? data
-            : []
-        );
+      setProjects(
+        Array.isArray(projectsData)
+          ? projectsData
+          : []
+      );
 
-      } catch (error) {
+      setAvailableCategories(
+        Array.isArray(categoriesData)
+          ? categoriesData
+          : []
+      );
 
-        console.error(
-          "Erro ao carregar projetos disponíveis:",
-          error
-        );
+    } catch (error) {
 
-        setError(
-          error.message ||
-          "Erro ao carregar projetos disponíveis."
-        );
+      console.error(
+        "Erro ao carregar projetos e categorias:",
+        error
+      );
 
-      } finally {
+      setError(
+        error.message ||
+        "Erro ao carregar projetos disponíveis."
+      );
 
-        setLoading(false);
+    } finally {
 
-      }
+      setLoading(false);
 
     }
 
-    loadProjects();
+  }
 
-  }, []);
+  loadProjectsAndCategories();
+
+}, []);
 
 
   /*
@@ -259,15 +275,25 @@ function ProviderProjects() {
 
   const categories = useMemo(() => {
 
-    const values = projects
-      .map(
-        (project) =>
-          project.category
-      )
-      .filter(Boolean)
-      .map((category) =>
-        String(category).trim()
-      );
+    const values = availableCategories
+      .map((category) => {
+
+        if (
+          typeof category === "string"
+        ) {
+
+          return category.trim();
+
+        }
+
+        return String(
+          category?.name ||
+          category?.title ||
+          ""
+        ).trim();
+
+      })
+      .filter(Boolean);
 
     return [
       "TODAS",
@@ -278,7 +304,7 @@ function ProviderProjects() {
       )
     ];
 
-  }, [projects]);
+  }, [availableCategories]);
 
 
   /*
@@ -320,11 +346,20 @@ function ProviderProjects() {
             .toLowerCase()
             .includes(normalizedSearch);
 
+        const projectCategory =
+          typeof project.category === "object"
+            ? (
+                project.category?.name ||
+                project.category?.title ||
+                ""
+              )
+            : String(
+                project.category || ""
+              );
+
         const matchesCategory =
           categoryFilter === "TODAS" ||
-          String(
-            project.category || ""
-          ) === categoryFilter;
+          projectCategory.trim() === categoryFilter;
 
         return (
           matchesSearch &&

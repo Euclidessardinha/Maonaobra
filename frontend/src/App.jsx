@@ -700,6 +700,27 @@ logout
 const path =
 window.location.pathname;
 
+
+/* =======================================================
+   LOADING INICIAL
+======================================================= */
+
+if (loading && path !== "/login" && path !== "/register") {
+  return (
+    <div className="app-loading">
+      <div className="app-loading-logo">
+        <div className="app-loading-ring"></div>
+
+        <img
+          src="/favicon-mao4.png"
+          alt="MãoNaObra"
+        />
+      </div>
+    </div>
+  );
+}
+
+
 /* =======================================================
 LOGIN
 ======================================================= */

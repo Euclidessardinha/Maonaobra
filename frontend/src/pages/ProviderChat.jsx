@@ -1,7 +1,9 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "../context/AuthContext";
+
+import NotificationBell from "../components/NotificationBell";
 
 import {
   markConversationNotificationsAsRead
@@ -13,203 +15,330 @@ import {
   sendMessage
 } from "../api/chat";
 
-
-function ProviderChat() {
-
-  const { logout } = useAuth();
-
-  const [conversations, setConversations] =
-    useState([]);
-
-  const [selectedConversation, setSelectedConversation] =
-    useState(null);
-
-  const [messages, setMessages] =
-    useState([]);
-
-  const [message, setMessage] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [messagesLoading, setMessagesLoading] =
-    useState(false);
-
-  const [sending, setSending] =
-    useState(false);
-
-  const [error, setError] =
-    useState("");
-
-  // Controla apenas a visualização do chat no telemóvel
-  const [mobileChatOpen, setMobileChatOpen] =
-    useState(false);
+import "./ProviderChat.css";
 
 
-  // =========================================================
-  // OBTER ID DA CONVERSA PELA URL
-  // =========================================================
+export default function ProviderChat() {
 
-  function getConversationIdFromUrl() {
+  const { user, logout } = useAuth();
 
-    const params =
-      new URLSearchParams(window.location.search);
+  /* =========================
+     DASHBOARD / NAVIGATION
+  ========================= */
 
-    const conversationId =
-      params.get("conversation_id");
+  const [menuOpen, setMenuOpen] = useState(false);
 
-    if (!conversationId) {
-      return null;
+  function handleClientMode() {
+    window.location.href = "/client";
+  }
+
+  function closeMenu() {
+    setMenuOpen(false);
+  }
+
+  function handleLogout() {
+    closeMenu();
+    logout();
+  }
+
+  useEffect(() => {
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        closeMenu();
+      }
     }
 
-    const parsedId =
-      Number(conversationId);
+    document.addEventListener("keydown", handleEscape);
 
-    if (
-      Number.isNaN(parsedId) ||
-      !Number.isInteger(parsedId)
-    ) {
-      return null;
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
     }
 
-    return parsedId;
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
 
+
+  /* =========================
+     CHAT STATE
+  ========================= */
+
+  const [conversations, setConversations] = useState([]);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+
+  const [messages, setMessages] = useState([]);
+
+  const [message, setMessage] = useState("");
+
+  const [search, setSearch] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  const [error, setError] = useState("");
+
+  const [mobileChatOpen, setMobileChatOpen] = useState(false);
+
+  const messagesEndRef = useRef(null);
+
+
+  /* =========================
+     HELPERS
+  ========================= */
+
+  function getInitials(name) {
+
+    if (!name) {
+      return "?";
+    }
+
+    return name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join("");
   }
 
 
-  // =========================================================
-  // CARREGAR CONVERSAS
-  // =========================================================
+  function formatTime(dateValue) {
+
+    if (!dateValue) {
+      return "";
+    }
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    return date.toLocaleTimeString("pt-MZ", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  }
+
+
+  function formatConversationTime(dateValue) {
+
+    if (!dateValue) {
+      return "";
+    }
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    const now = new Date();
+
+    const sameDay =
+      date.getDate() === now.getDate() &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear();
+
+    if (sameDay) {
+      return date.toLocaleTimeString("pt-MZ", {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    return date.toLocaleDateString("pt-MZ", {
+      day: "2-digit",
+      month: "2-digit"
+    });
+  }
+
+
+  function getConversationIdFromUrl() {
+
+    const params = new URLSearchParams(window.location.search);
+
+    const value = params.get("conversation_id");
+
+    if (!value) {
+      return null;
+    }
+
+    const id = Number(value);
+
+    return Number.isNaN(id) ? null : id;
+  }
+
+
+  function getCurrentUserId() {
+
+    try {
+
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        return null;
+      }
+
+      const payload = JSON.parse(
+        atob(
+          token
+            .split(".")[1]
+            .replace(/-/g, "+")
+            .replace(/_/g, "/")
+        )
+      );
+
+      if (payload?.sub) {
+        return Number(payload.sub);
+      }
+
+      return null;
+
+    } catch {
+      return null;
+    }
+  }
+
+
+  function getClientName(conversation) {
+
+    if (!conversation) {
+      return "Cliente";
+    }
+
+    return (
+      conversation.client_name ||
+      conversation.user_name ||
+      conversation.other_user_name ||
+      conversation.name ||
+      "Cliente"
+    );
+  }
+
+
+  function getLastMessage(conversation) {
+
+    if (!conversation) {
+      return "";
+    }
+
+    return (
+      conversation.last_message ||
+      conversation.last_message_content ||
+      conversation.message ||
+      "Nenhuma mensagem ainda"
+    );
+  }
+
+
+  function scrollToBottom() {
+
+    setTimeout(() => {
+
+      messagesEndRef.current?.scrollIntoView({
+        behavior: "smooth"
+      });
+
+    }, 50);
+  }
+
+
+  /* =========================
+     LOAD CONVERSATIONS
+  ========================= */
 
   async function loadConversations() {
 
     try {
 
-      setLoading(true);
       setError("");
 
-      const data =
-        await getMyConversations();
+      const data = await getMyConversations();
 
+      const list = Array.isArray(data)
+        ? data
+        : data?.conversations || [];
 
-      console.log(
-        "Conversas carregadas:",
-        data
-      );
+      setConversations(list);
 
+      return list;
 
-      setConversations(data);
+    } catch (err) {
 
-
-      // =====================================================
-      // VERIFICAR SE EXISTE conversation_id NA URL
-      // =====================================================
-
-      const conversationIdFromUrl =
-        getConversationIdFromUrl();
-
-
-      console.log(
-        "conversation_id recebido pela URL:",
-        conversationIdFromUrl
-      );
-
-
-      // =====================================================
-      // SE VEIO DA NOTIFICAÇÃO
-      // =====================================================
-
-      if (conversationIdFromUrl) {
-
-        const conversationFromNotification =
-          data.find(
-            (conversation) =>
-              Number(conversation.id) ===
-              Number(conversationIdFromUrl)
-          );
-
-
-        console.log(
-          "Conversa encontrada pela notificação:",
-          conversationFromNotification
-        );
-
-
-        if (conversationFromNotification) {
-
-          setSelectedConversation(
-            conversationFromNotification
-          );
-
-          setMobileChatOpen(true);
-
-        } else {
-
-          console.warn(
-            "A conversa indicada na notificação não foi encontrada.",
-            {
-              conversationIdFromUrl,
-              conversations: data
-            }
-          );
-
-        }
-
-      }
-
-
-      // =====================================================
-      // SE NÃO VEIO conversation_id,
-      // SELECIONAR PRIMEIRA CONVERSA
-      // =====================================================
-
-      if (
-        !conversationIdFromUrl &&
-        data.length > 0
-      ) {
-
-        setSelectedConversation(
-          data[0]
-        );
-
-      }
-
-    } catch (error) {
-
-      console.error(
-        "Erro ao carregar conversas:",
-        error
-      );
+      console.error("Erro ao carregar conversas:", err);
 
       setError(
-        error.message ||
-        "Erro ao carregar conversas."
+        err?.message ||
+        "Não foi possível carregar as conversas."
       );
+
+      return [];
 
     } finally {
 
       setLoading(false);
-
     }
-
   }
 
 
-  // =========================================================
-  // CARREGAMENTO INICIAL
-  // =========================================================
+  /* =========================
+     INITIAL LOAD
+  ========================= */
 
   useEffect(() => {
 
-    loadConversations();
+    async function initialize() {
+
+      const list = await loadConversations();
+
+      if (!list.length) {
+        return;
+      }
+
+      const conversationId = getConversationIdFromUrl();
+
+      let conversationToOpen = null;
+
+      if (conversationId) {
+
+        conversationToOpen = list.find(
+          (conversation) =>
+            Number(conversation.id) === Number(conversationId)
+        );
+      }
+
+      if (!conversationToOpen) {
+        conversationToOpen = list[0];
+      }
+
+      if (conversationToOpen) {
+
+        setSelectedConversation(conversationToOpen);
+
+        if (window.innerWidth <= 768) {
+          setMobileChatOpen(true);
+        }
+      }
+    }
+
+    initialize();
 
   }, []);
 
 
-  // =========================================================
-  // CARREGAR MENSAGENS
-  // =========================================================
+  /* =========================
+     LOAD MESSAGES
+  ========================= */
 
   async function loadMessages(conversationId) {
 
@@ -222,125 +351,113 @@ function ProviderChat() {
       setMessagesLoading(true);
       setError("");
 
-      const data =
-        await getConversationMessages(
-          conversationId
-        );
-
-
-      console.log(
-        `Mensagens da conversa ${conversationId}:`,
-        data
+      const data = await getConversationMessages(
+        conversationId
       );
 
+      const list = Array.isArray(data)
+        ? data
+        : data?.messages || [];
 
-      setMessages(data);
+      setMessages(list);
 
-    } catch (error) {
+    } catch (err) {
 
-      console.error(
-        "Erro ao carregar mensagens:",
-        error
-      );
+      console.error("Erro ao carregar mensagens:", err);
 
       setError(
-        error.message ||
-        "Erro ao carregar mensagens."
+        err?.message ||
+        "Não foi possível carregar as mensagens."
       );
 
     } finally {
 
       setMessagesLoading(false);
-
     }
-
   }
 
 
-  // =========================================================
-  // CARREGAR MENSAGENS QUANDO TROCAR DE CONVERSA
-  // =========================================================
+  /* =========================
+     SELECTED CONVERSATION
+  ========================= */
 
   useEffect(() => {
 
-    if (!selectedConversation) {
+    if (!selectedConversation?.id) {
+      setMessages([]);
       return;
     }
 
+    const conversationId = selectedConversation.id;
 
-    async function openConversation() {
+    loadMessages(conversationId);
 
-      try {
-
-        await loadMessages(
-          selectedConversation.id
-        );
-
-
-        await markConversationNotificationsAsRead(
-          selectedConversation.id
-        );
-
-
-        console.log(
-          `Notificações da conversa ${selectedConversation.id} marcadas como lidas.`
-        );
-
-      } catch (error) {
-
+    markConversationNotificationsAsRead(conversationId)
+      .catch((err) => {
         console.error(
-          "Erro ao abrir conversa:",
-          error
+          "Erro ao marcar notificações:",
+          err
         );
-
-      }
-
-    }
-
-
-    openConversation();
+      });
 
   }, [selectedConversation]);
 
 
-  // =========================================================
-  // ATUALIZAR MENSAGENS AUTOMATICAMENTE
-  // =========================================================
+  /* =========================
+     AUTO SCROLL
+  ========================= */
 
   useEffect(() => {
 
-    if (!selectedConversation) {
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+
+  }, [messages]);
+
+
+  /* =========================
+     POLLING
+  ========================= */
+
+  useEffect(() => {
+
+    if (!selectedConversation?.id) {
       return;
     }
 
-    const interval =
-      setInterval(() => {
+    const interval = setInterval(() => {
 
-        loadMessages(
-          selectedConversation.id
-        );
+      loadMessages(selectedConversation.id);
 
-      }, 3000);
+    }, 3000);
 
-
-    return () =>
+    return () => {
       clearInterval(interval);
+    };
 
-  }, [selectedConversation]);
+  }, [selectedConversation?.id]);
 
 
-  // =========================================================
-  // ENVIAR MENSAGEM
-  // =========================================================
+  /* =========================
+     SEND MESSAGE
+  ========================= */
 
   async function handleSendMessage(event) {
 
     event.preventDefault();
 
-    if (
-      !message.trim() ||
-      !selectedConversation
-    ) {
+    const text = message.trim();
+
+    if (!text) {
+      return;
+    }
+
+    if (!selectedConversation?.id) {
+      return;
+    }
+
+    if (sending) {
       return;
     }
 
@@ -349,196 +466,509 @@ function ProviderChat() {
       setSending(true);
       setError("");
 
-
-      const newMessage =
-        await sendMessage(
-          selectedConversation.id,
-          message.trim()
-        );
-
-
-      setMessages(
-        (currentMessages) => [
-          ...currentMessages,
-          newMessage
-        ]
+      const newMessage = await sendMessage(
+        selectedConversation.id,
+        text
       );
-
 
       setMessage("");
 
-    } catch (error) {
+      if (newMessage) {
 
-      console.error(
-        "Erro ao enviar mensagem:",
-        error
-      );
+        setMessages((previous) => [
+          ...previous,
+          newMessage
+        ]);
+
+      } else {
+
+        await loadMessages(
+          selectedConversation.id
+        );
+      }
+
+      scrollToBottom();
+
+      await loadConversations();
+
+    } catch (err) {
+
+      console.error("Erro ao enviar mensagem:", err);
 
       setError(
-        error.message ||
-        "Erro ao enviar mensagem."
+        err?.message ||
+        "Não foi possível enviar a mensagem."
       );
 
     } finally {
 
       setSending(false);
-
     }
-
   }
 
 
-  // =========================================================
-  // OBTER ID DO UTILIZADOR LOGADO
-  // =========================================================
+  /* =========================
+     SELECT CONVERSATION
+  ========================= */
 
-  function getCurrentUserId() {
+  function handleSelectConversation(conversation) {
 
-    const token =
-      localStorage.getItem(
-        "access_token"
-      );
+    setSelectedConversation(conversation);
 
-    if (!token) {
-      return null;
-    }
+    setMessages([]);
 
-    try {
-
-      const payload =
-        JSON.parse(
-          atob(
-            token.split(".")[1]
-          )
-        );
-
-
-      return Number(
-        payload.sub
-      );
-
-    } catch {
-
-      return null;
-
-    }
-
-  }
-
-
-  const currentUserId =
-    getCurrentUserId();
-
-
-  // =========================================================
-  // SELECIONAR CONVERSA
-  // =========================================================
-
-  function handleSelectConversation(
-    conversation
-  ) {
-
-    setSelectedConversation(
-      conversation
+    window.history.replaceState(
+      {},
+      "",
+      `/provider/chat?conversation_id=${conversation.id}`
     );
 
-    // No telemóvel mostra a conversa
-    setMobileChatOpen(true);
-
+    if (window.innerWidth <= 768) {
+      setMobileChatOpen(true);
+    }
   }
 
 
-  // =========================================================
-  // VOLTAR PARA LISTA DE CONVERSAS
-  // =========================================================
+  /* =========================
+     MOBILE BACK
+  ========================= */
 
-  function handleBackToConversations() {
+  function handleMobileBack() {
 
     setMobileChatOpen(false);
 
+    window.history.replaceState(
+      {},
+      "",
+      "/provider/chat"
+    );
   }
 
 
-  // =========================================================
-  // INTERFACE
-  // =========================================================
+  /* =========================
+     FILTER
+  ========================= */
+
+  const filteredConversations =
+    conversations.filter((conversation) => {
+
+      const name = getClientName(
+        conversation
+      ).toLowerCase();
+
+      return name.includes(
+        search.toLowerCase()
+      );
+    });
+
+
+  const currentUserId = getCurrentUserId();
+
+
+  /* =========================
+     RENDER
+  ========================= */
 
   return (
+    <div className="provider-chat-page">
 
-    <div className="dashboard">
+      {/* =========================
+          MOBILE HEADER
+      ========================= */}
 
+      <header className="provider-mobile-header">
 
-      {/* =====================================================
-          SIDEBAR
-      ===================================================== */}
+        <button
+          className="provider-hamburger"
+          onClick={() => setMenuOpen(true)}
+          aria-label="Abrir menu"
+          aria-expanded={menuOpen}
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
 
-      <aside className="sidebar">
-
-        <div className="logo">
+        <div className="provider-mobile-logo">
           Mão<span>NaObra</span>
         </div>
 
+        <div className="provider-mobile-notification">
+          <NotificationBell />
+        </div>
 
-        <nav>
+      </header>
 
-          <a href="/provider">
-            🏠 Visão geral
+
+      {/* =========================
+          SIDEBAR OVERLAY
+      ========================= */}
+
+      {menuOpen && (
+        <div
+          className="provider-sidebar-overlay"
+          onClick={closeMenu}
+          aria-hidden="true"
+        />
+      )}
+
+
+      {/* =========================
+          SIDEBAR
+      ========================= */}
+
+      <aside
+        className={`provider-sidebar ${
+          menuOpen
+            ? "provider-sidebar-open"
+            : ""
+        }`}
+      >
+
+        <button
+          className="provider-sidebar-close"
+          onClick={closeMenu}
+          aria-label="Fechar menu"
+        >
+          ×
+        </button>
+
+
+        <div className="provider-sidebar-brand">
+
+          <div className="provider-brand-mark">
+            M
+          </div>
+
+          <div>
+
+            <div className="provider-brand-name">
+              Mão<span>NaObra</span>
+            </div>
+
+            <div className="provider-brand-area">
+              Área profissional
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div className="provider-area-badge">
+
+          <div className="provider-area-icon">
+            🛠️
+          </div>
+
+          <div>
+
+            <strong>
+              ÁREA DO PRESTADOR
+            </strong>
+
+            <span>
+              Gerencie o seu trabalho
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div className="provider-nav-title">
+          MENU PRINCIPAL
+        </div>
+
+
+        <nav className="provider-sidebar-nav">
+
+          <a
+            href="/provider"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+            <span className="provider-nav-icon">
+              ◈
+            </span>
+
+            <span>
+              Visão geral
+            </span>
           </a>
 
-          <a href="/provider/services">
-            🔧 Meus serviços
+
+          <a
+            href="/provider/services"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+            <span className="provider-nav-icon">
+              🔧
+            </span>
+
+            <span>
+              Meus serviços
+            </span>
           </a>
 
-          <a href="/provider/services/new">
-            ➕ Criar serviço
+
+          <a
+            href="/provider/services/new"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+            <span className="provider-nav-icon">
+              ＋
+            </span>
+
+            <span>
+              Criar serviço
+            </span>
           </a>
 
-          <a href="/provider/requests">
-            📋 Pedidos recebidos
+
+          <a
+            href="/provider/requests"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+            <span className="provider-nav-icon">
+              ▣
+            </span>
+
+            <span>
+              Pedidos recebidos
+            </span>
           </a>
 
-          <a href="/provider/chat">
-            💬 Mensagens
+
+          <a
+            href="/provider/projects"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+            <span className="provider-nav-icon">
+              ◉
+            </span>
+
+            <span>
+              Projetos disponíveis
+            </span>
           </a>
 
-          <a href="/provider/profile">
-            👤 Meu perfil
+
+          <a
+            href="/provider/chat"
+            onClick={closeMenu}
+            className="provider-nav-link provider-messages-link active"
+          >
+            <span className="provider-nav-icon provider-messages-icon">
+
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+
+                <path
+                  d="M20 11.5C20 16.194 16.194 20 11.5 20C10.337 20 9.222 19.766 8.21 19.343L4 20L4.657 15.79C4.234 14.778 4 13.663 4 12.5C4 7.806 7.806 4 12.5 4C17.194 4 20 7.806 20 11.5Z"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+
+                <path
+                  d="M8 12H8.01"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+
+                <path
+                  d="M12 12H12.01"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+
+                <path
+                  d="M16 12H16.01"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+
+              </svg>
+
+            </span>
+
+            <span className="provider-messages-label">
+              Mensagens
+            </span>
+
+            <span className="provider-messages-status">
+              <span className="provider-messages-status-dot"></span>
+            </span>
+
+          </a>
+
+
+          <a
+            href="/provider/reviews"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+            <span className="provider-nav-icon">
+              ★
+            </span>
+
+            <span>
+              Avaliações
+            </span>
+          </a>
+
+
+          <div className="provider-nav-divider"></div>
+
+
+          <div className="provider-nav-title">
+            CONTA
+          </div>
+
+
+          <a
+            href="/provider/profile"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+            <span className="provider-nav-icon">
+              ○
+            </span>
+
+            <span>
+              Meu perfil
+            </span>
+          </a>
+
+
+          <a
+            href="/"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+            <span className="provider-nav-icon">
+              ⌂
+            </span>
+
+            <span>
+              Página inicial
+            </span>
           </a>
 
         </nav>
 
 
-        <button
-          onClick={logout}
-          className="sidebar-logout"
-        >
-          Sair
-        </button>
+        {/* =========================
+            SIDEBAR BOTTOM
+        ========================= */}
+
+        <div className="provider-sidebar-bottom">
+
+          <button
+            type="button"
+            className="provider-client-mode"
+            onClick={handleClientMode}
+          >
+
+            <span className="provider-client-mode-icon">
+              👤
+            </span>
+
+            <span>
+
+              <strong>
+                Modo Cliente
+              </strong>
+
+              <small>
+                Procurar profissionais
+              </small>
+
+            </span>
+
+            <span className="provider-client-arrow">
+              →
+            </span>
+
+          </button>
+
+
+          <div className="provider-sidebar-user">
+
+            <div className="provider-user-avatar">
+              {getInitials(user?.name)}
+            </div>
+
+            <div className="provider-user-info">
+
+              <strong>
+                {user?.name || "Prestador"}
+              </strong>
+
+              <span>
+                Prestador
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <button
+            onClick={handleLogout}
+            className="provider-logout"
+          >
+            <span>
+              ↪
+            </span>
+
+            Sair da conta
+
+          </button>
+
+        </div>
 
       </aside>
 
 
-      {/* =====================================================
-          CONTEÚDO PRINCIPAL
-      ===================================================== */}
+      {/* =========================
+          MAIN
+      ========================= */}
 
-      <main className="dashboard-content">
+      <main className="provider-main">
 
 
-        {/* ===================================================
-            CABEÇALHO
-        =================================================== */}
+        {/* =========================
+            TOPBAR
+        ========================= */}
 
-        <div className="dashboard-header">
+        <header className="provider-topbar">
 
-          <div>
+          <div className="provider-page-heading">
 
-            <span className="section-label">
-              MENSAGENS
-            </span>
+            <div className="provider-heading-label">
+
+              <span className="provider-heading-dot"></span>
+
+              COMUNICAÇÃO
+
+            </div>
 
             <h1>
-              Conversas com clientes 💬
+              Mensagens
             </h1>
 
             <p>
@@ -547,499 +977,459 @@ function ProviderChat() {
 
           </div>
 
-        </div>
+
+          <div className="provider-header-actions">
+
+            <NotificationBell />
 
 
-        {/* ===================================================
-            ERRO
-        =================================================== */}
+            <button
+              type="button"
+              className="provider-header-client-btn"
+              onClick={handleClientMode}
+            >
+              👤
+              <span>
+                Área do Cliente
+              </span>
+            </button>
+
+
+            <a
+              href="/provider/services/new"
+              className="provider-create-btn"
+            >
+              <span>
+                ＋
+              </span>
+
+              Criar serviço
+
+            </a>
+
+          </div>
+
+        </header>
+
+
+        {/* =========================
+            ERROR
+        ========================= */}
 
         {error && (
 
-          <div className="error-message">
+          <div className="provider-chat-error">
             {error}
           </div>
 
         )}
 
 
-        {/* ===================================================
-            ÁREA DE CHAT
-        =================================================== */}
+        {/* =========================
+            CHAT
+        ========================= */}
 
-        <section
-          className="dashboard-section chat-section"
-          style={{
-            padding: 0,
-            overflow: "hidden"
-          }}
-        >
+        <section className="provider-chat-container">
 
-          <div
-            className={
-              `chat-layout ${
-                mobileChatOpen
-                  ? "mobile-chat-open"
-                  : ""
-              }`
-            }
+
+          {/* =========================
+              CONVERSATION LIST
+          ========================= */}
+
+          <aside
+            className={`provider-chat-list ${
+              mobileChatOpen
+                ? "provider-chat-list-hidden-mobile"
+                : ""
+            }`}
           >
 
+            <div className="provider-chat-list-header">
 
-            {/* =================================================
-                LISTA DE CONVERSAS
-            ================================================= */}
+              <div>
 
-            <div
-              className="chat-conversations"
-              style={{
-                borderRight:
-                  "1px solid #e5e7eb",
-                background:
-                  "#f8fafc"
-              }}
-            >
-
-              <div
-                style={{
-                  padding: "20px",
-                  borderBottom:
-                    "1px solid #e5e7eb"
-                }}
-              >
-
-                <strong>
+                <h2>
                   Conversas
-                </strong>
+                </h2>
+
+                <span>
+                  {conversations.length}{" "}
+                  {conversations.length === 1
+                    ? "conversa"
+                    : "conversas"}
+                </span>
 
               </div>
 
+            </div>
+
+
+            <div className="provider-chat-search">
+
+              <span>
+                ⌕
+              </span>
+
+              <input
+                type="text"
+                placeholder="Pesquisar conversa..."
+                value={search}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
+              />
+
+            </div>
+
+
+            <div className="provider-conversations">
 
               {loading ? (
 
-                <div
-                  style={{
-                    padding: "20px"
-                  }}
-                >
-                  Carregando...
-                </div>
+                <div className="provider-chat-empty">
 
-              ) : conversations.length === 0 ? (
-
-                <div
-                  style={{
-                    padding: "20px"
-                  }}
-                >
+                  <div className="provider-chat-loading-spinner"></div>
 
                   <p>
-                    Você ainda não possui conversas.
+                    A carregar conversas...
                   </p>
 
-                  <p
-                    style={{
-                      fontSize: "13px",
-                      color: "#64748b"
-                    }}
-                  >
-                    Quando um cliente enviar uma
-                    mensagem, a conversa aparecerá aqui.
+                </div>
+
+              ) : filteredConversations.length === 0 ? (
+
+                <div className="provider-chat-empty">
+
+                  <div className="provider-chat-empty-icon">
+                    💬
+                  </div>
+
+                  <strong>
+                    {search
+                      ? "Nenhuma conversa encontrada"
+                      : "Ainda não tem conversas"}
+                  </strong>
+
+                  <p>
+                    {search
+                      ? "Tente pesquisar por outro nome."
+                      : "As mensagens dos seus clientes aparecerão aqui."}
                   </p>
 
                 </div>
 
               ) : (
 
-                conversations.map(
-                  (conversation) => (
+                filteredConversations.map(
+                  (conversation) => {
 
-                    <button
-                      key={conversation.id}
-                      type="button"
-                      onClick={() =>
-                        handleSelectConversation(
-                          conversation
-                        )
-                      }
-                      style={{
-                        width: "100%",
-                        padding: "18px",
-                        border: "none",
-                        borderBottom:
-                          "1px solid #e5e7eb",
-                        background:
-                          selectedConversation?.id ===
-                          conversation.id
-                            ? "#ffffff"
-                            : "transparent",
-                        textAlign: "left",
-                        cursor: "pointer"
-                      }}
-                    >
+                    const isSelected =
+                      Number(
+                        selectedConversation?.id
+                      ) === Number(
+                        conversation.id
+                      );
 
-                      <strong>
-                        👤{" "}
-                        {conversation.client_name ||
-                          "Cliente"}
-                      </strong>
+                    const clientName =
+                      getClientName(
+                        conversation
+                      );
 
+                    return (
 
-                      <p
-                        style={{
-                          margin:
-                            "6px 0 0",
-                          fontSize: "13px",
-                          color: "#64748b"
-                        }}
+                      <button
+                        type="button"
+                        key={conversation.id}
+                        className={`provider-conversation-item ${
+                          isSelected
+                            ? "selected"
+                            : ""
+                        }`}
+                        onClick={() =>
+                          handleSelectConversation(
+                            conversation
+                          )
+                        }
                       >
-                        Cliente
-                      </p>
+
+                        <div className="provider-conversation-avatar">
+
+                          {getInitials(
+                            clientName
+                          )}
+
+                        </div>
 
 
-                      <p
-                        style={{
-                          margin:
-                            "4px 0 0",
-                          fontSize: "12px",
-                          color: "#94a3b8"
-                        }}
-                      >
-                        Conversa #
-                        {conversation.id}
-                      </p>
+                        <div className="provider-conversation-info">
 
-                    </button>
+                          <div className="provider-conversation-top">
 
-                  )
+                            <strong>
+                              {clientName}
+                            </strong>
+
+                            <span>
+                              {formatConversationTime(
+                                conversation.updated_at ||
+                                conversation.last_message_at ||
+                                conversation.created_at
+                              )}
+                            </span>
+
+                          </div>
+
+
+                          <div className="provider-conversation-bottom">
+
+                            <p>
+                              {getLastMessage(
+                                conversation
+                              )}
+                            </p>
+
+                          </div>
+
+                        </div>
+
+                      </button>
+
+                    );
+                  }
                 )
 
               )}
 
             </div>
 
+          </aside>
 
-            {/* =================================================
-                ÁREA DAS MENSAGENS
-            ================================================= */}
 
-            <div
-              className="chat-window"
-              style={{
-                display: "flex",
-                flexDirection: "column"
-              }}
-            >
+          {/* =========================
+              CONVERSATION WINDOW
+          ========================= */}
 
-              {!selectedConversation ? (
+          <section
+            className={`provider-conversation-window ${
+              mobileChatOpen
+                ? "provider-conversation-window-mobile-open"
+                : ""
+            }`}
+          >
 
-                <div
-                  style={{
-                    flex: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: "40px"
-                  }}
-                >
+            {!selectedConversation ? (
 
-                  <div
-                    style={{
-                      textAlign: "center"
-                    }}
-                  >
+              <div className="provider-chat-welcome">
 
-                    <div
-                      style={{
-                        fontSize: "48px"
-                      }}
-                    >
-                      💬
-                    </div>
-
-                    <h2>
-                      Selecione uma conversa
-                    </h2>
-
-                    <p>
-                      Escolha um cliente para
-                      começar a conversar.
-                    </p>
-
-                  </div>
-
+                <div className="provider-chat-welcome-icon">
+                  💬
                 </div>
 
-              ) : (
+                <h2>
+                  As suas mensagens
+                </h2>
 
-                <>
+                <p>
+                  Selecione uma conversa para começar
+                  a conversar com um cliente.
+                </p>
 
+              </div>
 
-                  {/* ===========================================
-                      CABEÇALHO DA CONVERSA
-                  =========================================== */}
+            ) : (
 
-                  <div
-                    className="chat-conversation-header"
-                    style={{
-                      padding: "20px",
-                      borderBottom:
-                        "1px solid #e5e7eb"
-                    }}
+              <>
+
+                {/* =========================
+                    CONVERSATION HEADER
+                ========================= */}
+
+                <header className="provider-conversation-header">
+
+                  <button
+                    type="button"
+                    className="provider-mobile-back"
+                    onClick={handleMobileBack}
+                    aria-label="Voltar para conversas"
                   >
-
-                    <button
-                      type="button"
-                      className="chat-back-button"
-                      onClick={
-                        handleBackToConversations
-                      }
-                    >
-                      ← Voltar
-                    </button>
+                    ←
+                  </button>
 
 
-                    <h2
-                      style={{
-                        margin: 0
-                      }}
-                    >
-                      💬{" "}
-                      {selectedConversation.client_name ||
-                        "Cliente"}
-                    </h2>
+                  <div className="provider-conversation-header-avatar">
 
-
-                    <p
-                      style={{
-                        margin:
-                          "6px 0 0",
-                        color: "#64748b"
-                      }}
-                    >
-                      Conversa com o cliente
-                    </p>
-
-                  </div>
-
-
-                  {/* ===========================================
-                      MENSAGENS
-                  =========================================== */}
-
-                  <div
-                    className="chat-messages"
-                    style={{
-                      flex: 1,
-                      padding: "20px",
-                      overflowY: "auto",
-                      minHeight: "400px",
-                      maxHeight: "450px",
-                      background:
-                        "#f8fafc"
-                    }}
-                  >
-
-                    {messagesLoading &&
-                    messages.length === 0 ? (
-
-                      <p>
-                        Carregando mensagens...
-                      </p>
-
-                    ) : messages.length === 0 ? (
-
-                      <div
-                        style={{
-                          textAlign: "center",
-                          padding:
-                            "50px 20px"
-                        }}
-                      >
-
-                        <div
-                          style={{
-                            fontSize: "40px"
-                          }}
-                        >
-                          👋
-                        </div>
-
-                        <h3>
-                          Comece a conversa
-                        </h3>
-
-                        <p>
-                          Responda ao cliente
-                          para iniciar a conversa.
-                        </p>
-
-                      </div>
-
-                    ) : (
-
-                      messages.map(
-                        (item) => {
-
-                          const isMine =
-                            Number(item.sender_id) ===
-                            Number(currentUserId);
-
-
-                          return (
-
-                            <div
-                              key={item.id}
-                              style={{
-                                display: "flex",
-                                justifyContent:
-                                  isMine
-                                    ? "flex-end"
-                                    : "flex-start",
-                                marginBottom:
-                                  "12px"
-                              }}
-                            >
-
-                              <div
-                                className="chat-message-bubble"
-                                style={{
-                                  maxWidth: "70%",
-                                  padding:
-                                    "12px 16px",
-                                  borderRadius:
-                                    "12px",
-                                  background:
-                                    isMine
-                                      ? "#2563eb"
-                                      : "#e5e7eb",
-                                  color:
-                                    isMine
-                                      ? "#ffffff"
-                                      : "#111827",
-                                  boxShadow:
-                                    "0 1px 3px rgba(0,0,0,0.08)"
-                                }}
-                              >
-
-                                <p
-                                  style={{
-                                    margin: 0,
-                                    whiteSpace:
-                                      "pre-wrap",
-                                    wordBreak:
-                                      "break-word"
-                                  }}
-                                >
-                                  {item.content}
-                                </p>
-
-
-                                <small
-                                  style={{
-                                    display:
-                                      "block",
-                                    marginTop:
-                                      "6px",
-                                    opacity: 0.7
-                                  }}
-                                >
-                                  {new Date(
-                                    item.created_at
-                                  ).toLocaleTimeString(
-                                    "pt-PT",
-                                    {
-                                      hour:
-                                        "2-digit",
-                                      minute:
-                                        "2-digit"
-                                    }
-                                  )}
-                                </small>
-
-                              </div>
-
-                            </div>
-
-                          );
-
-                        }
+                    {getInitials(
+                      getClientName(
+                        selectedConversation
                       )
-
                     )}
 
                   </div>
 
 
-                  {/* ===========================================
-                      FORMULÁRIO DE ENVIO
-                  =========================================== */}
+                  <div className="provider-conversation-header-info">
 
-                  <form
-                    className="chat-form"
-                    onSubmit={
-                      handleSendMessage
+                    <strong>
+                      {getClientName(
+                        selectedConversation
+                      )}
+                    </strong>
+
+                    <span>
+                      Cliente
+                    </span>
+
+                  </div>
+
+                </header>
+
+
+                {/* =========================
+                    MESSAGES
+                ========================= */}
+
+                <div className="provider-messages-area">
+
+                  {messagesLoading && messages.length === 0 ? (
+
+                    <div className="provider-messages-loading">
+
+                      <div className="provider-chat-loading-spinner"></div>
+
+                      <span>
+                        A carregar mensagens...
+                      </span>
+
+                    </div>
+
+                  ) : messages.length === 0 ? (
+
+                    <div className="provider-no-messages">
+
+                      <div>
+                        💬
+                      </div>
+
+                      <strong>
+                        Nenhuma mensagem ainda
+                      </strong>
+
+                      <span>
+                        Envie uma mensagem para iniciar
+                        a conversa.
+                      </span>
+
+                    </div>
+
+                  ) : (
+
+                    messages.map((item, index) => {
+
+                      const senderId =
+                        item.sender_id ??
+                        item.user_id ??
+                        item.sender?.id;
+
+                      const isMine =
+                        currentUserId !== null &&
+                        Number(senderId) ===
+                          Number(currentUserId);
+
+                      return (
+
+                        <div
+                          key={
+                            item.id ??
+                            `${item.created_at}-${index}`
+                          }
+                          className={`provider-message-row ${
+                            isMine
+                              ? "mine"
+                              : "received"
+                          }`}
+                        >
+
+                          <div className="provider-message-bubble">
+
+                            <p>
+                              {item.content ??
+                                item.message ??
+                                ""}
+                            </p>
+
+                            <span>
+                              {formatTime(
+                                item.created_at ||
+                                item.sent_at
+                              )}
+                            </span>
+
+                          </div>
+
+                        </div>
+
+                      );
+
+                    })
+
+                  )}
+
+                  <div ref={messagesEndRef} />
+
+                </div>
+
+
+                {/* =========================
+                    MESSAGE FORM
+                ========================= */}
+
+                <form
+                  className="provider-message-form"
+                  onSubmit={handleSendMessage}
+                >
+
+                  <input
+                    type="text"
+                    placeholder="Escreva uma mensagem..."
+                    value={message}
+                    onChange={(event) =>
+                      setMessage(
+                        event.target.value
+                      )
                     }
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      padding: "16px",
-                      borderTop:
-                        "1px solid #e5e7eb",
-                      background:
-                        "#ffffff"
-                    }}
+                    disabled={sending}
+                  />
+
+
+                  <button
+                    type="submit"
+                    disabled={
+                      sending ||
+                      !message.trim()
+                    }
+                    aria-label="Enviar mensagem"
                   >
 
-                    <input
-                      type="text"
-                      value={message}
-                      onChange={(event) =>
-                        setMessage(
-                          event.target.value
-                        )
-                      }
-                      placeholder="Responder ao cliente..."
-                      maxLength={2000}
-                      disabled={sending}
-                      style={{
-                        flex: 1
-                      }}
-                    />
+                    {sending ? (
+                      "..."
+                    ) : (
+                      "➤"
+                    )}
 
+                  </button>
 
-                    <button
-                      type="submit"
-                      className="register-btn"
-                      disabled={
-                        sending ||
-                        !message.trim()
-                      }
-                    >
-                      {sending
-                        ? "Enviando..."
-                        : "📨 Enviar"}
-                    </button>
+                </form>
 
-                  </form>
+              </>
 
-                </>
+            )}
 
-              )}
-
-            </div>
-
-          </div>
+          </section>
 
         </section>
 
       </main>
 
     </div>
-
   );
-
 }
-
-
-export default ProviderChat;

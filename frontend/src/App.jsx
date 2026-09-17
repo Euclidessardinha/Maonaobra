@@ -47,6 +47,7 @@ import "./App.css";
 
 import ClientFavorites from "./pages/ClientFavorites";
 import ClientProfile from "./pages/ClientProfile";
+import ProviderProfile from "./pages/ProviderProfile";
 
 /* =========================================================
 PÁGINA INICIAL
@@ -325,7 +326,7 @@ return (
           PESQUISA
       ================================================= */}
 
-      <form
+      {/*<form
         className="search-box"
         onSubmit={handleSearch}
       >
@@ -390,6 +391,7 @@ return (
         </button>
 
       </form>
+      */}
 
 
       {/* =================================================
@@ -398,12 +400,7 @@ return (
 
       <div
         className="hero-actions"
-        style={{
-          display: "flex",
-          gap: "14px",
-          flexWrap: "wrap",
-          marginTop: "24px"
-        }}
+        
       >
 
         <button
@@ -1010,6 +1007,28 @@ return (
 
 
 }
+
+
+
+/* =======================================================
+PROVIDER — MEU PERFIL PROFISSIONAL
+======================================================= */
+
+if (path === "/provider/profile") {
+
+  return (
+
+    <ProviderRoute>
+
+      <ProviderProfile />
+
+    </ProviderRoute>
+
+  );
+
+}
+
+
 
 
 /* =======================================================

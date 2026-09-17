@@ -477,3 +477,43 @@ export async function deleteService(
   return data;
 }
 
+
+// ============================================================
+// ATUALIZAR PERFIL PROFISSIONAL
+// ============================================================
+
+export async function updateMyProviderProfile(
+  profileData
+) {
+
+  const token =
+    localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `${API_URL}/providers/me`,
+    {
+      method: "PATCH",
+
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+
+      body: JSON.stringify(profileData),
+    }
+  );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : "Erro ao atualizar o perfil profissional."
+    );
+  }
+
+  return data;
+}
+

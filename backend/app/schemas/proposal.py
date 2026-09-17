@@ -1,7 +1,6 @@
-
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ProposalCreate(BaseModel):
@@ -11,7 +10,7 @@ class ProposalCreate(BaseModel):
 
 class ProviderProposalResponse(BaseModel):
     id: int
-    name: str
+    name: str = Field(default="Profissional")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -27,4 +26,3 @@ class ProposalResponse(BaseModel):
     provider: ProviderProposalResponse | None = None
 
     model_config = ConfigDict(from_attributes=True)
-

@@ -463,14 +463,52 @@ function ProviderDashboard() {
           <a
             href="/provider/chat"
             onClick={closeMenu}
-            className="provider-nav-link"
+            className="provider-nav-link provider-messages-link"
           >
-            <span className="provider-nav-icon">
-              ◌
+            <span className="provider-nav-icon provider-messages-icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+              <path
+                d="M20 11.5C20 16.194 16.194 20 11.5 20C10.337 20 9.222 19.766 8.21 19.343L4 20L4.657 15.79C4.234 14.778 4 13.663 4 12.5C4 7.806 7.806 4 12.5 4C17.194 4 20 7.806 20 11.5Z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+
+              <path
+                d="M8 12H8.01"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+
+              <path
+                d="M12 12H12.01"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+
+              <path
+                d="M16 12H16.01"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              </svg>
             </span>
 
-            <span>
+            <span className="provider-messages-label">
               Mensagens
+            </span>
+
+            <span className="provider-messages-status">
+              <span className="provider-messages-status-dot"></span>
             </span>
           </a>
 

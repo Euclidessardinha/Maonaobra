@@ -1,811 +1,1035 @@
 import { useEffect, useState } from "react";
 
 import {
-  getProject,
-  getProjectProposals,
-  acceptProposal,
-  completeProject
+getProject,
+getProjectProposals,
+acceptProposal,
+completeProject
 } from "../api/projects";
 
-import { createReview, getMyReviewProjects } from "../api/reviews";
+import {
+createReview,
+getMyReviewProjects
+} from "../api/reviews";
 
+import "./ClientProject.css";
 
 function ClientProject() {
 
-  const [project, setProject] = useState(null);
+const [project, setProject] = useState(null);
+const [proposals, setProposals] = useState([]);
 
-  const [proposals, setProposals] = useState([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState("");
 
-  const [loading, setLoading] = useState(true);
+const [accepting, setAccepting] = useState(null);
 
-  const [error, setError] = useState("");
+const [rating, setRating] = useState(5);
+const [comment, setComment] = useState("");
 
-  const [accepting, setAccepting] = useState(null);
+const [reviewLoading, setReviewLoading] = useState(false);
+const [reviewed, setReviewed] = useState(false);
 
-  const [rating, setRating] = useState(5);
+const [success, setSuccess] = useState("");
 
-  const [comment, setComment] = useState("");
-
-  const [reviewLoading, setReviewLoading] = useState(false);
-
-  const [reviewed, setReviewed] = useState(false);
-
-  const [success, setSuccess] = useState("");
+useEffect(() => {
 
 
-  useEffect(() => {
+async function loadProject() {
 
-    async function loadProject() {
+  try {
 
-      try {
+    setLoading(true);
+    setError("");
 
-        setLoading(true);
-        setError("");
+    const pathParts =
+      window.location.pathname.split("/");
 
-        const pathParts =
-          window.location.pathname.split("/");
+    const projectId =
+      pathParts[pathParts.length - 1];
 
-        const projectId =
-          pathParts[pathParts.length - 1];
+    const projectData =
+      await getProject(projectId);
 
+    const proposalsData =
+      await getProjectProposals(projectId);
 
-        const [
-          projectData,
-          proposalsData,
-          reviewProjects
-        ] = await Promise.all([
-
-          getProject(projectId),
-
-          getProjectProposals(projectId),
-
-          getMyReviewProjects()
-
-        ]);
+    const reviewProjects =
+      await getMyReviewProjects();
 
 
-        setProject(projectData);
+    setProject(projectData);
+    setProposals(proposalsData);
 
-        setProposals(proposalsData);
 
-        const currentProjectReview = reviewProjects.find(
-          (item) => item.id === Number(projectId)
-        );
+    const currentProjectReview =
+      reviewProjects.find(
+        (item) => item.id === Number(projectId)
+      );
 
-        if (currentProjectReview) {
-          setReviewed(currentProjectReview.reviewed);
-        }
 
-      } catch (error) {
+    if (currentProjectReview) {
 
-        console.error(
-          "Erro ao carregar projeto:",
-          error
-        );
-
-        setError(
-          error.message ||
-          "Erro ao carregar projeto."
-        );
-
-      } finally {
-
-        setLoading(false);
-
-      }
+      setReviewed(
+        currentProjectReview.reviewed
+      );
 
     }
 
-    loadProject();
+  } catch (error) {
 
-  }, []);
-
-
-  async function handleAcceptProposal(proposalId) {
-
-    const confirmed =
-      window.confirm(
-        "Tem certeza que deseja aceitar esta proposta? As outras propostas serão rejeitadas."
-      );
-
-
-    if (!confirmed) {
-      return;
-    }
-
-
-    try {
-
-      setAccepting(proposalId);
-
-      setError("");
-
-      setSuccess("");
-
-
-      await acceptProposal(proposalId);
-
-
-      setSuccess(
-        "Proposta aceita com sucesso! 🎉 O projeto agora está em andamento."
-      );
-
-
-      // Atualizar o projeto e as propostas
-
-      const pathParts =
-        window.location.pathname.split("/");
-
-      const projectId =
-        pathParts[pathParts.length - 1];
-
-
-      const [
-        updatedProject,
-        updatedProposals
-      ] = await Promise.all([
-
-        getProject(projectId),
-
-        getProjectProposals(projectId)
-
-      ]);
-
-
-      setProject(updatedProject);
-
-      setProposals(updatedProposals);
-
-    } catch (error) {
-
-      console.error(
-        "Erro ao aceitar proposta:",
-        error
-      );
-
-      setError(
-        error.message ||
-        "Erro ao aceitar proposta."
-      );
-
-    } finally {
-
-      setAccepting(null);
-
-    }
-
-  }
-
-
-  async function handleCreateReview() {
-
-    try {
-
-      setError("");
-      setSuccess("");
-      setReviewLoading(true);
-
-      await createReview(
-        project.id,
-        Number(rating),
-        comment
-      );
-
-      setReviewed(true);
-
-      setSuccess(
-        "Avaliação enviada com sucesso! ⭐"
-      );
-
-      setRating(5);
-      setComment("");
-
-    } catch (error) {
-
-      console.error(error);
-
-      setError(
-        error.message ||
-        "Erro ao enviar avaliação."
-      );
-
-    } finally {
-
-      setReviewLoading(false);
-
-    }
-  }
-
-  
-  async function handleCompleteProject() {
-
-    const confirmed = window.confirm(
-      "Tem certeza que deseja marcar este projeto como concluído?"
+    console.error(
+      "Erro ao carregar projeto:",
+      error
     );
 
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-
-      setError("");
-
-      await completeProject(project.id);
-
-      setSuccess(
-        "Projeto concluído com sucesso! 🎉"
-      );
-
-      const updatedProject =
-        await getProject(project.id);
-
-      setProject(updatedProject);
-
-    } catch (error) {
-
-      console.error(error);
-
-      setError(
-        error.message ||
-        "Erro ao concluir projeto."
-      );
-
-    }
-  }
-
-
-
-
-  function getStatusLabel(status) {
-
-    const labels = {
-      PENDING: "Pendente",
-      ACCEPTED: "Aceita",
-      REJECTED: "Rejeitada"
-    };
-
-    return labels[status] || status;
-
-  }
-
-
-  if (loading) {
-
-    return (
-
-      <div className="dashboard">
-
-        <main className="dashboard-content">
-
-          <div className="empty-state">
-
-            <h3>
-              Carregando projeto...
-            </h3>
-
-          </div>
-
-        </main>
-
-      </div>
-
+    setError(
+      error.message ||
+      "Erro ao carregar projeto."
     );
 
-  }
+  } finally {
 
-
-  if (error && !project) {
-
-    return (
-
-      <div className="dashboard">
-
-        <main className="dashboard-content">
-
-          <div className="error-message">
-            {error}
-          </div>
-
-          <a
-            href="/client"
-            className="register-btn"
-          >
-            ← Voltar
-          </a>
-
-        </main>
-
-      </div>
-
-    );
+    setLoading(false);
 
   }
 
+}
 
-  if (!project) {
-    return null;
-  }
+loadProject();
 
+}, []);
 
-  return (
+async function handleAcceptProposal(proposalId) {
 
-    <div className="dashboard">
 
-      {/* SIDEBAR */}
+const confirmed =
+  window.confirm(
+    "Tem certeza que deseja aceitar esta proposta? As outras propostas serão rejeitadas."
+  );
 
-      <aside className="sidebar">
 
-        <div className="logo">
-          Mão<span>NaObra</span>
-        </div>
+if (!confirmed) {
+  return;
+}
 
 
-        <nav>
+try {
 
-          <a href="/client">
-            🏠 Visão geral
-          </a>
+  setAccepting(proposalId);
+  setError("");
+  setSuccess("");
 
-          <a href="/client/requests">
-            📋 Meus pedidos
-          </a>
 
-          <a href="/client/favorites">
-            ❤️ Favoritos
-          </a>
+  await acceptProposal(proposalId);
 
-          <a href="/client/reviews">
-            ⭐ Avaliações
-          </a>
 
-          <a href="/client/profile">
-            👤 Meu perfil
-          </a>
+  setSuccess(
+    "Proposta aceita com sucesso! O projeto agora está em andamento."
+  );
 
-        </nav>
 
-      </aside>
+  const pathParts =
+    window.location.pathname.split("/");
 
+  const projectId =
+    pathParts[pathParts.length - 1];
 
-      {/* CONTEÚDO */}
 
-      <main className="dashboard-content">
+  const [
+    updatedProject,
+    updatedProposals
+  ] = await Promise.all([
 
-        {/* CABEÇALHO */}
+    getProject(projectId),
+    getProjectProposals(projectId)
 
-        <div className="dashboard-header">
+  ]);
 
-          <div>
 
-            <span className="section-label">
-              MEU PROJETO
-            </span>
+  setProject(updatedProject);
+  setProposals(updatedProposals);
 
-            <h1>
-              {project.title}
-            </h1>
 
-            <p>
-              Consulte os detalhes e as propostas
-              recebidas dos profissionais.
-            </p>
+} catch (error) {
 
-          </div>
+  console.error(
+    "Erro ao aceitar proposta:",
+    error
+  );
 
+  setError(
+    error.message ||
+    "Erro ao aceitar proposta."
+  );
 
-          <a
-            href="/client"
-            className="register-btn"
-          >
-            ← Voltar
-          </a>
+} finally {
 
-        </div>
+  setAccepting(null);
 
+}
 
-        {/* ERRO */}
 
-        {error && (
+}
 
-          <div className="error-message">
-            {error}
-          </div>
+async function handleCompleteProject() {
 
-        )}
 
+const confirmed =
+  window.confirm(
+    "Tem certeza que deseja marcar este projeto como concluído?"
+  );
 
-        {/* SUCESSO */}
 
-        {success && (
+if (!confirmed) {
+  return;
+}
 
-          <div className="success-message">
-            {success}
-          </div>
 
-        )}
+try {
 
+  setError("");
+  setSuccess("");
 
-        {/* DETALHES DO PROJETO */}
 
-        <section className="dashboard-section">
+  await completeProject(project.id);
 
-          <div className="section-header">
 
-            <div>
+  setSuccess(
+    "Projeto concluído com sucesso!"
+  );
 
-              <h2>
-                Detalhes do projeto
-              </h2>
 
-              <p>
-                Informações do serviço que você publicou.
-              </p>
+  const updatedProject =
+    await getProject(project.id);
 
-            </div>
 
+  setProject(updatedProject);
 
-            <span
-              className={
-                `status-badge status-${project.status?.toLowerCase()}`
-              }
-            >
-              {project.status}
-            </span>
 
-            
-            {project.status === "IN_PROGRESS" && (
+} catch (error) {
 
-              <button
-                onClick={handleCompleteProject}
-                className="register-btn"
-                style={{
-                  marginTop: "15px"
-                }}
-              >
-                ✓ Concluir projeto
-              </button>
+  console.error(error);
 
-            )}
-
-            
-            {project.status === "COMPLETED" && !reviewed && (
-
-              <section className="dashboard-section">
-
-                <div className="section-header">
-
-                  <div>
-
-                    <h2>
-                      ⭐ Avaliar profissional
-                    </h2>
-
-                    <p>
-                      Conte como foi a sua experiência com o profissional.
-                    </p>
-
-                  </div>
-
-                </div>
-
-
-                <div className="proposal-form">
-
-                  <div className="form-group">
-
-                    <label>
-                      Avaliação
-                    </label>
-
-                    <select
-                      value={rating}
-                      onChange={(e) =>
-                        setRating(Number(e.target.value))
-                      }
-                    >
-                      <option value={5}>⭐⭐⭐⭐⭐ Excelente</option>
-                      <option value={4}>⭐⭐⭐⭐ Muito bom</option>
-                      <option value={3}>⭐⭐⭐ Bom</option>
-                      <option value={2}>⭐⭐ Razoável</option>
-                      <option value={1}>⭐ Ruim</option>
-                    </select>
-
-                  </div>
-
-
-                  <div className="form-group">
-
-                    <label>
-                      Comentário
-                    </label>
-
-                    <textarea
-                      value={comment}
-                      onChange={(e) =>
-                        setComment(e.target.value)
-                      }
-                        placeholder="Escreva um comentário sobre o profissional..."
-                    />
-
-                  </div>
-
-
-                  <button
-                    onClick={handleCreateReview}
-                    className="register-btn"
-                    disabled={reviewLoading}
-                  >
-                    {reviewLoading
-                      ? "Enviando..."
-                      : "⭐ Enviar avaliação"}
-                  </button>
-
-                </div>
-
-                
-
-              </section>
-
-              )}
-
-              {project.status === "COMPLETED" && reviewed && (
-
-                <div className="success-message">
-                  ⭐ Você já avaliou este profissional. Obrigado pelo seu feedback!
-                </div>  
-              )}
-
-            
-
-
-          </div>
-
-
-          <div className="project-details">
-
-            <div className="project-detail-item project-description">
-
-              <span>
-                📝 Descrição do projeto
-              </span>
-
-              <p>
-                {project.description}
-              </p>
-
-            </div>
-
-
-            <div className="project-info-grid">
-
-              <div className="project-detail-item">
-
-                <span>
-                  📂 Categoria
-                </span>
-
-                <strong>
-                  {project.category}
-                </strong>
-
-              </div>
-
-
-              <div className="project-detail-item">
-
-                <span>
-                  📍 Localização
-                </span>
-
-                <strong>
-                  {project.location}
-                </strong>
-
-              </div>
-
-
-              <div className="project-detail-item budget-item">
-
-                <span>
-                  💰 Orçamento
-                </span>
-
-                <strong>
-
-                  {project.budget !== null &&
-                  project.budget !== undefined
-                    ? `${project.budget} MT`
-                    : "Não definido"}
-
-                </strong>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </section>
-
-
-        {/* PROPOSTAS */}
-
-        <section className="dashboard-section">
-
-          <div className="section-header">
-
-            <div>
-
-              <h2>
-                Propostas recebidas
-              </h2>
-
-              <p>
-                Compare as propostas dos profissionais
-                interessados no seu projeto.
-              </p>
-
-            </div>
-
-
-            <strong>
-              {proposals.length}{" "}
-              {proposals.length === 1
-                ? "proposta"
-                : "propostas"}
-            </strong>
-
-          </div>
-
-
-          {proposals.length === 0 ? (
-
-            <div className="empty-state">
-
-              <div className="empty-icon">
-                💼
-              </div>
-
-              <h3>
-                Nenhuma proposta recebida
-              </h3>
-
-              <p>
-                Quando os profissionais enviarem
-                propostas, elas aparecerão aqui.
-              </p>
-
-            </div>
-
-          ) : (
-
-            <div className="proposals-list">
-
-              {proposals.map((proposal) => (
-
-                <div
-                  className="proposal-card"
-                  key={proposal.id}
-                >
-
-                  <div className="proposal-card-header">
-
-                    <div>
-
-                      <h3>
-                        {proposal.provider?.name ||
-                        "Profissional"}
-                      </h3>
-
-                      <span>
-                        Proposta #{proposal.id}
-                      </span>
-
-                    </div>
-
-
-                    <span
-                      className={
-                        `status-badge status-${proposal.status?.toLowerCase()}`
-                      }
-                    >
-                      {getStatusLabel(
-                        proposal.status
-                      )}
-                    </span>
-
-                  </div>
-
-
-                  <div className="proposal-price">
-
-                    <span>
-                      Valor proposto
-                    </span>
-
-                    <strong>
-                      {proposal.price} MT
-                    </strong>
-
-                  </div>
-
-
-                  <div className="proposal-message">
-
-                    <span>
-                      💬 Mensagem do profissional
-                    </span>
-
-                    <p>
-                      {proposal.message}
-                    </p>
-
-                  </div>
-
-
-                  {proposal.status === "PENDING" &&
-                  project.status === "OPEN" && (
-
-                    <button
-                      className="accept-proposal-btn"
-                      onClick={() =>
-                        handleAcceptProposal(
-                          proposal.id
-                        )
-                      }
-                      disabled={
-                        accepting === proposal.id
-                      }
-                    >
-
-                      {accepting === proposal.id
-                        ? "Aceitando..."
-                        : "✓ Aceitar proposta"}
-
-                    </button>
-
-                  )}
-
-
-                  {proposal.status === "ACCEPTED" && (
-
-                    <div className="accepted-message">
-
-                      ✓ Esta proposta foi aceita
-
-                    </div>
-
-                  )}
-
-
-                  {proposal.status === "REJECTED" && (
-
-                    <div className="rejected-message">
-
-                      Esta proposta foi rejeitada
-
-                    </div>
-
-                  )}
-
-                </div>
-
-              ))}
-
-            </div>
-
-          )}
-
-        </section>
-
-      </main>
-
-    </div>
-
+  setError(
+    error.message ||
+    "Erro ao concluir projeto."
   );
 
 }
 
+
+}
+
+async function handleCreateReview() {
+
+
+if (!comment.trim()) {
+
+  setError(
+    "Escreva um comentário antes de enviar a avaliação."
+  );
+
+  return;
+
+}
+
+
+try {
+
+  setError("");
+  setSuccess("");
+  setReviewLoading(true);
+
+
+  await createReview(
+    project.id,
+    Number(rating),
+    comment
+  );
+
+
+  setReviewed(true);
+
+
+  setSuccess(
+    "Avaliação enviada com sucesso!"
+  );
+
+
+  setRating(5);
+  setComment("");
+
+
+} catch (error) {
+
+  console.error(error);
+
+  setError(
+    error.message ||
+    "Erro ao enviar avaliação."
+  );
+
+} finally {
+
+  setReviewLoading(false);
+
+}
+
+
+}
+
+function getStatusLabel(status) {
+
+
+const labels = {
+
+  OPEN: "Aberto",
+
+  IN_PROGRESS: "Em andamento",
+
+  COMPLETED: "Concluído",
+
+  PENDING: "Pendente",
+
+  ACCEPTED: "Aceita",
+
+  REJECTED: "Rejeitada"
+
+};
+
+return labels[status] || status;
+
+
+}
+
+function getStatusClass(status) {
+
+
+return (
+  `status-${status
+    ?.toLowerCase()
+    .replace("_", "-")}`
+);
+
+
+}
+
+if (loading) {
+
+
+return (
+
+  <div className="client-project-page">
+
+    <div className="client-project-loading">
+
+      <div className="loading-spinner"></div>
+
+      <h3>Carregando projeto...</h3>
+
+      <p>
+        Estamos preparando os detalhes do seu projeto.
+      </p>
+
+    </div>
+
+  </div>
+
+);
+
+
+}
+
+if (error && !project) {
+
+
+return (
+
+  <div className="client-project-page">
+
+    <div className="client-project-error">
+
+      <div className="error-icon">
+        !
+      </div>
+
+      <h2>
+        Não foi possível carregar o projeto
+      </h2>
+
+      <p>
+        {error}
+      </p>
+
+      <a
+        href="/client"
+        className="project-secondary-btn"
+      >
+        ← Voltar para o dashboard
+      </a>
+
+    </div>
+
+  </div>
+
+);
+
+
+}
+
+if (!project) {
+return null;
+}
+
+return (
+
+
+<div className="client-project-page">
+
+  {/* =========================
+      TOP BAR
+  ========================== */}
+
+  <header className="project-topbar">
+
+    <div className="project-brand">
+      Mão<span>NaObra</span>
+    </div>
+
+
+    <a
+      href="/client"
+      className="back-project-btn"
+    >
+      <span>←</span>
+      Voltar aos projetos
+    </a>
+
+  </header>
+
+
+  <main className="client-project-container">
+
+    {/* =========================
+        PAGE HEADER
+    ========================== */}
+
+    <div className="project-page-header">
+
+      <div className="project-page-heading">
+
+        <span className="project-eyebrow">
+          MEU PROJETO
+        </span>
+
+        <h1>
+          {project.title}
+        </h1>
+
+        <p>
+          Acompanhe os detalhes, propostas e evolução
+          do serviço que você publicou.
+        </p>
+
+      </div>
+
+
+      <span
+        className={`project-status-badge ${getStatusClass(
+          project.status
+        )}`}
+      >
+
+        <span className="status-dot"></span>
+
+        {getStatusLabel(project.status)}
+
+      </span>
+
+    </div>
+
+
+    {/* =========================
+        ALERTS
+    ========================== */}
+
+    {error && (
+
+      <div className="project-alert project-alert-error">
+
+        <span>!</span>
+
+        <div>
+          <strong>Ocorreu um problema</strong>
+          <p>{error}</p>
+        </div>
+
+      </div>
+
+    )}
+
+
+    {success && (
+
+      <div className="project-alert project-alert-success">
+
+        <span>✓</span>
+
+        <div>
+          <strong>Operação realizada</strong>
+          <p>{success}</p>
+        </div>
+
+      </div>
+
+    )}
+
+
+    {/* =========================
+        PROJECT OVERVIEW
+    ========================== */}
+
+    <section className="project-overview-card">
+
+      <div className="overview-main">
+
+        <div className="overview-title-row">
+
+          <div className="overview-icon">
+            📋
+          </div>
+
+          <div>
+
+            <span>
+              DETALHES DO SERVIÇO
+            </span>
+
+            <h2>
+              Sobre este projeto
+            </h2>
+
+          </div>
+
+        </div>
+
+
+        <div className="project-description">
+
+          <label>
+            Descrição
+          </label>
+
+          <p>
+            {project.description ||
+              "Nenhuma descrição foi adicionada."}
+          </p>
+
+        </div>
+
+
+        <div className="project-meta-grid">
+
+          <div className="project-meta-card">
+
+            <span className="meta-icon">
+              📂
+            </span>
+
+            <div>
+
+              <small>
+                Categoria
+              </small>
+
+              <strong>
+                {project.category || "Não definida"}
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div className="project-meta-card">
+
+            <span className="meta-icon">
+              📍
+            </span>
+
+            <div>
+
+              <small>
+                Localização
+              </small>
+
+              <strong>
+                {project.location || "Não definida"}
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div className="project-meta-card project-budget-card">
+
+            <span className="meta-icon">
+              💰
+            </span>
+
+            <div>
+
+              <small>
+                Orçamento
+              </small>
+
+              <strong>
+
+                {project.budget !== null &&
+                project.budget !== undefined
+                  ? `${project.budget} MT`
+                  : "Não definido"}
+
+              </strong>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      {/* PROJECT ACTION */}
+
+      {project.status === "IN_PROGRESS" && (
+
+        <div className="project-action-panel">
+
+          <div className="action-icon">
+            ✓
+          </div>
+
+          <div>
+
+            <strong>
+              Projeto em andamento
+            </strong>
+
+            <p>
+              Quando o serviço estiver concluído,
+              confirme aqui para finalizar o projeto.
+            </p>
+
+          </div>
+
+          <button
+            onClick={handleCompleteProject}
+            className="complete-project-btn"
+          >
+            ✓ Marcar como concluído
+          </button>
+
+        </div>
+
+      )}
+
+    </section>
+
+
+    {/* =========================
+        PROPOSALS
+    ========================== */}
+
+    <section className="project-section">
+
+      <div className="project-section-header">
+
+        <div>
+
+          <span className="project-section-label">
+            PROFISSIONAIS
+          </span>
+
+          <h2>
+            Propostas recebidas
+          </h2>
+
+          <p>
+            Compare as propostas e escolha o profissional
+            que melhor atende às suas necessidades.
+          </p>
+
+        </div>
+
+
+        <div className="proposal-counter">
+
+          <strong>
+            {proposals.length}
+          </strong>
+
+          <span>
+            {proposals.length === 1
+              ? "proposta"
+              : "propostas"}
+          </span>
+
+        </div>
+
+      </div>
+
+
+      {proposals.length === 0 ? (
+
+        <div className="project-empty-state">
+
+          <div className="empty-project-icon">
+            💼
+          </div>
+
+          <h3>
+            Ainda não recebeu propostas
+          </h3>
+
+          <p>
+            Quando profissionais demonstrarem interesse
+            no seu projeto, as propostas aparecerão aqui.
+          </p>
+
+        </div>
+
+      ) : (
+
+        <div className="premium-proposals-grid">
+
+          {proposals.map((proposal) => (
+
+            <article
+              className={`premium-proposal-card ${
+                proposal.status === "ACCEPTED"
+                  ? "proposal-accepted"
+                  : ""
+              }`}
+              key={proposal.id}
+            >
+
+              <div className="proposal-top">
+
+                <div className="provider-profile">
+
+                  <div className="provider-avatar">
+
+                    {(
+                      proposal.provider?.name ||
+                      "P"
+                    )
+                      .charAt(0)
+                      .toUpperCase()}
+
+                  </div>
+
+
+                  <div>
+
+                    <h3>
+                      {proposal.provider?.name ||
+                        "Profissional"}
+                    </h3>
+
+                    <span>
+                      Proposta #{proposal.id}
+                    </span>
+
+                  </div>
+
+                </div>
+
+
+                <span
+                  className={`proposal-status ${getStatusClass(
+                    proposal.status
+                  )}`}
+                >
+                  {getStatusLabel(
+                    proposal.status
+                  )}
+                </span>
+
+              </div>
+
+
+              <div className="proposal-price-box">
+
+                <span>
+                  Valor proposto
+                </span>
+
+                <strong>
+                  {proposal.price} MT
+                </strong>
+
+              </div>
+
+
+              <div className="proposal-message-box">
+
+                <span>
+                  Mensagem do profissional
+                </span>
+
+                <p>
+                  "{proposal.message}"
+                </p>
+
+              </div>
+
+
+              {proposal.status === "PENDING" &&
+              project.status === "OPEN" && (
+
+                <button
+                  className="accept-proposal-btn"
+                  onClick={() =>
+                    handleAcceptProposal(
+                      proposal.id
+                    )
+                  }
+                  disabled={
+                    accepting === proposal.id
+                  }
+                >
+
+                  {accepting === proposal.id
+                    ? (
+                      <>
+                        <span className="button-spinner"></span>
+                        Aceitando...
+                      </>
+                    )
+                    : (
+                      <>
+                        ✓ Aceitar proposta
+                      </>
+                    )}
+
+                </button>
+
+              )}
+
+
+              {proposal.status === "ACCEPTED" && (
+
+                <div className="proposal-result accepted-result">
+
+                  <span>
+                    ✓
+                  </span>
+
+                  Esta proposta foi aceita
+
+                </div>
+
+              )}
+
+
+              {proposal.status === "REJECTED" && (
+
+                <div className="proposal-result rejected-result">
+
+                  <span>
+                    —
+                  </span>
+
+                  Esta proposta foi rejeitada
+
+                </div>
+
+              )}
+
+            </article>
+
+          ))}
+
+        </div>
+
+      )}
+
+    </section>
+
+
+    {/* =========================
+        REVIEW
+    ========================== */}
+
+    {project.status === "COMPLETED" && (
+
+      <section className="review-section">
+
+        {!reviewed ? (
+
+          <>
+
+            <div className="review-header">
+
+              <div className="review-icon">
+                ⭐
+              </div>
+
+              <div>
+
+                <span>
+                  SUA EXPERIÊNCIA
+                </span>
+
+                <h2>
+                  Avalie o profissional
+                </h2>
+
+                <p>
+                  A sua avaliação ajuda outros clientes
+                  a escolherem profissionais na plataforma.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div className="review-form">
+
+              <div className="review-rating">
+
+                <label>
+                  Como foi o trabalho?
+                </label>
+
+                <div className="rating-options">
+
+                  {[5, 4, 3, 2, 1].map(
+                    (value) => (
+
+                      <button
+                        key={value}
+                        type="button"
+                        className={
+                          rating === value
+                            ? "rating-option active"
+                            : "rating-option"
+                        }
+                        onClick={() =>
+                          setRating(value)
+                        }
+                      >
+
+                        <span>
+                          ★
+                        </span>
+
+                        <small>
+                          {value}
+                        </small>
+
+                      </button>
+
+                    )
+                  )}
+
+                </div>
+
+                <strong className="rating-label">
+
+                  {rating === 5 && "Excelente"}
+                  {rating === 4 && "Muito bom"}
+                  {rating === 3 && "Bom"}
+                  {rating === 2 && "Razoável"}
+                  {rating === 1 && "Ruim"}
+
+                </strong>
+
+              </div>
+
+
+              <div className="review-comment">
+
+                <label>
+                  Comentário
+                </label>
+
+                <textarea
+                  value={comment}
+                  onChange={(e) =>
+                    setComment(e.target.value)
+                  }
+                  placeholder="Conte como foi a sua experiência com o profissional..."
+                />
+
+              </div>
+
+
+              <button
+                onClick={handleCreateReview}
+                className="submit-review-btn"
+                disabled={reviewLoading}
+              >
+
+                {reviewLoading
+                  ? (
+                    <>
+                      <span className="button-spinner"></span>
+                      Enviando...
+                    </>
+                  )
+                  : (
+                    <>
+                      ⭐ Enviar avaliação
+                    </>
+                  )}
+
+              </button>
+
+            </div>
+
+          </>
+
+        ) : (
+
+          <div className="review-completed">
+
+            <div className="review-completed-icon">
+              ✓
+            </div>
+
+            <div>
+
+              <h3>
+                Avaliação enviada
+              </h3>
+
+              <p>
+                Obrigado pelo seu feedback!
+                A sua avaliação foi registrada com sucesso.
+              </p>
+
+            </div>
+
+          </div>
+
+        )}
+
+      </section>
+
+    )}
+
+  </main>
+
+</div>
+
+);
+
+}
 
 export default ClientProject;

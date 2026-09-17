@@ -1,0 +1,2491 @@
+/* ============================================================
+   MÃO NA OBRA — PERFIL DO PRESTADOR
+   IDENTIDADE VISUAL LARANJA
+   ============================================================ */
+
+
+/* ============================================================
+   VARIÁVEIS
+   ============================================================ */
+
+.provider-profile-page {
+
+  --provider-orange: #f97316;
+  --provider-orange-dark: #ea580c;
+  --provider-orange-deep: #c2410c;
+  --provider-orange-light: #fff3e8;
+  --provider-orange-soft: #fff7ed;
+
+  --provider-navy: #172033;
+  --provider-text: #344054;
+  --provider-muted: #697386;
+  --provider-border: #e5e9ef;
+
+  min-height: 100vh;
+
+  background: #f6f8fb;
+
+  color: var(--provider-navy);
+
+}
+
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+
+.provider-profile-sidebar {
+
+  position: fixed;
+
+  left: 0;
+  top: 0;
+  bottom: 0;
+
+  width: 270px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  background: #ffffff;
+
+  border-right: 1px solid #e5e9ef;
+
+  z-index: 300;
+
+}
+
+
+.provider-profile-sidebar-top {
+
+  padding: 22px 14px 0;
+
+}
+
+
+.provider-profile-brand {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 0 10px 24px;
+
+}
+
+
+.provider-profile-brand-mark {
+
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #172033,
+      #29364f
+    );
+
+  color: #ffffff;
+
+  font-size: 22px;
+
+  font-weight: 900;
+
+  box-shadow:
+    0 7px 18px rgba(23, 32, 51, 0.16);
+
+}
+
+
+.provider-profile-brand-name {
+
+  color: var(--provider-navy);
+
+  font-size: 21px;
+
+  font-weight: 850;
+
+  letter-spacing: -0.7px;
+
+}
+
+
+.provider-profile-brand-name span {
+
+  color: var(--provider-orange);
+
+}
+
+
+.provider-profile-sidebar-close {
+
+  display: none;
+
+}
+
+
+/* ============================================================
+   ÁREA DO PRESTADOR
+   ============================================================ */
+
+.provider-profile-area-label {
+
+  min-height: 44px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 0 14px;
+
+  margin-bottom: 16px;
+
+  border-radius: 11px;
+
+  background: var(--provider-orange-soft);
+
+  color: var(--provider-orange-dark);
+
+  font-size: 12px;
+
+  font-weight: 850;
+
+  letter-spacing: 0.3px;
+
+}
+
+
+.provider-profile-area-icon {
+
+  font-size: 17px;
+
+}
+
+
+/* ============================================================
+   NAVEGAÇÃO
+   ============================================================ */
+
+.provider-profile-nav {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+
+}
+
+
+.provider-profile-nav-link {
+
+  position: relative;
+
+  min-height: 47px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 13px;
+
+  padding: 0 14px;
+
+  border-radius: 10px;
+
+  color: #62718a;
+
+  text-decoration: none;
+
+  font-size: 14px;
+
+  font-weight: 650;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+
+}
+
+
+.provider-profile-nav-link:hover {
+
+  background: #fff7ed;
+
+  color: var(--provider-orange-dark);
+
+  transform: translateX(2px);
+
+}
+
+
+.provider-profile-nav-link-active {
+
+  background:
+    linear-gradient(
+      90deg,
+      #fff3e8,
+      #fff8f2
+    );
+
+  color: var(--provider-orange-dark);
+
+  font-weight: 800;
+
+}
+
+
+.provider-profile-nav-link-active::before {
+
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+
+  top: 8px;
+  bottom: 8px;
+
+  width: 3px;
+
+  border-radius: 0 4px 4px 0;
+
+  background: var(--provider-orange);
+
+}
+
+
+.provider-profile-nav-icon {
+
+  width: 23px;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  font-size: 17px;
+
+}
+
+
+/* ============================================================
+   PARTE INFERIOR SIDEBAR
+   ============================================================ */
+
+.provider-profile-sidebar-bottom {
+
+  padding: 18px 14px;
+
+  border-top: 1px solid #edf0f4;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+
+}
+
+
+.provider-profile-bottom-link {
+
+  min-height: 44px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 13px;
+
+  padding: 0 14px;
+
+  border-radius: 10px;
+
+  color: #697386;
+
+  text-decoration: none;
+
+  font-size: 13px;
+
+  font-weight: 650;
+
+  transition: 0.2s ease;
+
+}
+
+
+.provider-profile-bottom-link:hover {
+
+  background: #f8fafc;
+
+  color: var(--provider-orange-dark);
+
+}
+
+
+/* ============================================================
+   ÁREA PRINCIPAL
+   ============================================================ */
+
+.provider-profile-main {
+
+  min-height: 100vh;
+
+  margin-left: 270px;
+
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.provider-profile-header {
+
+  min-height: 96px;
+
+  padding: 0 42px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #e7ebf1;
+
+}
+
+
+.provider-profile-header-left {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 16px;
+
+}
+
+
+.provider-profile-header-eyebrow {
+
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: var(--provider-orange);
+
+  font-size: 11px;
+
+  font-weight: 850;
+
+  letter-spacing: 1px;
+
+}
+
+
+.provider-profile-header h1 {
+
+  margin: 0;
+
+  color: var(--provider-navy);
+
+  font-size: 28px;
+
+  line-height: 1.1;
+
+  font-weight: 850;
+
+  letter-spacing: -0.8px;
+
+}
+
+
+.provider-profile-header-left p {
+
+  margin: 6px 0 0;
+
+  color: #718096;
+
+  font-size: 13px;
+
+}
+
+
+.provider-profile-header-right {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 17px;
+
+}
+
+
+.provider-profile-header-user {
+
+  color: #465269;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+}
+
+
+.provider-profile-menu-button {
+
+  display: none;
+
+}
+
+
+/* ============================================================
+   CONTEÚDO
+   ============================================================ */
+
+.provider-profile-content {
+
+  width: min(
+    1180px,
+    calc(100% - 72px)
+  );
+
+  margin: 0 auto;
+
+  padding: 32px 0 60px;
+
+}
+
+
+/* ============================================================
+   HERO PREMIUM
+   ============================================================ */
+
+.provider-profile-hero {
+
+  position: relative;
+
+  min-height: 240px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 28px;
+
+  padding: 38px 42px;
+
+  margin-bottom: 22px;
+
+  overflow: hidden;
+
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f97316 0%,
+      #ea580c 45%,
+      #c2410c 100%
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 18px 40px rgba(
+      194,
+      65,
+      12,
+      0.20
+    );
+
+}
+
+
+.provider-profile-hero-decoration {
+
+  position: absolute;
+
+  border: 1px solid rgba(
+    255,
+    255,
+    255,
+    0.16
+  );
+
+  border-radius: 50%;
+
+  pointer-events: none;
+
+}
+
+
+.provider-profile-hero-decoration-one {
+
+  width: 290px;
+  height: 290px;
+
+  right: -105px;
+  top: -175px;
+
+}
+
+
+.provider-profile-hero-decoration-two {
+
+  width: 220px;
+  height: 220px;
+
+  left: -130px;
+  bottom: -160px;
+
+}
+
+
+/* ============================================================
+   AVATAR
+   ============================================================ */
+
+.provider-profile-hero-avatar {
+
+  position: relative;
+
+  z-index: 2;
+
+  width: 112px;
+  height: 112px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.15
+    );
+
+  border: 4px solid rgba(
+    255,
+    255,
+    255,
+    0.82
+  );
+
+  box-shadow:
+    0 8px 24px rgba(
+      0,
+      0,
+      0,
+      0.14
+    );
+
+  color: #ffffff;
+
+  font-size: 36px;
+
+  font-weight: 850;
+
+  letter-spacing: -1px;
+
+}
+
+
+/* ============================================================
+   HERO CONTEÚDO
+   ============================================================ */
+
+.provider-profile-hero-content {
+
+  position: relative;
+
+  z-index: 2;
+
+  min-width: 0;
+
+}
+
+
+.provider-profile-role-badge {
+
+  width: fit-content;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 7px 13px;
+
+  margin-bottom: 11px;
+
+  border: 1px solid rgba(
+    255,
+    255,
+    255,
+    0.23
+  );
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.14
+    );
+
+  font-size: 12px;
+
+  font-weight: 750;
+
+}
+
+
+.provider-profile-hero-content h2 {
+
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 32px;
+
+  line-height: 1.12;
+
+  font-weight: 850;
+
+  letter-spacing: -1px;
+
+}
+
+
+.provider-profile-hero-profession {
+
+  margin: 8px 0 0;
+
+  color: rgba(
+    255,
+    255,
+    255,
+    0.95
+  );
+
+  font-size: 16px;
+
+  font-weight: 700;
+
+}
+
+
+.provider-profile-hero-member {
+
+  margin: 5px 0 0;
+
+  color: rgba(
+    255,
+    255,
+    255,
+    0.72
+  );
+
+  font-size: 13px;
+
+}
+
+
+/* ============================================================
+   HERO STATUS
+   ============================================================ */
+
+.provider-profile-hero-side {
+
+  position: relative;
+
+  z-index: 2;
+
+  margin-left: auto;
+
+  align-self: flex-start;
+
+}
+
+
+.provider-profile-hero-verified {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 9px 13px;
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.15
+    );
+
+  border: 1px solid rgba(
+    255,
+    255,
+    255,
+    0.2
+  );
+
+  font-size: 12px;
+
+  font-weight: 750;
+
+}
+
+
+.provider-profile-hero-verified span {
+
+  width: 19px;
+  height: 19px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  color: var(--provider-orange-dark);
+
+  font-size: 11px;
+
+  font-weight: 900;
+
+}
+
+
+.provider-profile-hero-status {
+
+  padding: 9px 13px;
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.12
+    );
+
+  border: 1px solid rgba(
+    255,
+    255,
+    255,
+    0.17
+  );
+
+  color: rgba(
+    255,
+    255,
+    255,
+    0.88
+  );
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+}
+
+
+/* ============================================================
+   HERO WATERMARK
+   ============================================================ */
+
+.provider-profile-hero-watermark {
+
+  position: absolute;
+
+  right: 30px;
+  bottom: -14px;
+
+  color: rgba(
+    255,
+    255,
+    255,
+    0.08
+  );
+
+  font-size: 76px;
+
+  font-weight: 950;
+
+  letter-spacing: -5px;
+
+  pointer-events: none;
+
+}
+
+
+/* ============================================================
+   TÍTULO DA SECÇÃO
+   ============================================================ */
+
+.provider-profile-section-heading {
+
+  display: flex;
+
+  align-items: flex-end;
+
+  justify-content: space-between;
+
+  gap: 24px;
+
+  padding: 6px 2px 18px;
+
+}
+
+
+.provider-profile-section-eyebrow {
+
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: var(--provider-orange);
+
+  font-size: 10px;
+
+  font-weight: 850;
+
+  letter-spacing: 1.2px;
+
+}
+
+
+.provider-profile-section-heading h2 {
+
+  margin: 0;
+
+  color: var(--provider-navy);
+
+  font-size: 23px;
+
+  font-weight: 850;
+
+  letter-spacing: -0.5px;
+
+}
+
+
+.provider-profile-section-heading p {
+
+  max-width: 650px;
+
+  margin: 7px 0 0;
+
+  color: #748096;
+
+  font-size: 13px;
+
+  line-height: 1.55;
+
+}
+
+
+/* ============================================================
+   EDITAR
+   ============================================================ */
+
+.provider-profile-edit-button {
+
+  flex-shrink: 0;
+
+  min-height: 43px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 0 18px;
+
+  border: 1px solid #fed7aa;
+
+  border-radius: 10px;
+
+  background: #fff7ed;
+
+  color: var(--provider-orange-dark);
+
+  cursor: pointer;
+
+  font-size: 13px;
+
+  font-weight: 800;
+
+  transition: 0.2s ease;
+
+}
+
+
+.provider-profile-edit-button:hover {
+
+  background: #ffedd5;
+
+  border-color: #fdba74;
+
+  transform: translateY(-1px);
+
+}
+
+
+/* ============================================================
+   ALERTAS
+   ============================================================ */
+
+.provider-profile-alert {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 13px 16px;
+
+  margin-bottom: 18px;
+
+  border-radius: 11px;
+
+  font-size: 13px;
+
+  font-weight: 650;
+
+}
+
+
+.provider-profile-alert > span {
+
+  width: 22px;
+  height: 22px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  color: #ffffff;
+
+  font-size: 11px;
+
+  font-weight: 900;
+
+}
+
+
+.provider-profile-alert-error {
+
+  background: #fff1f2;
+
+  border: 1px solid #fecdd3;
+
+  color: #be123c;
+
+}
+
+
+.provider-profile-alert-error > span {
+
+  background: #be123c;
+
+}
+
+
+.provider-profile-alert-success {
+
+  background: #ecfdf5;
+
+  border: 1px solid #a7f3d0;
+
+  color: #047857;
+
+}
+
+
+.provider-profile-alert-success > span {
+
+  background: #047857;
+
+}
+
+
+/* ============================================================
+   CARTÃO PRINCIPAL
+   ============================================================ */
+
+.provider-profile-card {
+
+  overflow: hidden;
+
+  background: #ffffff;
+
+  border: 1px solid var(--provider-border);
+
+  border-radius: 20px;
+
+  box-shadow:
+    0 7px 25px rgba(
+      23,
+      32,
+      51,
+      0.045
+    );
+
+}
+
+
+/* ============================================================
+   HEADER DO CARTÃO
+   ============================================================ */
+
+.provider-profile-card-top {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+
+  padding: 23px 28px;
+
+  border-bottom: 1px solid #edf0f4;
+
+}
+
+
+.provider-profile-card-icon {
+
+  width: 47px;
+  height: 47px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 13px;
+
+  background: var(--provider-orange-light);
+
+  font-size: 21px;
+
+}
+
+
+.provider-profile-card-top h3 {
+
+  margin: 0;
+
+  color: var(--provider-navy);
+
+  font-size: 18px;
+
+  font-weight: 850;
+
+}
+
+
+.provider-profile-card-top p {
+
+  margin: 4px 0 0;
+
+  color: #7b8494;
+
+  font-size: 12px;
+
+}
+
+
+.provider-profile-verified {
+
+  margin-left: auto;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  padding: 7px 11px;
+
+  border-radius: 999px;
+
+  background: #ecfdf5;
+
+  color: #047857;
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+}
+
+
+.provider-profile-verified span {
+
+  font-size: 12px;
+
+}
+
+
+/* ============================================================
+   INFORMAÇÕES
+   ============================================================ */
+
+.provider-profile-info {
+
+  padding: 27px;
+
+}
+
+
+.provider-profile-info-grid {
+
+  display: grid;
+
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 1px;
+
+  overflow: hidden;
+
+  border: 1px solid #edf0f4;
+
+  border-radius: 13px;
+
+  background: #edf0f4;
+
+}
+
+
+.provider-profile-info-item {
+
+  min-height: 92px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  padding: 18px 20px;
+
+  background: #ffffff;
+
+}
+
+
+.provider-profile-info-item span,
+
+.provider-profile-bio > span {
+
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #8992a1;
+
+  font-size: 9px;
+
+  font-weight: 850;
+
+  letter-spacing: 1px;
+
+}
+
+
+.provider-profile-info-item strong {
+
+  color: var(--provider-navy);
+
+  font-size: 15px;
+
+  font-weight: 750;
+
+}
+
+
+/* ============================================================
+   BIO
+   ============================================================ */
+
+.provider-profile-bio {
+
+  margin-top: 24px;
+
+  padding: 2px 1px;
+
+}
+
+
+.provider-profile-bio p {
+
+  margin: 0;
+
+  color: #505b6d;
+
+  font-size: 14px;
+
+  line-height: 1.75;
+
+  white-space: pre-wrap;
+
+}
+
+
+/* ============================================================
+   LOCALIZAÇÃO
+   ============================================================ */
+
+.provider-profile-location-card {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 13px;
+
+  margin-top: 25px;
+
+  padding: 17px;
+
+  border: 1px solid #fed7aa;
+
+  border-radius: 13px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #fff7ed,
+      #ffffff
+    );
+
+}
+
+
+.provider-profile-location-icon {
+
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 11px;
+
+  background: #ffedd5;
+
+  font-size: 19px;
+
+}
+
+
+.provider-profile-location-card span {
+
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #9a3412;
+
+  font-size: 9px;
+
+  font-weight: 850;
+
+  letter-spacing: 1px;
+
+}
+
+
+.provider-profile-location-card strong {
+
+  display: block;
+
+  color: var(--provider-navy);
+
+  font-size: 14px;
+
+}
+
+
+.provider-profile-location-card p {
+
+  margin: 3px 0 0;
+
+  color: #8a6b5a;
+
+  font-size: 11px;
+
+}
+
+
+/* ============================================================
+   FORMULÁRIO
+   ============================================================ */
+
+.provider-profile-form {
+
+  padding: 28px;
+
+}
+
+
+.provider-profile-form-grid {
+
+  display: grid;
+
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 21px;
+
+}
+
+
+.provider-profile-field {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+
+}
+
+
+.provider-profile-field-full {
+
+  grid-column: 1 / -1;
+
+}
+
+
+.provider-profile-field label {
+
+  color: #344054;
+
+  font-size: 12px;
+
+  font-weight: 750;
+
+}
+
+
+.provider-profile-field input,
+
+.provider-profile-field textarea {
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d9dee7;
+
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: var(--provider-navy);
+
+  font-family: inherit;
+
+  font-size: 14px;
+
+  outline: none;
+
+  transition: 0.2s ease;
+
+}
+
+
+.provider-profile-field input {
+
+  height: 46px;
+
+  padding: 0 14px;
+
+}
+
+
+.provider-profile-field textarea {
+
+  min-height: 150px;
+
+  padding: 13px 14px;
+
+  resize: vertical;
+
+  line-height: 1.6;
+
+}
+
+
+.provider-profile-field input:focus,
+
+.provider-profile-field textarea:focus {
+
+  border-color: var(--provider-orange);
+
+  box-shadow:
+    0 0 0 3px rgba(
+      249,
+      115,
+      22,
+      0.10
+    );
+
+}
+
+
+.provider-profile-field input:disabled,
+
+.provider-profile-field textarea:disabled {
+
+  background: #f8fafc;
+
+  cursor: not-allowed;
+
+}
+
+
+/* ============================================================
+   AÇÕES FORMULÁRIO
+   ============================================================ */
+
+.provider-profile-form-actions {
+
+  display: flex;
+
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 27px;
+
+  padding-top: 23px;
+
+  border-top: 1px solid #edf0f4;
+
+}
+
+
+.provider-profile-cancel-button,
+
+.provider-profile-save-button {
+
+  min-height: 43px;
+
+  padding: 0 19px;
+
+  border-radius: 9px;
+
+  font-size: 13px;
+
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+
+}
+
+
+.provider-profile-cancel-button {
+
+  border: 1px solid #d8dee8;
+
+  background: #ffffff;
+
+  color: #475467;
+
+}
+
+
+.provider-profile-cancel-button:hover {
+
+  background: #f8fafc;
+
+}
+
+
+.provider-profile-save-button {
+
+  border: 0;
+
+  background: var(--provider-orange);
+
+  color: #ffffff;
+
+  box-shadow:
+    0 5px 13px rgba(
+      249,
+      115,
+      22,
+      0.20
+    );
+
+}
+
+
+.provider-profile-save-button:hover {
+
+  background: var(--provider-orange-dark);
+
+  transform: translateY(-1px);
+
+}
+
+
+.provider-profile-cancel-button:disabled,
+
+.provider-profile-save-button:disabled {
+
+  opacity: 0.6;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+}
+
+
+/* ============================================================
+   DADOS DA CONTA
+   ============================================================ */
+
+.provider-account-card {
+
+  margin-top: 22px;
+
+  padding: 25px 28px;
+
+  background: #ffffff;
+
+  border: 1px solid var(--provider-border);
+
+  border-radius: 20px;
+
+  box-shadow:
+    0 7px 25px rgba(
+      23,
+      32,
+      51,
+      0.035
+    );
+
+}
+
+
+.provider-account-header {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 13px;
+
+}
+
+
+.provider-account-header-icon {
+
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: #fff7ed;
+
+  font-size: 19px;
+
+}
+
+
+.provider-account-header span {
+
+  color: #8992a1;
+
+  font-size: 9px;
+
+  font-weight: 850;
+
+  letter-spacing: 1px;
+
+}
+
+
+.provider-account-header h2 {
+
+  margin: 4px 0 0;
+
+  color: var(--provider-navy);
+
+  font-size: 18px;
+
+  font-weight: 850;
+
+}
+
+
+.provider-account-header p {
+
+  margin: 4px 0 0;
+
+  color: #7b8494;
+
+  font-size: 11px;
+
+}
+
+
+.provider-account-grid {
+
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  margin-top: 22px;
+
+  overflow: hidden;
+
+  border: 1px solid #edf0f4;
+
+  border-radius: 13px;
+
+}
+
+
+.provider-account-item {
+
+  min-height: 83px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  padding: 17px 19px;
+
+  border-right: 1px solid #edf0f4;
+
+}
+
+
+.provider-account-item:last-child {
+
+  border-right: 0;
+
+}
+
+
+.provider-account-item span {
+
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #8992a1;
+
+  font-size: 9px;
+
+  font-weight: 850;
+
+  letter-spacing: 1px;
+
+}
+
+
+.provider-account-item strong {
+
+  color: var(--provider-navy);
+
+  font-size: 13px;
+
+  font-weight: 750;
+
+  word-break: break-word;
+
+}
+
+
+.provider-account-note {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  margin: 16px 0 0;
+
+  color: #7b8494;
+
+  font-size: 11px;
+
+  line-height: 1.6;
+
+}
+
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+
+.provider-profile-footer {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  padding: 22px 2px 0;
+
+}
+
+
+.provider-profile-footer a {
+
+  color: #697386;
+
+  text-decoration: none;
+
+  font-size: 12px;
+
+  font-weight: 650;
+
+  transition: 0.2s ease;
+
+}
+
+
+.provider-profile-footer a:hover {
+
+  color: var(--provider-orange-dark);
+
+}
+
+
+/* ============================================================
+   LOADING
+   ============================================================ */
+
+.provider-profile-loading {
+
+  min-height: 100vh;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 14px;
+
+  color: #697386;
+
+}
+
+
+.provider-profile-spinner {
+
+  width: 36px;
+  height: 36px;
+
+  border: 3px solid #fed7aa;
+
+  border-top-color: var(--provider-orange);
+
+  border-radius: 50%;
+
+  animation:
+    providerProfileSpin
+    0.8s
+    linear
+    infinite;
+
+}
+
+
+@keyframes providerProfileSpin {
+
+  to {
+
+    transform: rotate(360deg);
+
+  }
+
+}
+
+
+/* ============================================================
+   ERRO
+   ============================================================ */
+
+.provider-profile-error-card {
+
+  width: min(
+    560px,
+    calc(100% - 32px)
+  );
+
+  margin: 100px auto;
+
+  padding: 40px;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e9ef;
+
+  border-radius: 18px;
+
+  text-align: center;
+
+  box-shadow:
+    0 10px 30px rgba(
+      23,
+      32,
+      51,
+      0.06
+    );
+
+}
+
+
+.provider-profile-error-icon {
+
+  width: 52px;
+  height: 52px;
+
+  margin: 0 auto 18px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #fff1f2;
+
+  color: #be123c;
+
+  font-weight: 850;
+
+}
+
+
+.provider-profile-error-card h2 {
+
+  margin: 0;
+
+  color: var(--provider-navy);
+
+  font-size: 22px;
+
+}
+
+
+.provider-profile-error-card p {
+
+  margin: 10px 0 20px;
+
+  color: #697386;
+
+  line-height: 1.6;
+
+}
+
+
+.provider-profile-error {
+
+  margin-bottom: 18px;
+
+  padding: 12px;
+
+  border-radius: 8px;
+
+  background: #fff1f2;
+
+  color: #be123c;
+
+  font-size: 13px;
+
+}
+
+
+.provider-profile-back-button {
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-height: 42px;
+
+  padding: 0 18px;
+
+  border-radius: 9px;
+
+  background: var(--provider-orange);
+
+  color: #ffffff;
+
+  text-decoration: none;
+
+  font-size: 13px;
+
+  font-weight: 750;
+
+}
+
+
+/* ============================================================
+   OVERLAY
+   ============================================================ */
+
+.provider-profile-overlay {
+
+  display: none;
+
+}
+
+
+/* ============================================================
+   RESPONSIVO — TABLET
+   ============================================================ */
+
+@media (max-width: 1000px) {
+
+  .provider-profile-sidebar {
+
+    width: 245px;
+
+  }
+
+
+  .provider-profile-main {
+
+    margin-left: 245px;
+
+  }
+
+
+  .provider-profile-content {
+
+    width: min(
+      100% - 40px,
+      1000px
+    );
+
+  }
+
+
+  .provider-profile-hero {
+
+    padding: 32px;
+
+  }
+
+
+  .provider-profile-hero-watermark {
+
+    font-size: 58px;
+
+  }
+
+}
+
+
+/* ============================================================
+   RESPONSIVO — MOBILE
+   ============================================================ */
+
+@media (max-width: 800px) {
+
+  .provider-profile-sidebar {
+
+    width: 280px;
+
+    transform: translateX(-100%);
+
+    transition:
+      transform 0.25s ease;
+
+    box-shadow:
+      10px 0 30px rgba(
+        0,
+        0,
+        0,
+        0.12
+      );
+
+  }
+
+
+  .provider-profile-sidebar-open {
+
+    transform: translateX(0);
+
+  }
+
+
+  .provider-profile-sidebar-close {
+
+    position: absolute;
+
+    top: 17px;
+    right: 15px;
+
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+
+    border-radius: 8px;
+
+    background: #f8fafc;
+
+    color: #475467;
+
+    cursor: pointer;
+
+    font-size: 22px;
+
+  }
+
+
+  .provider-profile-overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    display: block;
+
+    background:
+      rgba(
+        15,
+        23,
+        42,
+        0.42
+      );
+
+    backdrop-filter: blur(2px);
+
+    z-index: 250;
+
+  }
+
+
+  .provider-profile-main {
+
+    margin-left: 0;
+
+  }
+
+
+  .provider-profile-header {
+
+    min-height: 82px;
+
+    padding: 0 18px;
+
+  }
+
+
+  .provider-profile-menu-button {
+
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border: 1px solid #e5e9ef;
+
+    border-radius: 9px;
+
+    background: #ffffff;
+
+    color: var(--provider-navy);
+
+    cursor: pointer;
+
+    font-size: 20px;
+
+  }
+
+
+  .provider-profile-header-eyebrow {
+
+    font-size: 9px;
+
+  }
+
+
+  .provider-profile-header h1 {
+
+    font-size: 22px;
+
+  }
+
+
+  .provider-profile-header-left p {
+
+    display: none;
+
+  }
+
+
+  .provider-profile-header-user {
+
+    display: none;
+
+  }
+
+
+  .provider-profile-content {
+
+    width: min(
+      calc(100% - 28px),
+      680px
+    );
+
+    padding: 23px 0 45px;
+
+  }
+
+
+  .provider-profile-hero {
+
+    min-height: auto;
+
+    align-items: flex-start;
+
+    flex-wrap: wrap;
+
+    gap: 18px;
+
+    padding: 27px;
+
+    border-radius: 20px;
+
+  }
+
+
+  .provider-profile-hero-avatar {
+
+    width: 82px;
+    height: 82px;
+
+    font-size: 27px;
+
+  }
+
+
+  .provider-profile-hero-content {
+
+    flex: 1;
+
+  }
+
+
+  .provider-profile-hero-content h2 {
+
+    font-size: 25px;
+
+  }
+
+
+  .provider-profile-hero-side {
+
+    width: 100%;
+
+    margin-left: 0;
+
+  }
+
+
+  .provider-profile-hero-watermark {
+
+    display: none;
+
+  }
+
+
+  .provider-profile-section-heading {
+
+    align-items: flex-start;
+
+    flex-direction: column;
+
+  }
+
+
+  .provider-profile-edit-button {
+
+    width: 100%;
+
+  }
+
+
+  .provider-profile-info-grid {
+
+    grid-template-columns: 1fr;
+
+  }
+
+
+  .provider-account-grid {
+
+    grid-template-columns: 1fr;
+
+  }
+
+
+  .provider-account-item {
+
+    border-right: 0;
+
+    border-bottom: 1px solid #edf0f4;
+
+  }
+
+
+  .provider-account-item:last-child {
+
+    border-bottom: 0;
+
+  }
+
+
+  .provider-profile-form-grid {
+
+    grid-template-columns: 1fr;
+
+  }
+
+
+  .provider-profile-field-full {
+
+    grid-column: auto;
+
+  }
+
+}
+
+
+/* ============================================================
+   RESPONSIVO — TELEMÓVEL PEQUENO
+   ============================================================ */
+
+@media (max-width: 520px) {
+
+  .provider-profile-header {
+
+    min-height: 70px;
+
+  }
+
+
+  .provider-profile-header h1 {
+
+    font-size: 20px;
+
+  }
+
+
+  .provider-profile-content {
+
+    width: calc(100% - 20px);
+
+    padding-top: 18px;
+
+  }
+
+
+  .provider-profile-hero {
+
+    padding: 22px;
+
+    border-radius: 18px;
+
+  }
+
+
+  .provider-profile-hero-avatar {
+
+    width: 70px;
+    height: 70px;
+
+    border-width: 3px;
+
+    font-size: 23px;
+
+  }
+
+
+  .provider-profile-hero-content h2 {
+
+    font-size: 22px;
+
+  }
+
+
+  .provider-profile-hero-profession {
+
+    font-size: 14px;
+
+  }
+
+
+  .provider-profile-hero-member {
+
+    font-size: 11px;
+
+  }
+
+
+  .provider-profile-card-top {
+
+    align-items: flex-start;
+
+    padding: 20px;
+
+  }
+
+
+  .provider-profile-card-top p {
+
+    max-width: 210px;
+
+  }
+
+
+  .provider-profile-verified {
+
+    margin-left: auto;
+
+    font-size: 9px;
+
+    padding: 6px 8px;
+
+  }
+
+
+  .provider-profile-info,
+
+  .provider-profile-form {
+
+    padding: 20px;
+
+  }
+
+
+  .provider-account-card {
+
+    padding: 20px;
+
+  }
+
+
+  .provider-profile-form-actions {
+
+    flex-direction: column-reverse;
+
+  }
+
+
+  .provider-profile-cancel-button,
+
+  .provider-profile-save-button {
+
+    width: 100%;
+
+  }
+
+
+  .provider-profile-footer {
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 12px;
+
+  }
+
+}

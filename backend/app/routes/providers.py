@@ -10,7 +10,11 @@ from app.models.review import Review
 from app.models.service import Service
 from app.models.category import Category
 
-from app.schemas.provider import ProviderProfileCreate
+from app.schemas.provider import (
+    ProviderProfileCreate,
+    ProviderProfileUpdate
+)
+
 
 
 router = APIRouter(
@@ -108,6 +112,58 @@ def get_my_provider_profile(
         "hourly_rate": profile.hourly_rate,
         "is_verified": profile.is_verified
     }
+
+
+# ==========================================================
+# ATUALIZAR MEU PERFIL PROFISSIONAL
+# ============================================================
+
+@router.patch("/me")
+def update_my_provider_profile(
+    profile_data: ProviderProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+
+    profile = (
+        db.query(ProviderProfile)
+        .filter(
+            ProviderProfile.user_id == current_user.id
+        )
+        .first()
+    )
+
+    if not profile:
+        raise HTTPException(
+            status_code=404,
+            detail="Perfil profissional não encontrado."
+        )
+
+    # Atualizar apenas os dados profissionais
+    profile.profession = profile_data.profession
+    profile.bio = profile_data.bio
+    profile.location = profile_data.location
+    profile.experience_years = profile_data.experience_years
+    profile.hourly_rate = profile_data.hourly_rate
+
+    db.commit()
+    db.refresh(profile)
+
+    return {
+        "message": "Perfil profissional atualizado com sucesso!",
+        "profile": {
+            "id": profile.id,
+            "user_id": profile.user_id,
+            "profession": profile.profession,
+            "bio": profile.bio,
+            "location": profile.location,
+            "experience_years": profile.experience_years,
+            "hourly_rate": profile.hourly_rate,
+            "is_verified": profile.is_verified
+        }
+    }
+
+
 
 
 # ============================================================

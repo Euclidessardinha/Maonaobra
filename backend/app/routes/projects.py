@@ -296,7 +296,34 @@ def get_project_proposals(
         .all()
     )
 
-    return proposals
+    result = []
+
+    for proposal in proposals:
+        provider_data = None
+
+        if proposal.provider:
+            provider_name = "Profissional"
+
+            if proposal.provider.user:
+                provider_name = proposal.provider.user.name
+
+            provider_data = {
+                "id": proposal.provider.id,
+                "name": provider_name
+            }
+
+        result.append({
+            "id": proposal.id,
+            "project_id": proposal.project_id,
+            "provider_id": proposal.provider_id,
+            "price": proposal.price,
+            "message": proposal.message,
+            "status": proposal.status,
+            "created_at": proposal.created_at,
+            "provider": provider_data
+        })
+
+    return result
 
 
 # ============================================================

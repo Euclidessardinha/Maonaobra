@@ -1,455 +1,1229 @@
-import { useEffect, useState } from "react";
 
-import { getOpenProjects } from "../api/provider";
+import { useEffect, useMemo, useState } from "react";
+
+import { useAuth } from "../context/AuthContext";
+
+import NotificationBell from "../components/NotificationBell";
+
+import {
+  getOpenProjects
+} from "../api/provider";
+
 import "./ProviderProjects.css";
+
 
 function ProviderProjects() {
 
-const [projects, setProjects] = useState([]);
+  const { user, logout } = useAuth();
 
-const [loading, setLoading] = useState(true);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-const [error, setError] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("TODAS");
 
-useEffect(() => {
 
+  /*
+  =========================================================
+  MENU MOBILE
+  =========================================================
+  */
 
-async function loadProjects() {
+  useEffect(() => {
 
-  try {
+    function handleEscape(event) {
 
-    setLoading(true);
-    setError("");
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
 
-    const data = await getOpenProjects();
+    }
 
-    setProjects(
-      Array.isArray(data)
-        ? data
-        : []
+    document.addEventListener(
+      "keydown",
+      handleEscape
     );
 
-  } catch (error) {
+    return () => {
 
-    console.error(
-      "Erro ao carregar projetos disponíveis:",
-      error
-    );
+      document.removeEventListener(
+        "keydown",
+        handleEscape
+      );
 
-    setError(
-      error.message ||
-      "Erro ao carregar projetos disponíveis."
-    );
+    };
 
-  } finally {
+  }, []);
 
-    setLoading(false);
+
+  useEffect(() => {
+
+    if (menuOpen) {
+
+      document.body.style.overflow = "hidden";
+
+    } else {
+
+      document.body.style.overflow = "";
+
+    }
+
+    return () => {
+
+      document.body.style.overflow = "";
+
+    };
+
+  }, [menuOpen]);
+
+
+  const closeMenu = () => {
+
+    setMenuOpen(false);
+
+  };
+
+
+  function handleLogout() {
+
+    setMenuOpen(false);
+
+    logout();
 
   }
 
-}
 
-loadProjects();
+  function handleClientMode() {
 
+    window.location.href = "/client";
 
-}, []);
-
-function handleViewProject(projectId) {
-
-
-window.location.href =
-  `/provider/projects/${projectId}`;
-
-
-}
-
-function formatBudget(budget) {
-
-
-if (
-  budget === null ||
-  budget === undefined ||
-  budget === ""
-) {
-  return "Não definido";
-}
-
-return `${Number(budget).toLocaleString("pt-MZ")} MT`;
-
-
-}
-
-function formatDate(date) {
-
-
-if (!date) {
-  return "";
-}
-
-const projectDate = new Date(date);
-
-if (Number.isNaN(projectDate.getTime())) {
-  return "";
-}
-
-return projectDate.toLocaleDateString(
-  "pt-MZ",
-  {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric"
   }
-);
 
 
-}
+  /*
+  =========================================================
+  CARREGAR PROJETOS
+  =========================================================
+  */
 
-return (
+  useEffect(() => {
 
+    async function loadProjects() {
 
-<div className="provider-projects-page">
+      try {
 
-  {/* =====================================================
-      SIDEBAR
-  ====================================================== */}
+        setLoading(true);
+        setError("");
 
-  <aside className="provider-projects-sidebar">
+        const data = await getOpenProjects();
 
-    <div className="provider-projects-logo">
-      Mão<span>NaObra</span>
-    </div>
+        setProjects(
+          Array.isArray(data)
+            ? data
+            : []
+        );
 
+      } catch (error) {
 
-    <nav className="provider-projects-nav">
+        console.error(
+          "Erro ao carregar projetos disponíveis:",
+          error
+        );
 
-      <a href="/provider">
-        🏠
-        <span>Visão geral</span>
-      </a>
+        setError(
+          error.message ||
+          "Erro ao carregar projetos disponíveis."
+        );
 
+      } finally {
 
-      <a href="/provider/services">
-        🔧
-        <span>Meus serviços</span>
-      </a>
+        setLoading(false);
 
+      }
 
-      <a href="/provider/services/new">
-        ➕
-        <span>Criar serviço</span>
-      </a>
+    }
 
+    loadProjects();
 
-      <a
-        href="/provider/projects"
-        className="active"
-      >
-        📁
-        <span>Projetos disponíveis</span>
-      </a>
-
-
-      <a href="/provider/requests">
-        📋
-        <span>Pedidos recebidos</span>
-      </a>
+  }, []);
 
 
-      <a href="/provider/profile">
-        👤
-        <span>Meu perfil</span>
-      </a>
+  /*
+  =========================================================
+  FUNÇÕES
+  =========================================================
+  */
 
-    </nav>
+  function handleViewProject(projectId) {
 
+    window.location.href =
+      `/provider/projects/${projectId}`;
 
-    <div className="provider-projects-sidebar-bottom">
-
-      <a href="/">
-        ← Voltar para página inicial
-      </a>
-
-    </div>
-
-  </aside>
+  }
 
 
-  {/* =====================================================
-      CONTEÚDO
-  ====================================================== */}
+  function formatBudget(budget) {
 
-  <main className="provider-projects-content">
+    if (
+      budget === null ||
+      budget === undefined ||
+      budget === ""
+    ) {
 
-    {/* CABEÇALHO */}
+      return "Não definido";
 
-    <header className="provider-projects-header">
+    }
 
-      <div>
+    const numericBudget = Number(budget);
 
-        <span className="provider-projects-label">
-          OPORTUNIDADES
-        </span>
+    if (Number.isNaN(numericBudget)) {
 
-        <h1>
-          Projetos disponíveis
-        </h1>
+      return "Não definido";
 
-        <p>
-          Encontre projetos publicados por clientes
-          e envie propostas para novas oportunidades.
-        </p>
+    }
 
-      </div>
+    return `${numericBudget.toLocaleString("pt-MZ")} MT`;
+
+  }
 
 
-      <a
-        href="/provider"
-        className="provider-projects-back-btn"
-      >
-        ← Voltar
-      </a>
+  function formatDate(date) {
 
-    </header>
+    if (!date) {
+
+      return "";
+
+    }
+
+    const projectDate = new Date(date);
+
+    if (
+      Number.isNaN(
+        projectDate.getTime()
+      )
+    ) {
+
+      return "";
+
+    }
+
+    return projectDate.toLocaleDateString(
+      "pt-MZ",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      }
+    );
+
+  }
 
 
-    {/* ERRO */}
+  function getInitials(name) {
 
-    {error && (
+    if (!name) {
 
-      <div className="provider-projects-error">
+      return "P";
 
-        <div className="provider-projects-error-icon">
-          !
+    }
+
+    const parts =
+      name
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+    if (parts.length === 1) {
+
+      return parts[0]
+        .substring(0, 2)
+        .toUpperCase();
+
+    }
+
+    return (
+      parts[0][0] +
+      parts[parts.length - 1][0]
+    ).toUpperCase();
+
+  }
+
+
+  /*
+  =========================================================
+  CATEGORIAS
+  =========================================================
+  */
+
+  const categories = useMemo(() => {
+
+    const values = projects
+      .map(
+        (project) =>
+          project.category
+      )
+      .filter(Boolean)
+      .map((category) =>
+        String(category).trim()
+      );
+
+    return [
+      "TODAS",
+      ...Array.from(
+        new Set(values)
+      ).sort((a, b) =>
+        a.localeCompare(b, "pt")
+      )
+    ];
+
+  }, [projects]);
+
+
+  /*
+  =========================================================
+  FILTROS
+  =========================================================
+  */
+
+  const filteredProjects = useMemo(() => {
+
+    const normalizedSearch =
+      search
+        .trim()
+        .toLowerCase();
+
+    return projects.filter(
+      (project) => {
+
+        const matchesSearch =
+          !normalizedSearch ||
+          String(
+            project.title || ""
+          )
+            .toLowerCase()
+            .includes(normalizedSearch) ||
+          String(
+            project.description || ""
+          )
+            .toLowerCase()
+            .includes(normalizedSearch) ||
+          String(
+            project.location || ""
+          )
+            .toLowerCase()
+            .includes(normalizedSearch) ||
+          String(
+            project.category || ""
+          )
+            .toLowerCase()
+            .includes(normalizedSearch);
+
+        const matchesCategory =
+          categoryFilter === "TODAS" ||
+          String(
+            project.category || ""
+          ) === categoryFilter;
+
+        return (
+          matchesSearch &&
+          matchesCategory
+        );
+
+      }
+    );
+
+  }, [
+    projects,
+    search,
+    categoryFilter
+  ]);
+
+
+  return (
+
+    <div className="provider-projects-page">
+
+      {/* =====================================================
+          MOBILE HEADER
+      ====================================================== */}
+
+      <header className="provider-mobile-header">
+
+        <button
+          type="button"
+          className="provider-hamburger"
+          onClick={() =>
+            setMenuOpen(true)
+          }
+          aria-label="Abrir menu"
+          aria-expanded={menuOpen}
+        >
+
+          <span></span>
+          <span></span>
+          <span></span>
+
+        </button>
+
+
+        <div className="provider-mobile-logo">
+
+          Mão<span>NaObra</span>
+
         </div>
 
-        <div>
 
-          <strong>
-            Não foi possível carregar os projetos
-          </strong>
+        <div className="provider-mobile-notification">
 
-          <p>
-            {error}
-          </p>
+          <NotificationBell />
 
         </div>
 
-      </div>
-
-    )}
+      </header>
 
 
-    {/* CARREGANDO */}
+      {/* =====================================================
+          OVERLAY MOBILE
+      ====================================================== */}
 
-    {loading && (
+      {menuOpen && (
 
-      <div className="provider-projects-loading">
-
-        <div className="provider-projects-spinner"></div>
-
-        <h3>
-          Procurando projetos...
-        </h3>
-
-        <p>
-          Aguarde enquanto buscamos novas
-          oportunidades para você.
-        </p>
-
-      </div>
-
-    )}
-
-
-    {/* LISTA VAZIA */}
-
-    {!loading &&
-      !error &&
-      projects.length === 0 && (
-
-        <div className="provider-projects-empty">
-
-          <div className="provider-projects-empty-icon">
-            📁
-          </div>
-
-          <h2>
-            Nenhum projeto disponível
-          </h2>
-
-          <p>
-            Neste momento não existem projetos
-            abertos para receber propostas.
-          </p>
-
-          <a
-            href="/provider"
-            className="provider-projects-empty-btn"
-          >
-            Voltar ao dashboard
-          </a>
-
-        </div>
+        <div
+          className="provider-sidebar-overlay"
+          onClick={closeMenu}
+          aria-hidden="true"
+        />
 
       )}
 
 
-    {/* PROJETOS */}
+      {/* =====================================================
+          SIDEBAR
+      ====================================================== */}
 
-    {!loading &&
-      projects.length > 0 && (
+      <aside
+        className={`provider-sidebar ${
+          menuOpen
+            ? "provider-sidebar-open"
+            : ""
+        }`}
+      >
 
-        <section className="provider-projects-section">
+        <button
+          type="button"
+          className="provider-sidebar-close"
+          onClick={closeMenu}
+          aria-label="Fechar menu"
+        >
+          ×
+        </button>
 
-          <div className="provider-projects-section-header">
 
-            <div>
+        {/* LOGO */}
 
-              <h2>
-                Oportunidades abertas
-              </h2>
+        <div className="provider-sidebar-brand">
 
-              <p>
-                {projects.length === 1
-                  ? "1 projeto disponível"
-                  : `${projects.length} projetos disponíveis`}
-              </p>
+          <div className="provider-brand-mark">
+            M
+          </div>
+
+          <div>
+
+            <div className="provider-brand-name">
+              Mão<span>NaObra</span>
+            </div>
+
+            <div className="provider-brand-area">
+              Área profissional
+            </div>
+
+          </div>
+
+        </div>
+
+
+        {/* ÁREA DO PRESTADOR */}
+
+        <div className="provider-area-badge">
+
+          <div className="provider-area-icon">
+            🛠️
+          </div>
+
+          <div>
+
+            <strong>
+              ÁREA DO PRESTADOR
+            </strong>
+
+            <span>
+              Gerencie o seu trabalho
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div className="provider-nav-title">
+          MENU PRINCIPAL
+        </div>
+
+
+        {/* MENU */}
+
+        <nav className="provider-sidebar-nav">
+
+          <a
+            href="/provider"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+
+            <span className="provider-nav-icon">
+              ◈
+            </span>
+
+            <span>
+              Visão geral
+            </span>
+
+          </a>
+
+
+          <a
+            href="/provider/services"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+
+            <span className="provider-nav-icon">
+              🔧
+            </span>
+
+            <span>
+              Meus serviços
+            </span>
+
+          </a>
+
+
+          <a
+            href="/provider/services/new"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+
+            <span className="provider-nav-icon">
+              ＋
+            </span>
+
+            <span>
+              Criar serviço
+            </span>
+
+          </a>
+
+
+          <a
+            href="/provider/requests"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+
+            <span className="provider-nav-icon">
+              ▣
+            </span>
+
+            <span>
+              Pedidos recebidos
+            </span>
+
+          </a>
+
+
+          <a
+            href="/provider/projects"
+            onClick={closeMenu}
+            className="provider-nav-link active"
+          >
+
+            <span className="provider-nav-icon">
+              ◉
+            </span>
+
+            <span>
+              Projetos disponíveis
+            </span>
+
+          </a>
+
+
+          <a
+            href="/provider/chat"
+            onClick={closeMenu}
+            className="provider-nav-link provider-messages-link"
+          >
+
+            <span className="provider-nav-icon provider-messages-icon">
+
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+
+                <path
+                  d="M20 11.5C20 15.09 16.42 18 12 18C11.05 18 10.14 17.87 9.3 17.63L5 20L5.93 16.29C4.14 15.12 3 13.41 3 11.5C3 7.91 6.58 5 11 5H12C16.42 5 20 7.91 20 11.5Z"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+
+              </svg>
+
+            </span>
+
+
+            <span className="provider-messages-label">
+              Mensagens
+            </span>
+
+
+            <span className="provider-messages-status">
+
+              <span className="provider-messages-status-dot"></span>
+
+            </span>
+
+          </a>
+
+
+          <a
+            href="/provider/reviews"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+
+            <span className="provider-nav-icon">
+              ★
+            </span>
+
+            <span>
+              Avaliações
+            </span>
+
+          </a>
+
+
+          <div className="provider-nav-divider"></div>
+
+
+          <div className="provider-nav-title">
+            CONTA
+          </div>
+
+
+          <a
+            href="/provider/profile"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+
+            <span className="provider-nav-icon">
+              ○
+            </span>
+
+            <span>
+              Meu perfil
+            </span>
+
+          </a>
+
+
+          <a
+            href="/"
+            onClick={closeMenu}
+            className="provider-nav-link"
+          >
+
+            <span className="provider-nav-icon">
+              ⌂
+            </span>
+
+            <span>
+              Página inicial
+            </span>
+
+          </a>
+
+        </nav>
+
+
+        {/* PARTE INFERIOR */}
+
+        <div className="provider-sidebar-bottom">
+
+          <button
+            type="button"
+            className="provider-client-mode"
+            onClick={handleClientMode}
+          >
+
+            <span className="provider-client-mode-icon">
+              👤
+            </span>
+
+            <span>
+
+              <strong>
+                Modo Cliente
+              </strong>
+
+              <small>
+                Procurar profissionais
+              </small>
+
+            </span>
+
+            <span className="provider-client-arrow">
+              →
+            </span>
+
+          </button>
+
+
+          <div className="provider-sidebar-user">
+
+            <div className="provider-user-avatar">
+              {getInitials(user?.name)}
+            </div>
+
+            <div className="provider-user-info">
+
+              <strong>
+                {user?.name || "Prestador"}
+              </strong>
+
+              <span>
+                Prestador
+              </span>
 
             </div>
 
           </div>
 
 
-          <div className="provider-projects-grid">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="provider-logout"
+          >
 
-            {projects.map((project) => (
+            <span>
+              ↪
+            </span>
 
-              <article
-                key={project.id}
-                className="provider-project-card"
-              >
+            Sair da conta
 
-                {/* CARD HEADER */}
+          </button>
 
-                <div className="provider-project-card-top">
+        </div>
 
-                  <span className="provider-project-category">
-                    📂
-                    {project.category ||
-                      "Sem categoria"}
-                  </span>
-
-                  <span className="provider-project-status">
-                    ABERTO
-                  </span>
-
-                </div>
+      </aside>
 
 
-                {/* TÍTULO */}
+      {/* =====================================================
+          CONTEÚDO PRINCIPAL
+      ====================================================== */}
 
-                <h3>
-                  {project.title}
-                </h3>
+      <main className="provider-projects-main">
 
+        {/* ===================================================
+            TOPBAR
+        ==================================================== */}
 
-                {/* DESCRIÇÃO */}
+        <header className="provider-projects-topbar">
 
-                <p className="provider-project-description">
+          <div className="provider-projects-heading">
 
-                  {project.description &&
-                  project.description.length > 150
-                    ? `${project.description.substring(
-                        0,
-                        150
-                      )}...`
-                    : project.description}
+            <div className="provider-projects-heading-label">
 
-                </p>
+              <span className="provider-projects-heading-dot"></span>
 
+              OPORTUNIDADES PROFISSIONAIS
 
-                {/* INFORMAÇÕES */}
-
-                <div className="provider-project-info">
-
-                  <div className="provider-project-info-item">
-
-                    <span>
-                      📍 Localização
-                    </span>
-
-                    <strong>
-                      {project.location ||
-                        "Não informado"}
-                    </strong>
-
-                  </div>
+            </div>
 
 
-                  <div className="provider-project-info-item">
-
-                    <span>
-                      💰 Orçamento
-                    </span>
-
-                    <strong className="provider-project-budget">
-                      {formatBudget(
-                        project.budget
-                      )}
-                    </strong>
-
-                  </div>
-
-                </div>
+            <h1>
+              Projetos disponíveis
+            </h1>
 
 
-                {/* RODAPÉ */}
-
-                <div className="provider-project-card-footer">
-
-                  <div className="provider-project-date">
-
-                    {project.created_at
-                      ? `Publicado em ${formatDate(
-                          project.created_at
-                        )}`
-                      : "Projeto publicado"}
-
-                  </div>
-
-
-                  <button
-                    type="button"
-                    className="provider-project-view-btn"
-                    onClick={() =>
-                      handleViewProject(
-                        project.id
-                      )
-                    }
-                  >
-                    Ver projeto
-                    <span>→</span>
-                  </button>
-
-                </div>
-
-              </article>
-
-            ))}
+            <p>
+              Encontre projetos publicados por clientes
+              e envie propostas para novas oportunidades.
+            </p>
 
           </div>
 
-        </section>
 
-      )}
+          <div className="provider-projects-header-actions">
 
-  </main>
-
-</div>
+            <NotificationBell />
 
 
-);
+            <button
+              type="button"
+              className="provider-header-client-btn"
+              onClick={handleClientMode}
+            >
+              👤
+              <span>
+                Área do Cliente
+              </span>
+            </button>
+
+
+            <a
+              href="/provider/services/new"
+              className="provider-create-btn"
+            >
+
+              <span>
+                ＋
+              </span>
+
+              Criar serviço
+
+            </a>
+
+          </div>
+
+        </header>
+
+
+        {/* ===================================================
+            ERRO
+        ==================================================== */}
+
+        {error && (
+
+          <div className="provider-projects-error">
+
+            <div className="provider-projects-error-icon">
+              !
+            </div>
+
+            <div>
+
+              <strong>
+                Não foi possível carregar os projetos
+              </strong>
+
+              <p>
+                {error}
+              </p>
+
+            </div>
+
+          </div>
+
+        )}
+
+
+        {/* ===================================================
+            BARRA DE PESQUISA E FILTROS
+        ==================================================== */}
+
+        {!loading && !error && (
+
+          <section className="provider-projects-tools">
+
+            <div className="provider-projects-search">
+
+              <span className="provider-projects-search-icon">
+                ⌕
+              </span>
+
+              <input
+                type="text"
+                value={search}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
+                placeholder="Pesquisar por projeto, categoria ou localização..."
+                aria-label="Pesquisar projetos"
+              />
+
+              {search && (
+
+                <button
+                  type="button"
+                  className="provider-projects-search-clear"
+                  onClick={() => setSearch("")}
+                  aria-label="Limpar pesquisa"
+                >
+                  ×
+                </button>
+
+              )}
+
+            </div>
+
+
+            <div className="provider-projects-filter">
+
+              <label htmlFor="project-category">
+                Categoria
+              </label>
+
+              <select
+                id="project-category"
+                value={categoryFilter}
+                onChange={(event) =>
+                  setCategoryFilter(
+                    event.target.value
+                  )
+                }
+              >
+
+                {categories.map(
+                  (category) => (
+
+                    <option
+                      key={category}
+                      value={category}
+                    >
+                      {category === "TODAS"
+                        ? "Todas as categorias"
+                        : category}
+                    </option>
+
+                  )
+                )}
+
+              </select>
+
+            </div>
+
+          </section>
+
+        )}
+
+
+        {/* ===================================================
+            CARREGANDO
+        ==================================================== */}
+
+        {loading && (
+
+          <div className="provider-projects-loading">
+
+            <div className="provider-projects-spinner"></div>
+
+            <h3>
+              Procurando projetos...
+            </h3>
+
+            <p>
+              Aguarde enquanto buscamos novas
+              oportunidades para você.
+            </p>
+
+          </div>
+
+        )}
+
+
+        {/* ===================================================
+            CONTEÚDO DEPOIS DO CARREGAMENTO
+        ==================================================== */}
+
+        {!loading && !error && (
+
+          <>
+
+            {/* CABEÇALHO DA LISTA */}
+
+            <section className="provider-projects-section">
+
+              <div className="provider-projects-section-header">
+
+                <div>
+
+                  <div className="provider-projects-section-kicker">
+                    OPORTUNIDADES
+                  </div>
+
+                  <h2>
+                    Projetos abertos
+                  </h2>
+
+                  <p>
+
+                    {filteredProjects.length === 1
+                      ? "1 projeto disponível para receber propostas"
+                      : `${filteredProjects.length} projetos disponíveis para receber propostas`
+                    }
+
+                  </p>
+
+                </div>
+
+
+                {projects.length > 0 && (
+
+                  <div className="provider-projects-total">
+
+                    <strong>
+                      {projects.length}
+                    </strong>
+
+                    <span>
+                      {projects.length === 1
+                        ? "projeto"
+                        : "projetos"}
+                    </span>
+
+                  </div>
+
+                )}
+
+              </div>
+
+
+              {/* NENHUM PROJETO */}
+
+              {projects.length === 0 && (
+
+                <div className="provider-projects-empty">
+
+                  <div className="provider-projects-empty-icon">
+                    ◉
+                  </div>
+
+                  <h2>
+                    Nenhum projeto disponível
+                  </h2>
+
+                  <p>
+                    Neste momento não existem projetos
+                    abertos para receber propostas.
+                    Volte mais tarde para encontrar
+                    novas oportunidades.
+                  </p>
+
+                  <a
+                    href="/provider"
+                    className="provider-projects-empty-btn"
+                  >
+                    ← Voltar ao dashboard
+                  </a>
+
+                </div>
+
+              )}
+
+
+              {/* PESQUISA SEM RESULTADOS */}
+
+              {projects.length > 0 &&
+                filteredProjects.length === 0 && (
+
+                  <div className="provider-projects-empty">
+
+                    <div className="provider-projects-empty-icon">
+                      ⌕
+                    </div>
+
+                    <h2>
+                      Nenhum projeto encontrado
+                    </h2>
+
+                    <p>
+                      Não encontramos projetos que
+                      correspondam à sua pesquisa ou
+                      categoria selecionada.
+                    </p>
+
+                    <button
+                      type="button"
+                      className="provider-projects-empty-btn"
+                      onClick={() => {
+                        setSearch("");
+                        setCategoryFilter("TODAS");
+                      }}
+                    >
+                      Limpar filtros
+                    </button>
+
+                  </div>
+
+                )}
+
+
+              {/* PROJETOS */}
+
+              {filteredProjects.length > 0 && (
+
+                <div className="provider-projects-grid">
+
+                  {filteredProjects.map(
+                    (project) => (
+
+                      <article
+                        key={project.id}
+                        className="provider-project-card"
+                      >
+
+                        {/* TOPO */}
+
+                        <div className="provider-project-card-top">
+
+                          <div className="provider-project-category">
+
+                            <span>
+                              ◉
+                            </span>
+
+                            {project.category ||
+                              "Sem categoria"}
+
+                          </div>
+
+
+                          <span className="provider-project-status">
+                            ABERTO
+                          </span>
+
+                        </div>
+
+
+                        {/* TÍTULO */}
+
+                        <h3>
+                          {project.title ||
+                            "Projeto sem título"}
+                        </h3>
+
+
+                        {/* DESCRIÇÃO */}
+
+                        <p className="provider-project-description">
+
+                          {project.description
+                            ? project.description.length > 190
+                              ? `${project.description.substring(
+                                  0,
+                                  190
+                                )}...`
+                              : project.description
+                            : "O cliente não adicionou uma descrição para este projeto."}
+
+                        </p>
+
+
+                        {/* INFORMAÇÕES */}
+
+                        <div className="provider-project-info">
+
+                          <div className="provider-project-info-item">
+
+                            <span>
+                              📍 Localização
+                            </span>
+
+                            <strong>
+                              {project.location ||
+                                "Não informado"}
+                            </strong>
+
+                          </div>
+
+
+                          <div className="provider-project-info-item">
+
+                            <span>
+                              💰 Orçamento
+                            </span>
+
+                            <strong className="provider-project-budget">
+
+                              {formatBudget(
+                                project.budget
+                              )}
+
+                            </strong>
+
+                          </div>
+
+                        </div>
+
+
+                        {/* FOOTER */}
+
+                        <div className="provider-project-card-footer">
+
+                          <div className="provider-project-date">
+
+                            {project.created_at
+                              ? `Publicado em ${formatDate(
+                                  project.created_at
+                                )}`
+                              : "Projeto publicado"}
+
+                          </div>
+
+
+                          <button
+                            type="button"
+                            className="provider-project-view-btn"
+                            onClick={() =>
+                              handleViewProject(
+                                project.id
+                              )
+                            }
+                          >
+
+                            Ver projeto
+
+                            <span>
+                              →
+                            </span>
+
+                          </button>
+
+                        </div>
+
+                      </article>
+
+                    )
+                  )}
+
+                </div>
+
+              )}
+
+            </section>
+
+          </>
+
+        )}
+
+      </main>
+
+    </div>
+
+  );
 
 }
 
+
 export default ProviderProjects;
+

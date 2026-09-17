@@ -38,6 +38,11 @@ import CreateProviderProfile from "./pages/CreateProviderProfile";
 
 import AdminDashboard from "./pages/AdminDashboard";
 
+import ProviderProjects from "./pages/ProviderProjects";
+
+import ProviderRequests from "./pages/ProviderRequests";
+
+
 import "./App.css";
 
 import ClientFavorites from "./pages/ClientFavorites";
@@ -744,6 +749,26 @@ return (
 
 }
 
+
+/* =======================================================
+   PRESTADOR — PROJETOS DISPONÍVEIS
+======================================================= */
+
+if (path === "/provider/projects") {
+
+  return (
+
+    <ProviderRoute>
+
+      <ProviderProjects />
+
+    </ProviderRoute>
+
+  );
+
+}
+
+
 /* =======================================================
 CLIENTE — PROJETO
 ======================================================= */
@@ -985,6 +1010,29 @@ return (
 
 
 }
+
+
+/* =======================================================
+PROVIDER — PEDIDOS RECEBIDOS
+======================================================= */
+
+if (path === "/provider/requests") {
+
+return (
+
+
+<ProviderRoute>
+
+  <ProviderRequests />
+
+</ProviderRoute>
+
+
+);
+
+}
+
+
 
 /* =======================================================
 PROVIDER — PROJETO

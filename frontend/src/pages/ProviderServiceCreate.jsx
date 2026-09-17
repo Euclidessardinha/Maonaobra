@@ -1,10 +1,19 @@
+
 import { useEffect, useState } from "react";
+
+import { useAuth } from "../context/AuthContext";
+
+import NotificationBell from "../components/NotificationBell";
 
 import { createService } from "../api/services";
 import { getCategories } from "../api/api";
 
+import "./ProviderServiceCreate.css";
+
 
 function ProviderServiceCreate() {
+
+  const { user, logout } = useAuth();
 
   const [categories, setCategories] = useState([]);
 
@@ -20,6 +29,25 @@ function ProviderServiceCreate() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
+
+  /* =====================================================
+     MODO CLIENTE
+  ===================================================== */
+
+  function handleClientMode() {
+
+    setMenuOpen(false);
+
+    window.location.href = "/client";
+
+  }
+
+
+  /* =====================================================
+     CARREGAR CATEGORIAS
+  ===================================================== */
 
   useEffect(() => {
 
@@ -54,6 +82,123 @@ function ProviderServiceCreate() {
 
   }, []);
 
+
+  /* =====================================================
+     ESC — FECHAR MENU
+  ===================================================== */
+
+  useEffect(() => {
+
+    function handleEscape(event) {
+
+      if (event.key === "Escape") {
+
+        setMenuOpen(false);
+
+      }
+
+    }
+
+    document.addEventListener(
+      "keydown",
+      handleEscape
+    );
+
+    return () => {
+
+      document.removeEventListener(
+        "keydown",
+        handleEscape
+      );
+
+    };
+
+  }, []);
+
+
+  /* =====================================================
+     BLOQUEAR SCROLL COM MENU ABERTO
+  ===================================================== */
+
+  useEffect(() => {
+
+    if (menuOpen) {
+
+      document.body.style.overflow = "hidden";
+
+    } else {
+
+      document.body.style.overflow = "";
+
+    }
+
+    return () => {
+
+      document.body.style.overflow = "";
+
+    };
+
+  }, [menuOpen]);
+
+
+  /* =====================================================
+     FECHAR MENU
+  ===================================================== */
+
+  const closeMenu = () => {
+
+    setMenuOpen(false);
+
+  };
+
+
+  /* =====================================================
+     LOGOUT
+  ===================================================== */
+
+  const handleLogout = () => {
+
+    setMenuOpen(false);
+
+    logout();
+
+  };
+
+
+  /* =====================================================
+     INICIAIS DO UTILIZADOR
+  ===================================================== */
+
+  function getInitials(name) {
+
+    if (!name) {
+
+      return "P";
+
+    }
+
+    const parts =
+      name.trim().split(" ");
+
+    if (parts.length === 1) {
+
+      return parts[0]
+        .substring(0, 2)
+        .toUpperCase();
+
+    }
+
+    return (
+      parts[0][0] +
+      parts[parts.length - 1][0]
+    ).toUpperCase();
+
+  }
+
+
+  /* =====================================================
+     CRIAR SERVIÇO
+  ===================================================== */
 
   async function handleSubmit(event) {
 
@@ -156,97 +301,496 @@ function ProviderServiceCreate() {
 
   return (
 
-    <div className="dashboard">
+    <div className="provider-create-page">
 
 
-      {/* SIDEBAR */}
+      {/* =====================================================
+          HEADER MOBILE
+      ===================================================== */}
 
-      <aside className="sidebar">
+      <header className="provider-create-mobile-header">
 
-        <div className="logo">
+        <button
+          className="provider-create-hamburger"
+          onClick={() => setMenuOpen(true)}
+          aria-label="Abrir menu"
+          aria-expanded={menuOpen}
+        >
+
+          <span></span>
+          <span></span>
+          <span></span>
+
+        </button>
+
+
+        <div className="provider-create-mobile-logo">
           Mão<span>NaObra</span>
         </div>
 
 
-        <nav>
+        <div className="provider-create-mobile-notification">
 
-          <a href="/provider">
-            🏠 Visão geral
-          </a>
+          <NotificationBell />
 
-          <a href="/provider/services">
-            🔧 Meus serviços
-          </a>
+        </div>
 
-          <a href="/provider/services/new">
-            ➕ Criar serviço
-          </a>
-
-          <a href="/provider/requests">
-            📋 Pedidos recebidos
-          </a>
-
-          <a href="/provider/profile">
-            👤 Meu perfil
-          </a>
-
-        </nav>
+      </header>
 
 
-        <a
-          href="/provider"
-          className="sidebar-logout"
-          style={{
-            textDecoration: "none",
-            textAlign: "center"
-          }}
+      {/* =====================================================
+          OVERLAY
+      ===================================================== */}
+
+      {menuOpen && (
+
+        <div
+          className="provider-create-sidebar-overlay"
+          onClick={closeMenu}
+          aria-hidden="true"
+        />
+
+      )}
+
+
+      {/* =====================================================
+          SIDEBAR
+      ===================================================== */}
+
+      <aside
+        className={
+          `provider-create-sidebar ${
+            menuOpen
+              ? "provider-create-sidebar-open"
+              : ""
+          }`
+        }
+      >
+
+
+        {/* FECHAR */}
+
+        <button
+          className="provider-create-sidebar-close"
+          onClick={closeMenu}
+          aria-label="Fechar menu"
         >
-          Voltar
-        </a>
-
-      </aside>
+          ×
+        </button>
 
 
-      {/* MAIN */}
+        {/* LOGO */}
 
-      <main className="dashboard-content">
+        <div className="provider-create-sidebar-brand">
 
-
-        <div className="dashboard-header">
+          <div className="provider-create-brand-mark">
+            M
+          </div>
 
           <div>
 
-            <span className="section-label">
-              ÁREA DO PRESTADOR
-            </span>
+            <div className="provider-create-brand-name">
+              Mão<span>NaObra</span>
+            </div>
 
-            <h1>
-              Criar novo serviço
-            </h1>
-
-            <p>
-              Publique um serviço para que clientes
-              possam encontrá-lo.
-            </p>
+            <div className="provider-create-brand-area">
+              Área profissional
+            </div>
 
           </div>
 
         </div>
 
 
-        <section className="dashboard-section">
+        {/* IDENTIDADE DO PRESTADOR */}
+
+        <div className="provider-create-area-badge">
+
+          <div className="provider-create-area-icon">
+            🛠️
+          </div>
+
+          <div>
+
+            <strong>
+              ÁREA DO PRESTADOR
+            </strong>
+
+            <span>
+              Gerencie o seu trabalho
+            </span>
+
+          </div>
+
+        </div>
 
 
-          <div className="section-header">
+        {/* TÍTULO DO MENU */}
+
+        <div className="provider-create-nav-title">
+          MENU PRINCIPAL
+        </div>
+
+
+        {/* NAVEGAÇÃO */}
+
+        <nav className="provider-create-sidebar-nav">
+
+
+          <a
+            href="/provider"
+            onClick={closeMenu}
+            className="provider-create-nav-link"
+          >
+
+            <span className="provider-create-nav-icon">
+              ◈
+            </span>
+
+            <span>
+              Visão geral
+            </span>
+
+          </a>
+
+
+          <a
+            href="/provider/services"
+            onClick={closeMenu}
+            className="provider-create-nav-link"
+          >
+
+            <span className="provider-create-nav-icon">
+              🔧
+            </span>
+
+            <span>
+              Meus serviços
+            </span>
+
+          </a>
+
+
+          <a
+            href="/provider/services/new"
+            onClick={closeMenu}
+            className="provider-create-nav-link active"
+          >
+
+            <span className="provider-create-nav-icon">
+              ＋
+            </span>
+
+            <span>
+              Criar serviço
+            </span>
+
+          </a>
+
+
+          <a
+            href="/provider/requests"
+            onClick={closeMenu}
+            className="provider-create-nav-link"
+          >
+
+            <span className="provider-create-nav-icon">
+              ▣
+            </span>
+
+            <span>
+              Pedidos recebidos
+            </span>
+
+          </a>
+
+
+          <a
+            href="/provider/projects"
+            onClick={closeMenu}
+            className="provider-create-nav-link"
+          >
+
+            <span className="provider-create-nav-icon">
+              ◉
+            </span>
+
+            <span>
+              Projetos disponíveis
+            </span>
+
+          </a>
+
+
+          <a
+            href="/provider/chat"
+            onClick={closeMenu}
+            className="provider-create-nav-link"
+          >
+
+            <span className="provider-create-nav-icon">
+              ◌
+            </span>
+
+            <span>
+              Mensagens
+            </span>
+
+          </a>
+
+
+          <a
+            href="/provider/reviews"
+            onClick={closeMenu}
+            className="provider-create-nav-link"
+          >
+
+            <span className="provider-create-nav-icon">
+              ★
+            </span>
+
+            <span>
+              Avaliações
+            </span>
+
+          </a>
+
+
+          <div className="provider-create-nav-divider"></div>
+
+
+          <div className="provider-create-nav-title">
+            CONTA
+          </div>
+
+
+          <a
+            href="/provider/profile"
+            onClick={closeMenu}
+            className="provider-create-nav-link"
+          >
+
+            <span className="provider-create-nav-icon">
+              ○
+            </span>
+
+            <span>
+              Meu perfil
+            </span>
+
+          </a>
+
+
+          <a
+            href="/"
+            onClick={closeMenu}
+            className="provider-create-nav-link"
+          >
+
+            <span className="provider-create-nav-icon">
+              ⌂
+            </span>
+
+            <span>
+              Página inicial
+            </span>
+
+          </a>
+
+
+        </nav>
+
+
+        {/* =================================================
+            PARTE INFERIOR
+        ================================================= */}
+
+        <div className="provider-create-sidebar-bottom">
+
+
+          {/* MODO CLIENTE */}
+
+          <button
+            type="button"
+            className="provider-create-client-mode"
+            onClick={handleClientMode}
+          >
+
+            <span className="provider-create-client-mode-icon">
+              👤
+            </span>
+
+            <span>
+
+              <strong>
+                Modo Cliente
+              </strong>
+
+              <small>
+                Procurar profissionais
+              </small>
+
+            </span>
+
+            <span className="provider-create-client-arrow">
+              →
+            </span>
+
+          </button>
+
+
+          {/* UTILIZADOR */}
+
+          <div className="provider-create-sidebar-user">
+
+            <div className="provider-create-user-avatar">
+
+              {getInitials(user?.name)}
+
+            </div>
+
+
+            <div className="provider-create-user-info">
+
+              <strong>
+                {user?.name || "Prestador"}
+              </strong>
+
+              <span>
+                Prestador
+              </span>
+
+            </div>
+
+          </div>
+
+
+          {/* LOGOUT */}
+
+          <button
+            onClick={handleLogout}
+            className="provider-create-logout"
+          >
+
+            <span>
+              ↪
+            </span>
+
+            Sair da conta
+
+          </button>
+
+
+        </div>
+
+
+      </aside>
+
+
+      {/* =====================================================
+          MAIN
+      ===================================================== */}
+
+      <main className="provider-create-main">
+
+
+        {/* =================================================
+            TOPBAR
+        ================================================= */}
+
+        <header className="provider-create-topbar">
+
+
+          <div className="provider-create-page-heading">
+
+            <div className="provider-create-heading-label">
+
+              <span className="provider-create-heading-dot"></span>
+
+              PAINEL PROFISSIONAL
+
+            </div>
+
+
+            <h1>
+              Criar novo serviço
+            </h1>
+
+
+            <p>
+              Publique um serviço e permita que clientes
+              encontrem o seu trabalho.
+            </p>
+
+          </div>
+
+
+          <div className="provider-create-header-actions">
+
+
+            <NotificationBell />
+
+
+            <button
+              type="button"
+              className="provider-create-header-client-btn"
+              onClick={handleClientMode}
+            >
+
+              👤
+
+              <span>
+                Área do Cliente
+              </span>
+
+            </button>
+
+
+            <a
+              href="/provider/services"
+              className="provider-create-header-back"
+            >
+
+              ←
+
+              <span>
+                Meus serviços
+              </span>
+
+            </a>
+
+
+          </div>
+
+        </header>
+
+
+        {/* =================================================
+            FORMULÁRIO
+        ================================================= */}
+
+        <section className="provider-create-form-section">
+
+
+          <div className="provider-create-form-header">
+
+            <div className="provider-create-form-icon">
+              🔧
+            </div>
 
             <div>
+
+              <div className="provider-create-form-kicker">
+                PUBLICAR SERVIÇO
+              </div>
 
               <h2>
                 Informações do serviço
               </h2>
 
               <p>
-                Preencha os dados abaixo.
+                Preencha os dados abaixo para apresentar
+                o seu serviço aos clientes.
               </p>
 
             </div>
@@ -254,24 +798,58 @@ function ProviderServiceCreate() {
           </div>
 
 
+          <div className="provider-create-form-divider"></div>
+
+
+          {/* ALERTA DE ERRO */}
+
           {error && (
 
-            <div className="error-message">
-              {error}
+            <div className="provider-create-alert error">
+
+              <div className="provider-create-alert-symbol">
+                !
+              </div>
+
+              <div>
+
+                <strong>
+                  Verifique as informações
+                </strong>
+
+                <p>
+                  {error}
+                </p>
+
+              </div>
+
             </div>
 
           )}
 
 
+          {/* SUCESSO */}
+
           {success && (
 
-            <div
-              className="success-message"
-              style={{
-                marginBottom: "20px"
-              }}
-            >
-              {success}
+            <div className="provider-create-alert success">
+
+              <div className="provider-create-alert-symbol">
+                ✓
+              </div>
+
+              <div>
+
+                <strong>
+                  Serviço criado com sucesso
+                </strong>
+
+                <p>
+                  O seu serviço foi publicado na plataforma.
+                </p>
+
+              </div>
+
             </div>
 
           )}
@@ -279,21 +857,25 @@ function ProviderServiceCreate() {
 
           <form
             onSubmit={handleSubmit}
-            style={{
-              maxWidth: "700px"
-            }}
+            className="provider-create-form"
           >
 
 
             {/* TÍTULO */}
 
-            <div className="form-group">
+            <div className="provider-create-field">
 
-              <label>
-                Título do serviço *
+              <label htmlFor="provider-service-title">
+
+                Título do serviço
+
+                <span>*</span>
+
               </label>
 
+
               <input
+                id="provider-service-title"
                 type="text"
                 value={title}
                 onChange={(event) =>
@@ -301,122 +883,206 @@ function ProviderServiceCreate() {
                 }
                 placeholder="Ex: Instalação elétrica residencial"
                 disabled={loading}
+                maxLength={150}
               />
+
+
+              <div className="provider-create-help-row">
+
+                <small>
+                  Use um título claro e objetivo.
+                </small>
+
+                <span>
+                  {title.length}/150
+                </span>
+
+              </div>
 
             </div>
 
 
             {/* DESCRIÇÃO */}
 
-            <div className="form-group">
+            <div className="provider-create-field">
 
-              <label>
-                Descrição *
+              <label htmlFor="provider-service-description">
+
+                Descrição
+
+                <span>*</span>
+
               </label>
 
+
               <textarea
+                id="provider-service-description"
                 value={description}
                 onChange={(event) =>
                   setDescription(event.target.value)
                 }
-                placeholder="Descreva detalhadamente o serviço que você oferece..."
-                rows={6}
+                placeholder="Descreva detalhadamente o serviço que você oferece, sua experiência, o que está incluído e outros detalhes importantes..."
+                rows={7}
                 disabled={loading}
+                maxLength={2000}
               />
+
+
+              <div className="provider-create-help-row">
+
+                <small>
+                  Explique ao cliente exatamente o que ele pode esperar do serviço.
+                </small>
+
+                <span>
+                  {description.length}/2000
+                </span>
+
+              </div>
 
             </div>
 
 
-            {/* CATEGORIA */}
+            {/* CATEGORIA + PREÇO */}
 
-            <div className="form-group">
-
-              <label>
-                Categoria *
-              </label>
+            <div className="provider-create-fields-grid">
 
 
-              {loadingCategories ? (
+              {/* CATEGORIA */}
 
-                <p>
-                  Carregando categorias...
-                </p>
+              <div className="provider-create-field">
 
-              ) : categories.length === 0 ? (
+                <label htmlFor="provider-service-category">
 
-                <p>
-                  Nenhuma categoria disponível.
-                </p>
+                  Categoria
 
-              ) : (
+                  <span>*</span>
 
-                <select
-                  value={categoryId}
-                  onChange={(event) =>
-                    setCategoryId(event.target.value)
-                  }
-                  disabled={loading}
-                >
-
-                  <option value="">
-                    Selecione uma categoria
-                  </option>
+                </label>
 
 
-                  {categories.map((category) => (
+                {loadingCategories ? (
 
-                    <option
-                      key={category.id}
-                      value={category.id}
-                    >
-                      {category.name}
+                  <div className="provider-create-loading-field">
+
+                    <span className="provider-create-mini-spinner"></span>
+
+                    Carregando categorias...
+
+                  </div>
+
+                ) : categories.length === 0 ? (
+
+                  <div className="provider-create-loading-field">
+
+                    Nenhuma categoria disponível.
+
+                  </div>
+
+                ) : (
+
+                  <select
+                    id="provider-service-category"
+                    value={categoryId}
+                    onChange={(event) =>
+                      setCategoryId(event.target.value)
+                    }
+                    disabled={loading}
+                  >
+
+                    <option value="">
+                      Selecione uma categoria
                     </option>
 
-                  ))}
 
-                </select>
+                    {categories.map((category) => (
 
-              )}
+                      <option
+                        key={category.id}
+                        value={category.id}
+                      >
+
+                        {category.name}
+
+                      </option>
+
+                    ))}
+
+                  </select>
+
+                )}
+
+
+                <small>
+                  Escolha a categoria mais adequada ao serviço.
+                </small>
+
+              </div>
+
+
+              {/* PREÇO */}
+
+              <div className="provider-create-field">
+
+                <label htmlFor="provider-service-price">
+
+                  Preço
+
+                  <span>*</span>
+
+                </label>
+
+
+                <div className="provider-create-price">
+
+                  <input
+                    id="provider-service-price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={price}
+                    onChange={(event) =>
+                      setPrice(event.target.value)
+                    }
+                    placeholder="Ex: 1500"
+                    disabled={loading}
+                  />
+
+                  <span>
+                    MT
+                  </span>
+
+                </div>
+
+
+                <small>
+                  Informe o valor cobrado pelo serviço.
+                </small>
+
+              </div>
+
 
             </div>
 
 
-            {/* PREÇO */}
+            {/* =================================================
+                AÇÕES
+            ================================================= */}
 
-            <div className="form-group">
-
-              <label>
-                Preço (MT) *
-              </label>
-
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={price}
-                onChange={(event) =>
-                  setPrice(event.target.value)
-                }
-                placeholder="Ex: 1500"
-                disabled={loading}
-              />
-
-            </div>
+            <div className="provider-create-actions">
 
 
-            {/* BOTÕES */}
+              <a
+                href="/provider/services"
+                className="provider-create-cancel"
+              >
+                Cancelar
+              </a>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                marginTop: "25px"
-              }}
-            >
 
               <button
                 type="submit"
-                className="register-btn"
+                className="provider-create-submit"
                 disabled={
                   loading ||
                   loadingCategories ||
@@ -424,22 +1090,32 @@ function ProviderServiceCreate() {
                 }
               >
 
-                {loading
-                  ? "Criando..."
-                  : "Criar serviço"}
+                {loading ? (
+
+                  <>
+
+                    <span className="provider-create-button-spinner"></span>
+
+                    Criando serviço...
+
+                  </>
+
+                ) : (
+
+                  <>
+
+                    <span>
+                      ✓
+                    </span>
+
+                    Criar serviço
+
+                  </>
+
+                )}
 
               </button>
 
-
-              <a
-                href="/provider"
-                className="login-btn"
-                style={{
-                  textDecoration: "none"
-                }}
-              >
-                Cancelar
-              </a>
 
             </div>
 
@@ -448,6 +1124,33 @@ function ProviderServiceCreate() {
 
 
         </section>
+
+
+        {/* =================================================
+            DICA
+        ================================================= */}
+
+        <div className="provider-create-tip">
+
+          <div className="provider-create-tip-icon">
+            💡
+          </div>
+
+          <div>
+
+            <strong>
+              Dica para conseguir mais clientes
+            </strong>
+
+            <p>
+              Uma descrição detalhada, uma categoria correta
+              e um preço claro ajudam os clientes a entender
+              melhor o seu serviço.
+            </p>
+
+          </div>
+
+        </div>
 
 
       </main>
@@ -461,3 +1164,4 @@ function ProviderServiceCreate() {
 
 
 export default ProviderServiceCreate;
+

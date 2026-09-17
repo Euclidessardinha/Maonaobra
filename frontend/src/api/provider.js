@@ -1,3 +1,4 @@
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 export async function getProviderRequests() {
@@ -126,6 +127,7 @@ export async function getOpenProjects() {
   return data;
 }
 
+
 export async function getMyProposals() {
 
   const token =
@@ -221,19 +223,26 @@ export async function getProject(projectId) {
 
 
 export async function getMyProviderReviews() {
-  const token = localStorage.getItem("access_token");
 
-  const profileResponse = await fetch(`${API_URL}/providers/me`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const token =
+    localStorage.getItem("access_token");
 
-  const profileData = await profileResponse.json();
+  const profileResponse = await fetch(
+    `${API_URL}/providers/me`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const profileData =
+    await profileResponse.json();
 
   if (!profileResponse.ok) {
     throw new Error(
-      profileData.detail || "Erro ao buscar perfil do prestador."
+      profileData.detail ||
+      "Erro ao buscar perfil do prestador."
     );
   }
 
@@ -245,7 +254,8 @@ export async function getMyProviderReviews() {
 
   if (!response.ok) {
     throw new Error(
-      data.detail || "Erro ao buscar avaliações."
+      data.detail ||
+      "Erro ao buscar avaliações."
     );
   }
 
@@ -257,9 +267,13 @@ export async function getMyProviderReviews() {
 // ATUALIZAR STATUS DE UM PEDIDO
 // ============================================================
 
-export async function updateRequestStatus(requestId, status) {
+export async function updateRequestStatus(
+  requestId,
+  status
+) {
 
-  const token = localStorage.getItem("access_token");
+  const token =
+    localStorage.getItem("access_token");
 
   const response = await fetch(
     `${API_URL}/requests/${requestId}/status`,
@@ -277,7 +291,8 @@ export async function updateRequestStatus(requestId, status) {
     }
   );
 
-  const data = await response.json();
+  const data =
+    await response.json();
 
   if (!response.ok) {
     throw new Error(
@@ -291,8 +306,12 @@ export async function updateRequestStatus(requestId, status) {
 }
 
 
-export async function createProviderProfile(profileData) {
-  const token = localStorage.getItem("access_token");
+export async function createProviderProfile(
+  profileData
+) {
+
+  const token =
+    localStorage.getItem("access_token");
 
   const response = await fetch(
     `${API_URL}/providers/profile`,
@@ -308,7 +327,8 @@ export async function createProviderProfile(profileData) {
     }
   );
 
-  const data = await response.json();
+  const data =
+    await response.json();
 
   if (!response.ok) {
     throw new Error(
@@ -323,15 +343,21 @@ export async function createProviderProfile(profileData) {
 
 
 export async function getMyServices() {
-  const token = localStorage.getItem("access_token");
 
-  const response = await fetch(`${API_URL}/services/my`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const token =
+    localStorage.getItem("access_token");
 
-  const data = await response.json();
+  const response = await fetch(
+    `${API_URL}/services/my`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data =
+    await response.json();
 
   if (!response.ok) {
     throw new Error(
@@ -346,24 +372,29 @@ export async function getMyServices() {
 
 
 export async function updateService(
-serviceId,
-serviceData
+  serviceId,
+  serviceData
 ) {
-  const token = localStorage.getItem("access_token");
+
+  const token =
+    localStorage.getItem("access_token");
 
   const response = await fetch(
     `${API_URL}/services/${serviceId}`,
-  {
-    method: "PATCH",
+    {
+      method: "PATCH",
+
       headers: {
         "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
-    body: JSON.stringify(serviceData),
-  }
+
+      body: JSON.stringify(serviceData),
+    }
   );
 
-  const data = await response.json();
+  const data =
+    await response.json();
 
   if (!response.ok) {
     throw new Error(
@@ -377,20 +408,26 @@ serviceData
 }
 
 
-export async function toggleServiceStatus(serviceId) {
-  const token = localStorage.getItem("access_token");
+export async function toggleServiceStatus(
+  serviceId
+) {
+
+  const token =
+    localStorage.getItem("access_token");
 
   const response = await fetch(
     `${API_URL}/services/${serviceId}/status`,
-  {
-  method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
+    {
+      method: "PATCH",
+
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
   );
 
-  const data = await response.json();
+  const data =
+    await response.json();
 
   if (!response.ok) {
     throw new Error(
@@ -402,3 +439,41 @@ export async function toggleServiceStatus(serviceId) {
 
   return data;
 }
+
+
+// ============================================================
+// EXCLUIR SERVIÇO
+// ============================================================
+
+export async function deleteService(
+  serviceId
+) {
+
+  const token =
+    localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `${API_URL}/services/${serviceId}`,
+    {
+      method: "DELETE",
+
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : "Erro ao excluir o serviço."
+    );
+  }
+
+  return data;
+}
+

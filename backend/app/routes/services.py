@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -11,23 +12,26 @@ from app.models.user import User
 
 from app.schemas.services import ServiceCreate, ServiceUpdate
 
+
 router = APIRouter(
-prefix="/services",
-tags=["Services"]
+    prefix="/services",
+    tags=["Services"]
 )
+
 
 @router.post("/")
 def create_service(
     service_data: ServiceCreate,
     current_user: User = Depends(require_provider),
     db: Session = Depends(get_db)
-    ):
+):
     provider = (
         db.query(ProviderProfile)
-            .filter(ProviderProfile.user_id == current_user.id)
-            .first()
+        .filter(
+            ProviderProfile.user_id == current_user.id
+        )
+        .first()
     )
-
 
     if not provider:
         raise HTTPException(
@@ -37,8 +41,10 @@ def create_service(
 
     category = (
         db.query(Category)
-            .filter(Category.id == service_data.category_id)
-            .first()
+        .filter(
+            Category.id == service_data.category_id
+        )
+        .first()
     )
 
     if not category:
@@ -48,11 +54,11 @@ def create_service(
         )
 
     service = Service(
-    provider_id=provider.id,
-    category_id=service_data.category_id,
-    title=service_data.title,
-    description=service_data.description,
-    price=service_data.price
+        provider_id=provider.id,
+        category_id=service_data.category_id,
+        title=service_data.title,
+        description=service_data.description,
+        price=service_data.price
     )
 
     db.add(service)
@@ -79,15 +85,14 @@ def update_service(
     service_data: ServiceUpdate,
     current_user: User = Depends(require_provider),
     db: Session = Depends(get_db)
-    ):
+):
     provider = (
         db.query(ProviderProfile)
-            .filter(
-                ProviderProfile.user_id == current_user.id
-            )
-            .first()
+        .filter(
+            ProviderProfile.user_id == current_user.id
+        )
+        .first()
     )
-
 
     if not provider:
         raise HTTPException(
@@ -97,11 +102,11 @@ def update_service(
 
     service = (
         db.query(Service)
-            .filter(
-                Service.id == service_id,
-                Service.provider_id == provider.id
-            )
-            .first()
+        .filter(
+            Service.id == service_id,
+            Service.provider_id == provider.id
+        )
+        .first()
     )
 
     if not service:
@@ -112,8 +117,10 @@ def update_service(
 
     category = (
         db.query(Category)
-            .filter(Category.id == service_data.category_id)
-            .first()
+        .filter(
+            Category.id == service_data.category_id
+        )
+        .first()
     )
 
     if not category:
@@ -154,20 +161,19 @@ def update_service(
     }
 
 
-@router.patch("/{service_id}/status")
-def toggle_service_status(
+@router.delete("/{service_id}")
+def delete_service(
     service_id: int,
     current_user: User = Depends(require_provider),
     db: Session = Depends(get_db)
-    ):
+):
     provider = (
         db.query(ProviderProfile)
-            .filter(
-                ProviderProfile.user_id == current_user.id
-            )
-            .first()
+        .filter(
+            ProviderProfile.user_id == current_user.id
+        )
+        .first()
     )
-
 
     if not provider:
         raise HTTPException(
@@ -177,11 +183,58 @@ def toggle_service_status(
 
     service = (
         db.query(Service)
-            .filter(
-                Service.id == service_id,
-                Service.provider_id == provider.id
-            )
-            .first()
+        .filter(
+            Service.id == service_id,
+            Service.provider_id == provider.id
+        )
+        .first()
+    )
+
+    if not service:
+        raise HTTPException(
+            status_code=404,
+            detail="Serviço não encontrado ou não pertence ao seu perfil."
+        )
+
+    service_title = service.title
+
+    db.delete(service)
+    db.commit()
+
+    return {
+        "message": "Serviço excluído com sucesso!",
+        "service_id": service_id,
+        "title": service_title
+    }
+
+
+@router.patch("/{service_id}/status")
+def toggle_service_status(
+    service_id: int,
+    current_user: User = Depends(require_provider),
+    db: Session = Depends(get_db)
+):
+    provider = (
+        db.query(ProviderProfile)
+        .filter(
+            ProviderProfile.user_id == current_user.id
+        )
+        .first()
+    )
+
+    if not provider:
+        raise HTTPException(
+            status_code=404,
+            detail="Perfil profissional não encontrado."
+        )
+
+    service = (
+        db.query(Service)
+        .filter(
+            Service.id == service_id,
+            Service.provider_id == provider.id
+        )
+        .first()
     )
 
     if not service:
@@ -223,23 +276,18 @@ def toggle_service_status(
     }
 
 
-
-
-
-
 @router.get("/my")
 def list_my_services(
     current_user: User = Depends(require_provider),
     db: Session = Depends(get_db)
-    ):
+):
     provider = (
-    db.query(ProviderProfile)
+        db.query(ProviderProfile)
         .filter(
             ProviderProfile.user_id == current_user.id
         )
         .first()
     )
-
 
     if not provider:
         raise HTTPException(
@@ -249,13 +297,13 @@ def list_my_services(
 
     services = (
         db.query(Service)
-            .join(Category)
-            .filter(
-                Service.provider_id == provider.id
-            )
-            .order_by(Service.id.desc())
-            .all()
+        .join(Category)
+        .filter(
+            Service.provider_id == provider.id
         )
+        .order_by(Service.id.desc())
+        .all()
+    )
 
     return [
         {
@@ -285,14 +333,15 @@ def list_services(
     category_id: int | None = None,
     location: str | None = None,
     db: Session = Depends(get_db)
-    ):
+):
     query = (
-    db.query(Service)
+        db.query(Service)
         .join(ProviderProfile)
         .join(Category)
-        .filter(Service.is_active.is_(True))
+        .filter(
+            Service.is_active.is_(True)
+        )
     )
-
 
     if search:
         search_term = f"%{search.strip()}%"
@@ -307,19 +356,21 @@ def list_services(
     if category_id is not None:
         category = (
             db.query(Category)
-                .filter(Category.id == category_id)
-                .first()
+            .filter(
+                Category.id == category_id
+            )
+            .first()
         )
 
-    if not category:
-        raise HTTPException(
-            status_code=404,
-            detail="Categoria não encontrada."
-        )
+        if not category:
+            raise HTTPException(
+                status_code=404,
+                detail="Categoria não encontrada."
+            )
 
-    query = query.filter(
-        Service.category_id == category_id
-    )
+        query = query.filter(
+            Service.category_id == category_id
+        )
 
     if location:
         query = query.filter(

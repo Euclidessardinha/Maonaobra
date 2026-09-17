@@ -489,46 +489,46 @@ def accept_proposal(
 
     for other_proposal in other_proposals:
 
-    # Marcar proposta como rejeitada
-    other_proposal.status = "REJECTED"
+        # Marcar proposta como rejeitada
+        other_proposal.status = "REJECTED"
 
-    # Perfil do prestador rejeitado
-    rejected_provider = other_proposal.provider
+        # Perfil do prestador rejeitado
+        rejected_provider = other_proposal.provider
 
-    if not rejected_provider:
-        continue
+        if not rejected_provider:
+            continue
 
-    # Verificar se já existe notificação para evitar duplicação
-    existing_rejection_notification = (
-        db.query(Notification)
-        .filter(
-            Notification.user_id == rejected_provider.user_id,
-            Notification.type == "PROJECT_NOT_SELECTED",
-            Notification.message.like(
-                f'%"{project.title}"%'
+        # Verificar se já existe notificação para evitar duplicação
+        existing_rejection_notification = (
+            db.query(Notification)
+            .filter(
+                Notification.user_id == rejected_provider.user_id,
+                Notification.type == "PROJECT_NOT_SELECTED",
+                Notification.message.like(
+                    f'%"{project.title}"%'
+                )
             )
-        )
-        .first()
-    )
-
-    # Criar notificação
-    if not existing_rejection_notification:
-
-        rejection_notification = Notification(
-            user_id=rejected_provider.user_id,
-            conversation_id=None,
-            type="PROJECT_NOT_SELECTED",
-            title="Proposta não selecionada",
-            message=(
-                f'A sua proposta para o projeto '
-                f'"{project.title}" não foi escolhida pelo cliente. '
-                f'Continue acompanhando novos projetos e '
-                f'enviando propostas.'
-            ),
-            is_read=False
+            .first()
         )
 
-        db.add(rejection_notification)
+        # Criar notificação
+        if not existing_rejection_notification:
+
+            rejection_notification = Notification(
+                user_id=rejected_provider.user_id,
+                conversation_id=None,
+                type="PROJECT_NOT_SELECTED",
+                title="Proposta não selecionada",
+                message=(
+                    f'A sua proposta para o projeto '
+                    f'"{project.title}" não foi escolhida pelo cliente. '
+                    f'Continue acompanhando novos projetos e '
+                    f'enviando propostas.'
+                ),
+                is_read=False
+            )
+
+            db.add(rejection_notification)
 
     # ========================================================
     # CRIAR OU REUTILIZAR CONVERSA

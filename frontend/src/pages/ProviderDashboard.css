@@ -541,7 +541,8 @@
 
   box-sizing: border-box;
 
-  overflow: visible;
+  overflow: visible !important;
+  overflow-y: visible !important;
 }
 
 

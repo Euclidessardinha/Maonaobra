@@ -164,96 +164,74 @@ function NotificationBell() {
   // CLICAR EM UMA NOTIFICAÇÃO
   // =========================================================
 
-  async function handleNotificationClick(notification) {
+  const handleNotificationClick = async (notification) => {
+  try {
+    // ==========================================
+    // MARCAR COMO LIDA
+    // ==========================================
 
-    try {
+    if (!notification.is_read) {
+      await markNotificationAsRead(notification.id);
 
-      // -----------------------------------------------------
-      // MARCAR COMO LIDA
-      // -----------------------------------------------------
-
-      if (!notification.is_read) {
-
-        await markNotificationAsRead(
-          notification.id
-        );
-
-        setNotifications((currentNotifications) =>
-          currentNotifications.map((item) =>
-            item.id === notification.id
-              ? {
-                  ...item,
-                  is_read: true
-                }
-              : item
-          )
-        );
-
-        setUnreadCount((currentCount) =>
-          Math.max(currentCount - 1, 0)
-        );
-
-      }
-
-
-      // -----------------------------------------------------
-      // NOTIFICAÇÃO DE NOVA MENSAGEM
-      // -----------------------------------------------------
-
-      if (
-        notification.type === "NEW_MESSAGE" &&
-        notification.conversation_id
-      ) {
-
-        setIsOpen(false);
-
-        /*
-          Detectar automaticamente se estamos no
-          dashboard do cliente ou do prestador.
-        */
-
-        const currentPath = window.location.pathname;
-
-        let chatPath = "/client/chat";
-
-        if (
-          currentPath.startsWith("/provider")
-        ) {
-
-          chatPath = "/provider/chat";
-
-        }
-
-
-        console.log(
-          "Abrindo conversa pela notificação:",
-          {
-            chatPath,
-            conversationId:
-              notification.conversation_id
-          }
-        );
-
-
-        /*
-          Abrir diretamente a conversa específica.
-        */
-
-        window.location.href =
-          `${chatPath}?conversation_id=${notification.conversation_id}`;
-
-      }
-
-    } catch (error) {
-
-      console.error(
-        "Erro ao processar notificação:",
-        error
+      setNotifications((prev) =>
+        prev.map((item) =>
+          item.id === notification.id
+            ? { ...item, is_read: true }
+            : item
+        )
       );
 
+      setUnreadCount((prev) =>
+        Math.max(0, prev - 1)
+      );
     }
 
+    // ==========================================
+    // NOTIFICAÇÃO DE PROJETO ESCOLHIDO
+    // ==========================================
+
+    if (
+      notification.type === "PROJECT_SELECTED" &&
+      notification.conversation_id
+    ) {
+      setIsOpen(false);
+
+      window.location.href =
+        `/provider/chat?conversation_id=${notification.conversation_id}`;
+
+      return;
+    }
+
+    // ==========================================
+    // NOVA MENSAGEM
+    // ==========================================
+
+    if (
+      notification.type === "NEW_MESSAGE" &&
+      notification.conversation_id
+    ) {
+      setIsOpen(false);
+
+      const currentPath = window.location.pathname;
+
+      if (currentPath.startsWith("/provider")) {
+        window.location.href =
+          `/provider/chat?conversation_id=${notification.conversation_id}`;
+      } else {
+        window.location.href =
+          `/client/chat?conversation_id=${notification.conversation_id}`;
+      }
+
+      return;
+    }
+
+  } catch (error) {
+    console.error(
+      "Erro ao abrir notificação:",
+      error
+    );
   }
+};
 
 
   // =========================================================
@@ -496,10 +474,12 @@ function NotificationBell() {
                         }}
                       >
 
-                        {notification.type ===
-                        "NEW_MESSAGE"
+                        {notification.type === "NEW_MESSAGE"
                           ? "💬"
-                          : "🔔"}
+                          : notification.type === "PROJECT_SELECTED"
+                          ? "🎉"
+                          : "🔔"
+                        }
 
                       </div>
 
@@ -565,8 +545,8 @@ function NotificationBell() {
                         </p>
 
 
-                        {notification.type ===
-                          "NEW_MESSAGE" && (
+                        {(notification.type ===
+                          "NEW_MESSAGE" || notification.type === "PROJECT_SELECTED") && (
 
                           <p
                             style={{

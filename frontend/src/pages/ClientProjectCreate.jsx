@@ -1,21 +1,19 @@
+
 import { useEffect, useState } from "react";
 
 import { useAuth } from "../context/AuthContext";
 import { createProject } from "../api/projects";
 import { getCategories } from "../api/api";
 
+import "./ClientProjectCreate.css";
+
 
 function ClientProjectCreate() {
 
-  const {
-    user,
-  } = useAuth();
-
+  const { user } = useAuth();
 
   const [categories, setCategories] = useState([]);
-
-  const [loadingCategories, setLoadingCategories] =
-    useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -26,7 +24,6 @@ function ClientProjectCreate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
 
   useEffect(() => {
 
@@ -77,6 +74,7 @@ function ClientProjectCreate() {
       );
 
       return;
+
     }
 
 
@@ -87,6 +85,7 @@ function ClientProjectCreate() {
       );
 
       return;
+
     }
 
 
@@ -97,6 +96,7 @@ function ClientProjectCreate() {
       );
 
       return;
+
     }
 
 
@@ -107,6 +107,7 @@ function ClientProjectCreate() {
       );
 
       return;
+
     }
 
 
@@ -166,296 +167,710 @@ function ClientProjectCreate() {
 
   return (
 
-    <div className="dashboard">
+    <div className="client-project-create-page">
 
-      <aside className="sidebar">
+      {/* =====================================================
+          NAVBAR
+      ====================================================== */}
 
-        <div className="logo">
-          Mão<span>NaObra</span>
+      <header className="client-project-create-navbar">
+
+        <div className="client-project-create-navbar-inner">
+
+          <a
+            href="/client"
+            className="client-project-create-logo"
+          >
+            Mão<span>NaObra</span>
+          </a>
+
+
+          <nav className="client-project-create-nav">
+
+            <a href="/client">
+              Visão geral
+            </a>
+
+            <a
+              href="/client/requests"
+            >
+              Meus pedidos
+            </a>
+
+            <a
+              href="/client/favorites"
+            >
+              Favoritos
+            </a>
+
+            <a
+              href="/client/reviews"
+            >
+              Avaliações
+            </a>
+
+          </nav>
+
+
+          <div className="client-project-create-user">
+
+            <div className="client-project-create-user-avatar">
+
+              {(user?.name || "U")
+                .charAt(0)
+                .toUpperCase()}
+
+            </div>
+
+
+            <div className="client-project-create-user-info">
+
+              <strong>
+                {user?.name || "Utilizador"}
+              </strong>
+
+              <span>
+                Área do Cliente
+              </span>
+
+            </div>
+
+
+            <a
+              href="/client/profile"
+              className="client-project-create-profile-link"
+              aria-label="Meu perfil"
+            >
+              →
+            </a>
+
+          </div>
+
+        </div>
+
+      </header>
+
+
+      {/* =====================================================
+          MAIN
+      ====================================================== */}
+
+      <main className="client-project-create-main">
+
+
+        {/* ===================================================
+            BREADCRUMB
+        ==================================================== */}
+
+        <div className="client-project-create-breadcrumb">
+
+          <a href="/client">
+            Área do Cliente
+          </a>
+
+          <span>›</span>
+
+          <span>
+            Novo projeto
+          </span>
+
         </div>
 
 
-        <nav>
+        {/* ===================================================
+            HERO
+        ==================================================== */}
 
-          <a href="/client">
-            🏠 Visão geral
-          </a>
+        <section className="client-project-create-hero">
 
-          <a href="/client/requests">
-            📋 Meus pedidos
-          </a>
+          <div className="client-project-create-hero-content">
 
-          <a href="/client/favorites">
-            ❤️ Favoritos
-          </a>
-
-          <a href="/client/reviews">
-            ⭐ Avaliações
-          </a>
-
-          <a href="/client/profile">
-            👤 Meu perfil
-          </a>
-
-        </nav>
-
-
-        <a
-          href="/client"
-          className="sidebar-logout"
-          style={{
-            textDecoration: "none",
-            textAlign: "center"
-          }}
-        >
-          Voltar
-        </a>
-
-      </aside>
-
-
-      <main className="dashboard-content">
-
-        <div className="dashboard-header">
-
-          <div>
-
-            <span className="section-label">
+            <span className="client-project-create-eyebrow">
               PUBLICAR PROJETO
             </span>
 
             <h1>
-              Publicar novo projeto
+              Encontre o profissional
+              <br />
+              certo para o seu projeto.
             </h1>
 
             <p>
-              Descreva o serviço que precisa e
-              encontre profissionais qualificados.
+              Descreva o serviço que precisa,
+              receba propostas de profissionais
+              e escolha a solução que melhor atende
+              às suas necessidades.
             </p>
 
           </div>
 
-        </div>
 
+          <div className="client-project-create-hero-badge">
 
-        <section className="dashboard-section">
-
-          <div className="section-header">
+            <div className="client-project-create-hero-icon">
+              +
+            </div>
 
             <div>
+              <strong>
+                Novo projeto
+              </strong>
 
-              <h2>
-                Informações do projeto
-              </h2>
-
-              <p>
-                Preencha os dados abaixo.
-              </p>
-
+              <span>
+                Preencha os detalhes abaixo
+              </span>
             </div>
 
           </div>
 
-
-          {error && (
-
-            <div className="error-message">
-              {error}
-            </div>
-
-          )}
+        </section>
 
 
-          {success && (
+        {/* ===================================================
+            CONTENT GRID
+        ==================================================== */}
 
-            <div
-              className="success-message"
-              style={{
-                marginBottom: "20px"
-              }}
-            >
-              {success}
-            </div>
-
-          )}
+        <div className="client-project-create-grid">
 
 
-          <form
-            onSubmit={handleSubmit}
-            style={{
-              maxWidth: "700px"
-            }}
-          >
+          {/* =================================================
+              FORM CARD
+          ================================================== */}
 
-            <div className="form-group">
+          <section className="client-project-create-card">
 
-              <label>
-                Título do projeto *
-              </label>
+            <div className="client-project-create-card-header">
 
-              <input
-                type="text"
-                value={title}
-                onChange={(event) =>
-                  setTitle(event.target.value)
-                }
-                placeholder="Ex: Instalação elétrica na minha residência"
-                disabled={loading}
-              />
+              <div className="client-project-create-card-icon">
+                01
+              </div>
 
-            </div>
+              <div>
 
+                <span>
+                  INFORMAÇÕES
+                </span>
 
-            <div className="form-group">
-
-              <label>
-                Descrição *
-              </label>
-
-              <textarea
-                value={description}
-                onChange={(event) =>
-                  setDescription(event.target.value)
-                }
-                placeholder="Descreva detalhadamente o serviço que precisa..."
-                rows={6}
-                disabled={loading}
-              />
-
-            </div>
-
-
-            <div className="form-group">
-
-              <label>
-                Categoria *
-              </label>
-
-
-              {loadingCategories ? (
+                <h2>
+                  Conte-nos sobre o seu projeto
+                </h2>
 
                 <p>
-                  Carregando categorias...
+                  Quanto mais detalhes fornecer,
+                  melhores serão as propostas recebidas.
                 </p>
 
-              ) : (
-
-                <select
-                  value={categoryId}
-                  onChange={(event) =>
-                    setCategoryId(event.target.value)
-                  }
-                  disabled={loading}
-                >
-
-                  <option value="">
-                    Selecione uma categoria
-                  </option>
-
-
-                  {categories.map((category) => (
-
-                    <option
-                      key={category.id}
-                      value={category.id}
-                    >
-                      {category.name}
-                    </option>
-
-                  ))}
-
-                </select>
-
-              )}
+              </div>
 
             </div>
 
 
-            <div className="form-group">
+            {/* =================================================
+                ALERTS
+            ================================================== */}
 
-              <label>
-                Localização *
-              </label>
+            {error && (
 
-              <input
-                type="text"
-                value={location}
-                onChange={(event) =>
-                  setLocation(event.target.value)
-                }
-                placeholder="Ex: Beira, Macurungo"
-                disabled={loading}
-              />
+              <div className="client-project-create-alert error">
 
-            </div>
+                <div className="alert-symbol">
+                  !
+                </div>
 
+                <div>
+                  <strong>
+                    Não foi possível continuar
+                  </strong>
 
-            <div className="form-group">
+                  <p>
+                    {error}
+                  </p>
+                </div>
 
-              <label>
-                Orçamento (MT)
-              </label>
+              </div>
 
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={budget}
-                onChange={(event) =>
-                  setBudget(event.target.value)
-                }
-                placeholder="Ex: 1500"
-                disabled={loading}
-              />
-
-              <small>
-                Opcional. Deixe vazio caso ainda não
-                tenha definido um orçamento.
-              </small>
-
-            </div>
+            )}
 
 
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                marginTop: "25px"
-              }}
+            {success && (
+
+              <div className="client-project-create-alert success">
+
+                <div className="alert-symbol">
+                  ✓
+                </div>
+
+                <div>
+                  <strong>
+                    Projeto publicado
+                  </strong>
+
+                  <p>
+                    {success}
+                  </p>
+                </div>
+
+              </div>
+
+            )}
+
+
+            <form
+              onSubmit={handleSubmit}
+              className="client-project-create-form"
             >
 
-              <button
-                type="submit"
-                className="register-btn"
-                disabled={
-                  loading ||
-                  loadingCategories ||
-                  categories.length === 0
-                }
-              >
 
-                {loading
-                  ? "Publicando..."
-                  : "Publicar projeto"}
+              {/* TITLE */}
 
-              </button>
+              <div className="client-project-create-field">
+
+                <label htmlFor="project-title">
+                  Título do projeto
+                  <span>*</span>
+                </label>
+
+                <p className="field-help">
+                  Dê um nome curto e claro ao serviço.
+                </p>
+
+                <input
+                  id="project-title"
+                  type="text"
+                  value={title}
+                  onChange={(event) =>
+                    setTitle(event.target.value)
+                  }
+                  placeholder="Ex: Instalação elétrica na minha residência"
+                  disabled={loading}
+                />
+
+              </div>
 
 
-              <a
-                href="/client"
-                className="login-btn"
-                style={{
-                  textDecoration: "none"
-                }}
-              >
-                Cancelar
-              </a>
+              {/* DESCRIPTION */}
+
+              <div className="client-project-create-field">
+
+                <label htmlFor="project-description">
+                  Descrição do projeto
+                  <span>*</span>
+                </label>
+
+                <p className="field-help">
+                  Explique o que precisa ser feito,
+                  incluindo detalhes importantes.
+                </p>
+
+                <textarea
+                  id="project-description"
+                  value={description}
+                  onChange={(event) =>
+                    setDescription(event.target.value)
+                  }
+                  placeholder="Descreva detalhadamente o serviço que precisa..."
+                  rows={7}
+                  disabled={loading}
+                />
+
+                <div className="field-counter">
+                  {description.length} caracteres
+                </div>
+
+              </div>
+
+
+              {/* CATEGORY + LOCATION */}
+
+              <div className="client-project-create-two-columns">
+
+
+                <div className="client-project-create-field">
+
+                  <label htmlFor="project-category">
+                    Categoria
+                    <span>*</span>
+                  </label>
+
+                  <p className="field-help">
+                    Escolha a área do serviço.
+                  </p>
+
+
+                  {loadingCategories ? (
+
+                    <div className="client-project-create-loading-select">
+                      <span></span>
+                      Carregando categorias...
+                    </div>
+
+                  ) : (
+
+                    <select
+                      id="project-category"
+                      value={categoryId}
+                      onChange={(event) =>
+                        setCategoryId(event.target.value)
+                      }
+                      disabled={loading}
+                    >
+
+                      <option value="">
+                        Selecione uma categoria
+                      </option>
+
+                      {categories.map((category) => (
+
+                        <option
+                          key={category.id}
+                          value={category.id}
+                        >
+                          {category.name}
+                        </option>
+
+                      ))}
+
+                    </select>
+
+                  )}
+
+                </div>
+
+
+                <div className="client-project-create-field">
+
+                  <label htmlFor="project-location">
+                    Localização
+                    <span>*</span>
+                  </label>
+
+                  <p className="field-help">
+                    Indique onde o serviço será realizado.
+                  </p>
+
+                  <input
+                    id="project-location"
+                    type="text"
+                    value={location}
+                    onChange={(event) =>
+                      setLocation(event.target.value)
+                    }
+                    placeholder="Ex: Beira, Macurungo"
+                    disabled={loading}
+                  />
+
+                </div>
+
+              </div>
+
+
+              {/* BUDGET */}
+
+              <div className="client-project-create-field">
+
+                <label htmlFor="project-budget">
+                  Orçamento
+                  <span className="optional">
+                    Opcional
+                  </span>
+                </label>
+
+                <p className="field-help">
+                  Se já tiver uma estimativa, informe o valor
+                  que pretende investir.
+                </p>
+
+
+                <div className="client-project-create-money-input">
+
+                  <input
+                    id="project-budget"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={budget}
+                    onChange={(event) =>
+                      setBudget(event.target.value)
+                    }
+                    placeholder="Ex: 1500"
+                    disabled={loading}
+                  />
+
+                  <span>
+                    MT
+                  </span>
+
+                </div>
+
+                <small className="client-project-create-input-note">
+                  Deixe vazio caso ainda não tenha definido
+                  um orçamento.
+                </small>
+
+              </div>
+
+
+              {/* ACTIONS */}
+
+              <div className="client-project-create-actions">
+
+                <a
+                  href="/client"
+                  className="client-project-create-cancel"
+                >
+                  Cancelar
+                </a>
+
+
+                <button
+                  type="submit"
+                  className="client-project-create-submit"
+                  disabled={
+                    loading ||
+                    loadingCategories ||
+                    categories.length === 0
+                  }
+                >
+
+                  {loading ? (
+
+                    <>
+                      <span className="create-project-spinner"></span>
+
+                      Publicando...
+                    </>
+
+                  ) : (
+
+                    <>
+                      Publicar projeto
+                      <span>→</span>
+                    </>
+
+                  )}
+
+                </button>
+
+              </div>
+
+            </form>
+
+          </section>
+
+
+          {/* =================================================
+              SIDEBAR
+          ================================================== */}
+
+          <aside className="client-project-create-sidebar">
+
+
+            {/* TIPS */}
+
+            <div className="client-project-create-tips">
+
+              <div className="tips-heading">
+
+                <div className="tips-icon">
+                  ✦
+                </div>
+
+                <div>
+
+                  <span>
+                    DICAS
+                  </span>
+
+                  <h3>
+                    Crie um bom projeto
+                  </h3>
+
+                </div>
+
+              </div>
+
+
+              <div className="tip-item">
+
+                <div className="tip-number">
+                  01
+                </div>
+
+                <div>
+
+                  <strong>
+                    Seja específico
+                  </strong>
+
+                  <p>
+                    Explique exatamente o que
+                    precisa ser feito.
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div className="tip-item">
+
+                <div className="tip-number">
+                  02
+                </div>
+
+                <div>
+
+                  <strong>
+                    Adicione detalhes
+                  </strong>
+
+                  <p>
+                    Informações adicionais ajudam
+                    os profissionais a compreender
+                    melhor o serviço.
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div className="tip-item">
+
+                <div className="tip-number">
+                  03
+                </div>
+
+                <div>
+
+                  <strong>
+                    Indique a localização
+                  </strong>
+
+                  <p>
+                    Informe onde o serviço será
+                    realizado.
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div className="tip-item">
+
+                <div className="tip-number">
+                  04
+                </div>
+
+                <div>
+
+                  <strong>
+                    Defina um orçamento
+                  </strong>
+
+                  <p>
+                    Se possível, indique quanto
+                    pretende investir.
+                  </p>
+
+                </div>
+
+              </div>
 
             </div>
 
-          </form>
 
-        </section>
+            {/* PROCESS */}
+
+            <div className="client-project-create-process">
+
+              <span className="process-label">
+                COMO FUNCIONA
+              </span>
+
+              <h3>
+                Depois de publicar
+              </h3>
+
+
+              <div className="process-step">
+
+                <div>
+                  1
+                </div>
+
+                <p>
+                  Profissionais encontram
+                  o seu projeto.
+                </p>
+
+              </div>
+
+
+              <div className="process-line"></div>
+
+
+              <div className="process-step">
+
+                <div>
+                  2
+                </div>
+
+                <p>
+                  Você recebe propostas
+                  e pode compará-las.
+                </p>
+
+              </div>
+
+
+              <div className="process-line"></div>
+
+
+              <div className="process-step">
+
+                <div>
+                  3
+                </div>
+
+                <p>
+                  Escolha a proposta que
+                  melhor atende às suas necessidades.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            {/* TRUST */}
+
+            <div className="client-project-create-trust">
+
+              <div className="trust-icon">
+                ✓
+              </div>
+
+              <div>
+
+                <strong>
+                  Seus dados estão protegidos
+                </strong>
+
+                <p>
+                  As informações do seu projeto
+                  são utilizadas para conectar você
+                  aos profissionais adequados.
+                </p>
+
+              </div>
+
+            </div>
+
+          </aside>
+
+        </div>
 
       </main>
 
@@ -467,3 +882,4 @@ function ClientProjectCreate() {
 
 
 export default ClientProjectCreate;
+

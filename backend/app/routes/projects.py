@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.models.conversation import Conversation
+from app.models.notification import Notification
+
 from app.core.dependencies import get_current_user, require_provider
 from app.database.connection import get_db
 
@@ -371,7 +374,10 @@ def accept_proposal(
     db: Session = Depends(get_db)
 ):
 
-    # Procurar proposta
+    # ========================================================
+    # PROCURAR PROPOSTA
+    # ========================================================
+
     proposal = (
         db.query(Proposal)
         .filter(
@@ -386,7 +392,10 @@ def accept_proposal(
             detail="Proposta não encontrada."
         )
 
-    # Procurar projeto
+    # ========================================================
+    # PROCURAR PROJETO
+    # ========================================================
+
     project = (
         db.query(Project)
         .filter(
@@ -401,7 +410,10 @@ def accept_proposal(
             detail="Projeto não encontrado."
         )
 
-    # Apenas o dono do projeto pode aceitar
+    # ========================================================
+    # APENAS O DONO DO PROJETO PODE ACEITAR
+    # ========================================================
+
     if project.client_id != current_user.id:
         raise HTTPException(
             status_code=403,
@@ -411,27 +423,60 @@ def accept_proposal(
             )
         )
 
-    # Projeto precisa estar aberto
+    # ========================================================
+    # PROJETO PRECISA ESTAR ABERTO
+    # ========================================================
+
     if project.status != "OPEN":
         raise HTTPException(
             status_code=400,
             detail="Este projeto não está mais disponível."
         )
 
-    # Proposta precisa estar pendente
+    # ========================================================
+    # PROPOSTA PRECISA ESTAR PENDENTE
+    # ========================================================
+
     if proposal.status != "PENDING":
         raise HTTPException(
             status_code=400,
             detail="Esta proposta não está mais pendente."
         )
 
-    # Aceitar proposta
+    # ========================================================
+    # PROCURAR O PERFIL DO PRESTADOR ESCOLHIDO
+    # ========================================================
+
+    provider = (
+        db.query(ProviderProfile)
+        .filter(
+            ProviderProfile.id == proposal.provider_id
+        )
+        .first()
+    )
+
+    if not provider:
+        raise HTTPException(
+            status_code=404,
+            detail="Perfil profissional não encontrado."
+        )
+
+    # ========================================================
+    # ACEITAR PROPOSTA
+    # ========================================================
+
     proposal.status = "ACCEPTED"
 
-    # Colocar projeto em andamento
+    # ========================================================
+    # COLOCAR PROJETO EM ANDAMENTO
+    # ========================================================
+
     project.status = "IN_PROGRESS"
 
-    # Rejeitar outras propostas pendentes
+    # ========================================================
+    # REJEITAR OUTRAS PROPOSTAS PENDENTES
+    # ========================================================
+
     other_proposals = (
         db.query(Proposal)
         .filter(
@@ -443,7 +488,113 @@ def accept_proposal(
     )
 
     for other_proposal in other_proposals:
-        other_proposal.status = "REJECTED"
+
+    # Marcar proposta como rejeitada
+    other_proposal.status = "REJECTED"
+
+    # Perfil do prestador rejeitado
+    rejected_provider = other_proposal.provider
+
+    if not rejected_provider:
+        continue
+
+    # Verificar se já existe notificação para evitar duplicação
+    existing_rejection_notification = (
+        db.query(Notification)
+        .filter(
+            Notification.user_id == rejected_provider.user_id,
+            Notification.type == "PROJECT_NOT_SELECTED",
+            Notification.message.like(
+                f'%"{project.title}"%'
+            )
+        )
+        .first()
+    )
+
+    # Criar notificação
+    if not existing_rejection_notification:
+
+        rejection_notification = Notification(
+            user_id=rejected_provider.user_id,
+            conversation_id=None,
+            type="PROJECT_NOT_SELECTED",
+            title="Proposta não selecionada",
+            message=(
+                f'A sua proposta para o projeto '
+                f'"{project.title}" não foi escolhida pelo cliente. '
+                f'Continue acompanhando novos projetos e '
+                f'enviando propostas.'
+            ),
+            is_read=False
+        )
+
+        db.add(rejection_notification)
+
+    # ========================================================
+    # CRIAR OU REUTILIZAR CONVERSA
+    # ========================================================
+
+    conversation = (
+        db.query(Conversation)
+        .filter(
+            Conversation.client_id == current_user.id,
+            Conversation.provider_id == provider.id
+        )
+        .first()
+    )
+
+    if not conversation:
+
+        conversation = Conversation(
+            client_id=current_user.id,
+            provider_id=provider.id
+        )
+
+        db.add(conversation)
+        db.flush()
+
+    # ========================================================
+    # VERIFICAR SE JÁ EXISTE NOTIFICAÇÃO
+    # ========================================================
+
+    existing_notification = (
+        db.query(Notification)
+        .filter(
+            Notification.user_id == provider.user_id,
+            Notification.conversation_id == conversation.id,
+            Notification.type == "PROJECT_SELECTED",
+            Notification.message.like(
+                f'%"{project.title}"%'
+            )
+        )
+        .first()
+    )
+
+    # ========================================================
+    # CRIAR NOTIFICAÇÃO PARA O PRESTADOR
+    # ========================================================
+
+    if not existing_notification:
+
+        notification = Notification(
+            user_id=provider.user_id,
+            conversation_id=conversation.id,
+            type="PROJECT_SELECTED",
+            title="🎉 Você foi escolhido para um projeto!",
+            message=(
+                f'O cliente {current_user.name} escolheu você '
+                f'para o projeto "{project.title}". '
+                f'Você já pode entrar em contato com o cliente '
+                f'por mensagem.'
+            ),
+            is_read=False
+        )
+
+        db.add(notification)
+
+    # ========================================================
+    # GUARDAR TUDO
+    # ========================================================
 
     db.commit()
     db.refresh(proposal)

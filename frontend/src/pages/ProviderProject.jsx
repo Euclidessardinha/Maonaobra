@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { getProject, createProposal } from "../api/provider";
+
+import {
+  getProject,
+  createProposal
+} from "../api/provider";
 
 import "./ProviderProject.css";
 
@@ -19,6 +23,73 @@ function ProviderProject() {
   const [sending, setSending] = useState(false);
 
   const [success, setSuccess] = useState("");
+
+
+  /* =========================================================
+     HELPERS
+  ========================================================= */
+
+  function getCategoryName(category) {
+
+    if (!category) {
+      return "Serviço";
+    }
+
+    if (typeof category === "object") {
+
+      return (
+        category?.name ||
+        category?.title ||
+        "Serviço"
+      );
+
+    }
+
+    return String(category);
+  }
+
+
+  function formatBudget(budget) {
+
+    if (
+      budget === null ||
+      budget === undefined ||
+      budget === ""
+    ) {
+      return "Não definido";
+    }
+
+    const numericBudget = Number(budget);
+
+    if (Number.isNaN(numericBudget)) {
+      return "Não definido";
+    }
+
+    return `${numericBudget.toLocaleString("pt-MZ")} MT`;
+  }
+
+
+  function formatProjectDate(date) {
+
+    if (!date) {
+      return "Data não disponível";
+    }
+
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return "Data não disponível";
+    }
+
+    return parsedDate.toLocaleDateString(
+      "pt-MZ",
+      {
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+      }
+    );
+  }
 
 
   /* =========================================================
@@ -193,6 +264,10 @@ function ProviderProject() {
             ⚠️
           </div>
 
+          <span className="provider-project-error-label">
+            PROJETO INDISPONÍVEL
+          </span>
+
           <h2>
             Não foi possível carregar o projeto
           </h2>
@@ -205,7 +280,8 @@ function ProviderProject() {
             href="/provider/projects"
             className="provider-project-back-btn"
           >
-            ← Voltar para projetos
+            <span>←</span>
+            Voltar para projetos
           </a>
 
         </div>
@@ -222,6 +298,16 @@ function ProviderProject() {
   }
 
 
+  const categoryName =
+    getCategoryName(project.category);
+
+  const budget =
+    formatBudget(project.budget);
+
+  const projectDate =
+    formatProjectDate(project.created_at);
+
+
   /* =========================================================
      RENDER
   ========================================================= */
@@ -232,20 +318,20 @@ function ProviderProject() {
 
 
       {/* =====================================================
-          TOPO
+          TOPBAR
       ===================================================== */}
 
       <header className="provider-project-topbar">
 
         <div className="provider-project-topbar-inner">
 
-
           <a
             href="/provider/projects"
             className="provider-project-back"
+            aria-label="Voltar para projetos"
           >
 
-            <span>
+            <span className="provider-project-back-arrow">
               ←
             </span>
 
@@ -263,7 +349,7 @@ function ProviderProject() {
               alt="MãoNaObra"
             />
 
-            <div>
+            <div className="provider-project-brand-name">
 
               <strong>
                 Mão
@@ -276,7 +362,6 @@ function ProviderProject() {
             </div>
 
           </div>
-
 
         </div>
 
@@ -292,7 +377,7 @@ function ProviderProject() {
 
         {/* ===================================================
             BREADCRUMB
-        =================================================== */}
+        ==================================================== */}
 
         <div className="provider-project-breadcrumb">
 
@@ -300,7 +385,7 @@ function ProviderProject() {
             Projetos
           </span>
 
-          <span>
+          <span className="provider-project-breadcrumb-separator">
             /
           </span>
 
@@ -313,22 +398,29 @@ function ProviderProject() {
 
         {/* ===================================================
             HERO DO PROJETO
-        =================================================== */}
+        ==================================================== */}
 
         <section className="provider-project-hero">
 
 
+          <div className="provider-project-hero-decoration" />
+
+
           <div className="provider-project-hero-main">
+
+            <span className="provider-project-eyebrow">
+              OPORTUNIDADE PROFISSIONAL
+            </span>
 
 
             <div className="provider-project-category">
 
-              <span>
+              <span className="provider-project-category-icon">
                 🛠️
               </span>
 
               <span>
-                {project.category || "Serviço"}
+                {categoryName}
               </span>
 
             </div>
@@ -343,7 +435,8 @@ function ProviderProject() {
             <p className="provider-project-hero-description">
 
               Confira os detalhes fornecidos pelo cliente
-              e envie a sua proposta.
+              e envie a sua proposta para participar
+              deste projeto.
 
             </p>
 
@@ -386,20 +479,7 @@ function ProviderProject() {
                   </span>
 
                   <strong>
-
-                    {project.created_at
-                      ? new Date(
-                          project.created_at
-                        ).toLocaleDateString(
-                          "pt-MZ",
-                          {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric"
-                          }
-                        )
-                      : "Data não disponível"}
-
+                    {projectDate}
                   </strong>
 
                 </div>
@@ -419,34 +499,42 @@ function ProviderProject() {
 
               <span className="provider-project-status-dot" />
 
-              Aberto
+              Projeto aberto
 
             </span>
 
 
-            <span className="provider-project-budget-label">
-              Orçamento do cliente
+            <span className="provider-project-budget-kicker">
+              ORÇAMENTO DO CLIENTE
             </span>
 
 
             <strong className="provider-project-budget">
-
-              {project.budget !== null &&
-              project.budget !== undefined
-                ? `${Number(
-                    project.budget
-                  ).toLocaleString(
-                    "pt-MZ"
-                  )} MT`
-                : "Não definido"}
-
+              {budget}
             </strong>
 
 
             <span className="provider-project-budget-note">
-              Valor de referência do projeto
+              Valor de referência fornecido
+              pelo cliente
             </span>
 
+
+            <div className="provider-project-budget-line" />
+
+
+            <div className="provider-project-budget-footer">
+
+              <span>
+                💡
+              </span>
+
+              <p>
+                Você pode apresentar um valor
+                diferente na sua proposta.
+              </p>
+
+            </div>
 
           </div>
 
@@ -456,7 +544,7 @@ function ProviderProject() {
 
         {/* ===================================================
             GRID PRINCIPAL
-        =================================================== */}
+        ==================================================== */}
 
         <div className="provider-project-grid">
 
@@ -477,7 +565,7 @@ function ProviderProject() {
               <div>
 
                 <span className="provider-project-card-label">
-                  INFORMAÇÕES
+                  VISÃO GERAL
                 </span>
 
                 <h2>
@@ -491,16 +579,29 @@ function ProviderProject() {
 
             <div className="provider-project-description">
 
-              <h3>
-                Descrição do projeto
-              </h3>
+              <div className="provider-project-description-accent" />
 
-              <p>
+              <div>
 
-                {project.description ||
-                  "O cliente não forneceu uma descrição detalhada."}
+                <h3>
+                  Descrição do projeto
+                </h3>
 
-              </p>
+                <p>
+                  {project.description ||
+                    "O cliente não forneceu uma descrição detalhada."}
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div className="provider-project-details-heading">
+
+              <span>
+                INFORMAÇÕES DO PROJETO
+              </span>
 
             </div>
 
@@ -521,8 +622,7 @@ function ProviderProject() {
                   </span>
 
                   <strong>
-                    {project.category ||
-                      "Não especificada"}
+                    {categoryName}
                   </strong>
 
                 </div>
@@ -565,16 +665,7 @@ function ProviderProject() {
                   </span>
 
                   <strong>
-
-                    {project.budget !== null &&
-                    project.budget !== undefined
-                      ? `${Number(
-                          project.budget
-                        ).toLocaleString(
-                          "pt-MZ"
-                        )} MT`
-                      : "Não definido"}
-
+                    {budget}
                   </strong>
 
                 </div>
@@ -616,6 +707,9 @@ function ProviderProject() {
           <section className="provider-project-card provider-project-proposal-card">
 
 
+            <div className="provider-project-proposal-glow" />
+
+
             <div className="provider-project-card-header">
 
               <div className="provider-project-card-icon proposal-icon">
@@ -637,13 +731,19 @@ function ProviderProject() {
             </div>
 
 
-            <p className="provider-project-proposal-intro">
+            <div className="provider-project-proposal-intro-box">
 
-              Apresente o seu valor e explique ao cliente
-              por que você é a pessoa certa para realizar
-              este projeto.
+              <span className="provider-project-proposal-intro-icon">
+                ✨
+              </span>
 
-            </p>
+              <p>
+                Apresente o seu valor e explique
+                ao cliente por que você é a pessoa
+                certa para realizar este projeto.
+              </p>
+
+            </div>
 
 
             {/* ERRO */}
@@ -652,7 +752,7 @@ function ProviderProject() {
 
               <div className="provider-project-alert provider-project-alert-error">
 
-                <span>
+                <span className="provider-project-alert-icon">
                   ⚠️
                 </span>
 
@@ -671,7 +771,7 @@ function ProviderProject() {
 
               <div className="provider-project-alert provider-project-alert-success">
 
-                <span>
+                <span className="provider-project-alert-icon">
                   ✓
                 </span>
 
@@ -748,7 +848,7 @@ function ProviderProject() {
 
                 <small>
                   Uma boa mensagem ajuda o cliente a
-                  entender a sua proposta.
+                  entender melhor a sua proposta.
                 </small>
 
               </div>
@@ -765,22 +865,46 @@ function ProviderProject() {
                 {sending ? (
 
                   <>
+
                     <span className="provider-project-button-spinner" />
-                    Enviando proposta...
+
+                    <span>
+                      Enviando proposta...
+                    </span>
+
                   </>
 
                 ) : (
 
                   <>
-                    Enviar proposta
+
                     <span>
+                      Enviar proposta
+                    </span>
+
+                    <span className="provider-project-submit-arrow">
                       →
                     </span>
+
                   </>
 
                 )}
 
               </button>
+
+
+              <div className="provider-project-form-security">
+
+                <span>
+                  🔒
+                </span>
+
+                <span>
+                  A sua proposta será enviada diretamente
+                  ao cliente.
+                </span>
+
+              </div>
 
 
             </form>

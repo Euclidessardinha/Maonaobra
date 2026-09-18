@@ -84,9 +84,7 @@ function ProviderProjects() {
 
 
   const closeMenu = () => {
-
     setMenuOpen(false);
-
   };
 
 
@@ -114,56 +112,56 @@ function ProviderProjects() {
 
   useEffect(() => {
 
-  async function loadProjectsAndCategories() {
+    async function loadProjectsAndCategories() {
 
-    try {
+      try {
 
-      setLoading(true);
-      setError("");
+        setLoading(true);
+        setError("");
 
-      const [
-        projectsData,
-        categoriesData
-      ] = await Promise.all([
-        getOpenProjects(),
-        getCategories()
-      ]);
+        const [
+          projectsData,
+          categoriesData
+        ] = await Promise.all([
+          getOpenProjects(),
+          getCategories()
+        ]);
 
-      setProjects(
-        Array.isArray(projectsData)
-          ? projectsData
-          : []
-      );
+        setProjects(
+          Array.isArray(projectsData)
+            ? projectsData
+            : []
+        );
 
-      setAvailableCategories(
-        Array.isArray(categoriesData)
-          ? categoriesData
-          : []
-      );
+        setAvailableCategories(
+          Array.isArray(categoriesData)
+            ? categoriesData
+            : []
+        );
 
-    } catch (error) {
+      } catch (error) {
 
-      console.error(
-        "Erro ao carregar projetos e categorias:",
-        error
-      );
+        console.error(
+          "Erro ao carregar projetos e categorias:",
+          error
+        );
 
-      setError(
-        error.message ||
-        "Erro ao carregar projetos disponíveis."
-      );
+        setError(
+          error.message ||
+          "Erro ao carregar projetos disponíveis."
+        );
 
-    } finally {
+      } finally {
 
-      setLoading(false);
+        setLoading(false);
+
+      }
 
     }
 
-  }
+    loadProjectsAndCategories();
 
-  loadProjectsAndCategories();
-
-}, []);
+  }, []);
 
 
   /*
@@ -208,9 +206,7 @@ function ProviderProjects() {
   function formatDate(date) {
 
     if (!date) {
-
       return "";
-
     }
 
     const projectDate = new Date(date);
@@ -220,9 +216,7 @@ function ProviderProjects() {
         projectDate.getTime()
       )
     ) {
-
       return "";
-
     }
 
     return projectDate.toLocaleDateString(
@@ -240,9 +234,7 @@ function ProviderProjects() {
   function getInitials(name) {
 
     if (!name) {
-
       return "P";
-
     }
 
     const parts =
@@ -456,8 +448,6 @@ function ProviderProjects() {
         </button>
 
 
-        {/* LOGO */}
-
         <div className="provider-sidebar-brand">
 
           <div className="provider-brand-mark">
@@ -478,8 +468,6 @@ function ProviderProjects() {
 
         </div>
 
-
-        {/* ÁREA DO PRESTADOR */}
 
         <div className="provider-area-badge">
 
@@ -506,8 +494,6 @@ function ProviderProjects() {
           MENU PRINCIPAL
         </div>
 
-
-        {/* MENU */}
 
         <nav className="provider-sidebar-nav">
 
@@ -623,11 +609,9 @@ function ProviderProjects() {
 
             </span>
 
-
             <span className="provider-messages-label">
               Mensagens
             </span>
-
 
             <span className="provider-messages-status">
 
@@ -698,8 +682,6 @@ function ProviderProjects() {
 
         </nav>
 
-
-        {/* PARTE INFERIOR */}
 
         <div className="provider-sidebar-bottom">
 
@@ -778,10 +760,6 @@ function ProviderProjects() {
 
       <main className="provider-projects-main">
 
-        {/* ===================================================
-            TOPBAR
-        ==================================================== */}
-
         <header className="provider-projects-topbar">
 
           <div className="provider-projects-heading">
@@ -843,10 +821,6 @@ function ProviderProjects() {
         </header>
 
 
-        {/* ===================================================
-            ERRO
-        ==================================================== */}
-
         {error && (
 
           <div className="provider-projects-error">
@@ -871,10 +845,6 @@ function ProviderProjects() {
 
         )}
 
-
-        {/* ===================================================
-            BARRA DE PESQUISA E FILTROS
-        ==================================================== */}
 
         {!loading && !error && (
 
@@ -952,10 +922,6 @@ function ProviderProjects() {
         )}
 
 
-        {/* ===================================================
-            CARREGANDO
-        ==================================================== */}
-
         {loading && (
 
           <div className="provider-projects-loading">
@@ -976,159 +942,160 @@ function ProviderProjects() {
         )}
 
 
-        {/* ===================================================
-            CONTEÚDO DEPOIS DO CARREGAMENTO
-        ==================================================== */}
-
         {!loading && !error && (
 
-          <>
+          <section className="provider-projects-section">
 
-            {/* CABEÇALHO DA LISTA */}
+            <div className="provider-projects-section-header">
 
-            <section className="provider-projects-section">
+              <div>
 
-              <div className="provider-projects-section-header">
-
-                <div>
-
-                  <div className="provider-projects-section-kicker">
-                    OPORTUNIDADES
-                  </div>
-
-                  <h2>
-                    Projetos abertos
-                  </h2>
-
-                  <p>
-
-                    {filteredProjects.length === 1
-                      ? "1 projeto disponível para receber propostas"
-                      : `${filteredProjects.length} projetos disponíveis para receber propostas`
-                    }
-
-                  </p>
-
+                <div className="provider-projects-section-kicker">
+                  OPORTUNIDADES
                 </div>
 
+                <h2>
+                  Projetos abertos
+                </h2>
 
-                {projects.length > 0 && (
+                <p>
 
-                  <div className="provider-projects-total">
+                  {filteredProjects.length === 1
+                    ? "1 projeto disponível para receber propostas"
+                    : `${filteredProjects.length} projetos disponíveis para receber propostas`
+                  }
 
-                    <strong>
-                      {projects.length}
-                    </strong>
-
-                    <span>
-                      {projects.length === 1
-                        ? "projeto"
-                        : "projetos"}
-                    </span>
-
-                  </div>
-
-                )}
+                </p>
 
               </div>
 
 
-              {/* NENHUM PROJETO */}
+              {projects.length > 0 && (
 
-              {projects.length === 0 && (
+                <div className="provider-projects-total">
+
+                  <strong>
+                    {projects.length}
+                  </strong>
+
+                  <span>
+                    {projects.length === 1
+                      ? "projeto"
+                      : "projetos"}
+                  </span>
+
+                </div>
+
+              )}
+
+            </div>
+
+
+            {projects.length === 0 && (
+
+              <div className="provider-projects-empty">
+
+                <div className="provider-projects-empty-icon">
+                  ◉
+                </div>
+
+                <h2>
+                  Nenhum projeto disponível
+                </h2>
+
+                <p>
+                  Neste momento não existem projetos
+                  abertos para receber propostas.
+                  Volte mais tarde para encontrar
+                  novas oportunidades.
+                </p>
+
+                <a
+                  href="/provider"
+                  className="provider-projects-empty-btn"
+                >
+                  ← Voltar ao dashboard
+                </a>
+
+              </div>
+
+            )}
+
+
+            {projects.length > 0 &&
+              filteredProjects.length === 0 && (
 
                 <div className="provider-projects-empty">
 
                   <div className="provider-projects-empty-icon">
-                    ◉
+                    ⌕
                   </div>
 
                   <h2>
-                    Nenhum projeto disponível
+                    Nenhum projeto encontrado
                   </h2>
 
                   <p>
-                    Neste momento não existem projetos
-                    abertos para receber propostas.
-                    Volte mais tarde para encontrar
-                    novas oportunidades.
+                    Não encontramos projetos que
+                    correspondam à sua pesquisa ou
+                    categoria selecionada.
                   </p>
 
-                  <a
-                    href="/provider"
+                  <button
+                    type="button"
                     className="provider-projects-empty-btn"
+                    onClick={() => {
+                      setSearch("");
+                      setCategoryFilter("TODAS");
+                    }}
                   >
-                    ← Voltar ao dashboard
-                  </a>
+                    Limpar filtros
+                  </button>
 
                 </div>
 
               )}
 
 
-              {/* PESQUISA SEM RESULTADOS */}
+            {filteredProjects.length > 0 && (
 
-              {projects.length > 0 &&
-                filteredProjects.length === 0 && (
+              <div className="provider-projects-grid">
 
-                  <div className="provider-projects-empty">
+                {filteredProjects.map(
+                  (project) => {
 
-                    <div className="provider-projects-empty-icon">
-                      ⌕
-                    </div>
+                    const projectCategory =
+                      typeof project.category === "object"
+                        ? (
+                            project.category?.name ||
+                            project.category?.title ||
+                            "Sem categoria"
+                          )
+                        : (
+                            project.category ||
+                            "Sem categoria"
+                          );
 
-                    <h2>
-                      Nenhum projeto encontrado
-                    </h2>
-
-                    <p>
-                      Não encontramos projetos que
-                      correspondam à sua pesquisa ou
-                      categoria selecionada.
-                    </p>
-
-                    <button
-                      type="button"
-                      className="provider-projects-empty-btn"
-                      onClick={() => {
-                        setSearch("");
-                        setCategoryFilter("TODAS");
-                      }}
-                    >
-                      Limpar filtros
-                    </button>
-
-                  </div>
-
-                )}
-
-
-              {/* PROJETOS */}
-
-              {filteredProjects.length > 0 && (
-
-                <div className="provider-projects-grid">
-
-                  {filteredProjects.map(
-                    (project) => (
+                    return (
 
                       <article
                         key={project.id}
                         className="provider-project-card"
                       >
 
-                        {/* TOPO */}
+                        <div className="provider-project-card-glow"></div>
 
                         <div className="provider-project-card-top">
 
                           <div className="provider-project-category">
 
-                            <span>
+                            <span className="provider-project-category-icon">
                               ◉
                             </span>
 
-                            {project.category ||
-                              "Sem categoria"}
+                            <span className="provider-project-category-name">
+                              {projectCategory}
+                            </span>
 
                           </div>
 
@@ -1140,15 +1107,22 @@ function ProviderProjects() {
                         </div>
 
 
-                        {/* TÍTULO */}
+                        <div className="provider-project-opportunity">
+
+                          <span className="provider-project-opportunity-icon">
+                            ✦
+                          </span>
+
+                          NOVO PROJETO
+
+                        </div>
+
 
                         <h3>
                           {project.title ||
                             "Projeto sem título"}
                         </h3>
 
-
-                        {/* DESCRIÇÃO */}
 
                         <p className="provider-project-description">
 
@@ -1164,7 +1138,28 @@ function ProviderProjects() {
                         </p>
 
 
-                        {/* INFORMAÇÕES */}
+                        <div className="provider-project-highlight">
+
+                          <div className="provider-project-budget-block">
+
+                            <span>
+                              ORÇAMENTO DO PROJETO
+                            </span>
+
+                            <strong>
+                              {formatBudget(
+                                project.budget
+                              )}
+                            </strong>
+
+                          </div>
+
+                          <div className="provider-project-budget-icon">
+                            $
+                          </div>
+
+                        </div>
+
 
                         <div className="provider-project-info">
 
@@ -1185,15 +1180,15 @@ function ProviderProjects() {
                           <div className="provider-project-info-item">
 
                             <span>
-                              💰 Orçamento
+                              🗓 Publicado
                             </span>
 
-                            <strong className="provider-project-budget">
-
-                              {formatBudget(
-                                project.budget
-                              )}
-
+                            <strong>
+                              {project.created_at
+                                ? formatDate(
+                                    project.created_at
+                                  )
+                                : "Recentemente"}
                             </strong>
 
                           </div>
@@ -1201,17 +1196,11 @@ function ProviderProjects() {
                         </div>
 
 
-                        {/* FOOTER */}
-
                         <div className="provider-project-card-footer">
 
                           <div className="provider-project-date">
 
-                            {project.created_at
-                              ? `Publicado em ${formatDate(
-                                  project.created_at
-                                )}`
-                              : "Projeto publicado"}
+                            Oportunidade disponível
 
                           </div>
 
@@ -1238,16 +1227,16 @@ function ProviderProjects() {
 
                       </article>
 
-                    )
-                  )}
+                    );
 
-                </div>
+                  }
+                )}
 
-              )}
+              </div>
 
-            </section>
+            )}
 
-          </>
+          </section>
 
         )}
 

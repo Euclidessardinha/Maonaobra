@@ -202,6 +202,18 @@ function NotificationBell() {
       return;
     }
 
+    if (
+      notification.type === "SERVICE_REQUEST" &&
+      notification.conversation_id
+    ) {
+      setIsOpen(false);
+
+      window.location.href =
+        `/provider/chat?conversation_id=${notification.conversation_id}`;
+
+      return;
+    }
+
     // ==========================================
     // NOVA MENSAGEM
     // ==========================================
@@ -476,6 +488,8 @@ function NotificationBell() {
 
                         {notification.type === "NEW_MESSAGE"
                           ? "💬"
+                          : notification.type === "SERVICE_REQUEST"
+                          ? "📋"
                           : notification.type === "PROJECT_SELECTED"
                           ? "🎉"
                           : "🔔"

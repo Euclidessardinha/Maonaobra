@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -9,6 +10,8 @@ from app.models.service import Service
 from app.models.service_request import ServiceRequest
 from app.models.user import User
 from app.models.review import Review
+from app.models.conversation import Conversation
+from app.models.notification import Notification
 
 from app.schemas.service_request import (
     ServiceRequestCreate,
@@ -56,7 +59,10 @@ def create_service_request(
             detail="Você não pode solicitar o seu próprio serviço."
         )
 
-    # Criar pedido
+    # ========================================================
+    # CRIAR PEDIDO
+    # ========================================================
+
     service_request = ServiceRequest(
         client_id=current_user.id,
         provider_id=service.provider_id,
@@ -69,8 +75,61 @@ def create_service_request(
     )
 
     db.add(service_request)
+
+    # ========================================================
+    # PROCURAR OU CRIAR CONVERSA
+    # ========================================================
+
+    conversation = (
+        db.query(Conversation)
+        .filter(
+            Conversation.client_id == current_user.id,
+            Conversation.provider_id == service.provider_id
+        )
+        .first()
+    )
+
+    if not conversation:
+
+        conversation = Conversation(
+            client_id=current_user.id,
+            provider_id=service.provider_id
+        )
+
+        db.add(conversation)
+
+        # Precisamos do ID da conversa antes de criar
+        # a notificação.
+        db.flush()
+
+    # ========================================================
+    # NOTIFICAÇÃO PARA O PRESTADOR
+    # ========================================================
+
+    provider_user = service.provider.user
+
+    notification = Notification(
+        user_id=provider_user.id,
+        conversation_id=conversation.id,
+        type="SERVICE_REQUEST",
+        title="Nova solicitação de serviço",
+        message=(
+            f"{current_user.name} solicitou o serviço "
+            f'"{service.title}".'
+        ),
+        is_read=False
+    )
+
+    db.add(notification)
+
+    # ========================================================
+    # GUARDAR TUDO
+    # ========================================================
+
     db.commit()
+
     db.refresh(service_request)
+    db.refresh(conversation)
 
     return {
         "message": "Solicitação enviada com sucesso!",
@@ -82,7 +141,8 @@ def create_service_request(
             "status": service_request.status,
             "location": service_request.location,
             "requested_date": service_request.requested_date
-        }
+        },
+        "conversation_id": conversation.id
     }
 
 
@@ -300,3 +360,4 @@ def update_request_status(
             "status": service_request.status
         }
     }
+

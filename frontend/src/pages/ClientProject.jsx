@@ -24,6 +24,9 @@ const [error, setError] = useState("");
 
 const [accepting, setAccepting] = useState(null);
 
+const [selectedConversationId, setSelectedConversationId] =
+  useState(null);
+
 const [rating, setRating] = useState(5);
 const [comment, setComment] = useState("");
 
@@ -121,8 +124,12 @@ try {
   setSuccess("");
 
 
+  const acceptedProposal =
   await acceptProposal(proposalId);
 
+  setSelectedConversationId(
+    acceptedProposal.conversation_id
+  );
 
   setSuccess(
     "Proposta aceita com sucesso! O projeto agora está em andamento."
@@ -823,17 +830,36 @@ return (
 
               {proposal.status === "ACCEPTED" && (
 
-                <div className="proposal-result accepted-result">
+  <div className="accepted-proposal-area">
 
-                  <span>
-                    ✓
-                  </span>
+    <div className="proposal-result accepted-result">
 
-                  Esta proposta foi aceita
+      <span>
+        ✓
+      </span>
 
-                </div>
+      Esta proposta foi aceita
 
-              )}
+    </div>
+
+    {proposal.conversation_id && (
+
+      <button
+        type="button"
+        className="message-provider-btn"
+        onClick={() =>
+          window.location.href =
+            `/client/chat?conversation_id=${proposal.conversation_id}`
+        }
+      >
+        💬 Enviar mensagem
+      </button>
+
+    )}
+
+  </div>
+
+)}
 
 
               {proposal.status === "REJECTED" && (

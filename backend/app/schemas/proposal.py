@@ -25,4 +25,7 @@ class ProposalResponse(BaseModel):
     created_at: datetime
     provider: ProviderProposalResponse | None = None
 
+    # Conversa criada quando a proposta é aceita
+    conversation_id: int | None = None
+
     model_config = ConfigDict(from_attributes=True)

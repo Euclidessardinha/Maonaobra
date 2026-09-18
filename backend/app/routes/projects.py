@@ -12,6 +12,7 @@ from app.models.user import User
 from app.models.provider import ProviderProfile
 from app.models.proposal import Proposal
 from app.models.category import Category
+from app.models.conversation import Conversation
 
 from app.schemas.project import (
     ProjectCreate,
@@ -315,6 +316,15 @@ def get_project_proposals(
                 "name": provider_name
             }
 
+        conversation = (
+            db.query(Conversation)
+            .filter(
+                Conversation.client_id == project.client_id,
+                Conversation.provider_id == proposal.provider_id
+            )
+            .first()
+        )    
+
         result.append({
             "id": proposal.id,
             "project_id": proposal.project_id,
@@ -323,7 +333,8 @@ def get_project_proposals(
             "message": proposal.message,
             "status": proposal.status,
             "created_at": proposal.created_at,
-            "provider": provider_data
+            "provider": provider_data,
+            "conversation_id": conversation.id if conversation else None
         })
 
     return result
@@ -597,9 +608,23 @@ def accept_proposal(
     # ========================================================
 
     db.commit()
-    db.refresh(proposal)
+    db.refresh(proposal)    
+    db.refresh(conversation)
 
-    return proposal
+    return {
+        "id": proposal.id,
+        "project_id": proposal.project_id,
+        "provider_id": proposal.provider_id,
+        "price": proposal.price,
+        "message": proposal.message,
+        "status": proposal.status,
+        "created_at": proposal.created_at,
+        "provider": {
+            "id": provider.id,
+            "name": provider.user.name
+        },
+        "conversation_id": conversation.id
+    }
 
 
 # ============================================================

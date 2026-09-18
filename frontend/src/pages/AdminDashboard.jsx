@@ -27,6 +27,10 @@ function AdminDashboard() {
   const [stats, setStats] = useState(null);
 
   const [users, setUsers] = useState([]);
+  
+  const [selectedUser, setSelectedUser] = useState(null);
+
+
 
 
   // =========================================================
@@ -366,6 +370,216 @@ function AdminDashboard() {
       );
 
     }
+
+  }
+
+
+  // =========================================================
+// DETALHES DO USUÁRIO
+// =========================================================
+
+  function openUserDetails(item) {
+    setSelectedUser(item);
+  }
+
+  function closeUserDetails() {
+    setSelectedUser(null);
+  }
+
+
+// =========================================================
+// OBTER PERFIL DE PRESTADOR DO USUÁRIO
+// =========================================================
+
+  function getUserProviderProfile(userId) {
+
+    return providers.find(
+      (provider) =>
+        String(provider.user_id) === String(userId) ||
+        String(provider.provider_id) === String(userId)
+    );
+
+  }
+
+
+// =========================================================
+// VERIFICAR SE O USUÁRIO POSSUI PERFIL DE PRESTADOR
+// =========================================================
+
+  function isProviderUser(item) {
+
+    if (!item) {
+      return false;
+    }
+
+    if (item.role === "PROVIDER") {
+      return true;
+    }
+
+    return Boolean(
+      getUserProviderProfile(item.id)
+    );
+  }
+
+
+// =========================================================
+// CAPACIDADES DO USUÁRIO
+// =========================================================
+
+  function getUserCapabilities(item) {
+
+    if (!item) {
+      return [];
+    }
+
+    const capabilities = [];
+
+    if (item.role === "ADMIN") {
+
+      return [
+        {
+          icon: "👥",
+          title: "Gerenciar usuários",
+          description: "Consultar e alterar o estado das contas."
+        },
+        {
+          icon: "🔧",
+          title: "Gerenciar prestadores",
+          description: "Consultar e controlar verificações profissionais."
+        },
+        {
+          icon: "📋",
+          title: "Acompanhar projetos",
+          description: "Visualizar os projetos publicados na plataforma."
+        },
+        {
+          icon: "🛠️",
+          title: "Acompanhar serviços",
+          description: "Visualizar os serviços publicados pelos prestadores."
+        },
+        {
+          icon: "⭐",
+          title: "Acompanhar avaliações",
+          description: "Consultar as avaliações existentes na plataforma."
+        },
+        {
+          icon: "📊",
+          title: "Acesso administrativo",
+          description: "Aceder às informações administrativas da plataforma."
+        }
+      ];
+
+    }
+
+
+  if (item.role === "PROVIDER") {
+
+    return [
+      {
+        icon: "👤",
+        title: "Manter perfil profissional",
+        description: "Criar e atualizar as informações profissionais."
+      },
+      {
+        icon: "🛠️",
+        title: "Publicar serviços",
+        description: "Disponibilizar serviços para clientes."
+      },
+      {
+        icon: "📋",
+        title: "Consultar projetos",
+        description: "Encontrar projetos publicados por clientes."
+      },
+      {
+        icon: "💼",
+        title: "Enviar propostas",
+        description: "Apresentar propostas para projetos disponíveis."
+      },
+      {
+        icon: "💬",
+        title: "Comunicar com clientes",
+        description: "Trocar mensagens relacionadas aos projetos."
+      },
+      {
+        icon: "⭐",
+        title: "Receber avaliações",
+        description: "Receber avaliações após trabalhos realizados."
+      }
+    ];
+
+  }
+
+
+  return [
+    {
+      icon: "📋",
+      title: "Criar projetos",
+      description: "Publicar pedidos de serviços na plataforma."
+    },
+    {
+      icon: "🔎",
+      title: "Procurar prestadores",
+      description: "Encontrar profissionais disponíveis."
+    },
+    {
+      icon: "💼",
+      title: "Receber propostas",
+      description: "Receber propostas dos prestadores."
+    },
+    {
+      icon: "🤝",
+      title: "Selecionar prestadores",
+      description: "Escolher um profissional para realizar um projeto."
+    },
+    {
+      icon: "💬",
+      title: "Comunicar com prestadores",
+      description: "Trocar mensagens relacionadas aos projetos."
+    },
+    {
+      icon: "⭐",
+      title: "Avaliar serviços",
+      description: "Avaliar prestadores após a realização do trabalho."
+    }
+  ];
+
+}
+
+
+// =========================================================
+// NOME DA FUNÇÃO
+// =========================================================
+
+  function getRoleName(role) {
+
+    if (role === "ADMIN") {
+      return "Administrador";
+    }
+
+    if (role === "PROVIDER") {
+      return "Prestador";
+    }
+
+    return "Cliente";
+
+  }
+
+
+// =========================================================
+// COR DA FUNÇÃO
+// =========================================================
+
+  function getRoleClass(role) {
+
+    if (role === "ADMIN") {
+      return "admin-role-admin";
+    }
+
+    if (role === "PROVIDER") {
+      return "admin-role-provider";
+    }
+
+    return "admin-role-client";
 
   }
 
@@ -1451,7 +1665,10 @@ function AdminDashboard() {
 
                     {filteredUsers.map((item) => (
 
-                      <tr key={item.id}>
+                      <tr key={item.id}
+                          className="admin-user-row"
+                          onClick={() => openUserDetails(item)}
+                      >
 
 
                         <td>
@@ -1538,9 +1755,11 @@ function AdminDashboard() {
                                   ? "admin-action danger"
                                   : "admin-action success"
                               }
-                              onClick={() =>
+                              onClick={(event) =>{
+                                event.stopPropagation();
                                 handleUserStatus(item.id)
-                              }
+                              }}
+                              
                             >
 
                               {item.is_active

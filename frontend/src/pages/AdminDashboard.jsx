@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { useAuth } from "../context/AuthContext";
 import NotificationBell from "../components/NotificationBell";
+import "./AdminDashboard.css";
 
 import {
   getAdminStats,
@@ -1327,8 +1328,9 @@ function AdminDashboard() {
                     .map((item) => (
 
                     <div
-                      className="admin-mini-item"
+                      className="admin-mini-item admin-clickable-user"
                       key={item.id}
+                      onClick={() => openUserDetails(item)}
                     >
 
                       <div className="admin-avatar">
@@ -2814,6 +2816,619 @@ function AdminDashboard() {
         />
 
       )}
+
+      {/* =====================================================
+    MODAL / PERFIL DO USUÁRIO
+===================================================== */}
+
+{selectedUser && (
+
+  <div
+    className="admin-user-modal-overlay"
+    onClick={closeUserDetails}
+  >
+
+    <div
+      className="admin-user-modal"
+      onClick={(event) =>
+        event.stopPropagation()
+      }
+    >
+
+      {/* HEADER */}
+
+      <div className="admin-user-modal-header">
+
+        <div>
+
+          <span className="admin-user-modal-eyebrow">
+            PERFIL DO USUÁRIO
+          </span>
+
+          <h2>
+            Informações da conta
+          </h2>
+
+        </div>
+
+        <button
+          className="admin-user-modal-close"
+          onClick={closeUserDetails}
+          aria-label="Fechar"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      {/* PERFIL PRINCIPAL */}
+
+      <div className="admin-user-profile">
+
+        <div className="admin-user-profile-avatar">
+
+          {selectedUser.name
+            ?.charAt(0)
+            .toUpperCase() || "U"}
+
+        </div>
+
+
+        <div className="admin-user-profile-main">
+
+          <h3>
+            {selectedUser.name || "Usuário"}
+          </h3>
+
+          <p>
+            {selectedUser.email || "-"}
+          </p>
+
+          <div className="admin-user-profile-badges">
+
+            <span
+              className={`admin-user-role-badge ${getRoleClass(
+                selectedUser.role
+              )}`}
+            >
+              {getRoleName(selectedUser.role)}
+            </span>
+
+            <span
+              className={
+                selectedUser.is_active
+                  ? "admin-user-status-badge active"
+                  : "admin-user-status-badge inactive"
+              }
+            >
+              <span />
+
+              {selectedUser.is_active
+                ? "Conta ativa"
+                : "Conta inativa"}
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      {/* INFORMAÇÕES DA CONTA */}
+
+      <div className="admin-user-detail-section">
+
+        <div className="admin-user-detail-section-title">
+
+          <span>
+            🔐
+          </span>
+
+          <div>
+
+            <strong>
+              Informações da conta
+            </strong>
+
+            <small>
+              Dados básicos do usuário.
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <div className="admin-user-info-grid">
+
+          <div className="admin-user-info-item">
+
+            <span>ID do usuário</span>
+
+            <strong>
+              #{selectedUser.id}
+            </strong>
+
+          </div>
+
+
+          <div className="admin-user-info-item">
+
+            <span>Função</span>
+
+            <strong>
+              {getRoleName(selectedUser.role)}
+            </strong>
+
+          </div>
+
+
+          <div className="admin-user-info-item">
+
+            <span>Email</span>
+
+            <strong>
+              {selectedUser.email || "-"}
+            </strong>
+
+          </div>
+
+
+          <div className="admin-user-info-item">
+
+            <span>Telefone</span>
+
+            <strong>
+              {selectedUser.phone || "-"}
+            </strong>
+
+          </div>
+
+
+          <div className="admin-user-info-item">
+
+            <span>Cadastro</span>
+
+            <strong>
+              {formatDate(selectedUser.created_at)}
+            </strong>
+
+          </div>
+
+
+          <div className="admin-user-info-item">
+
+            <span>Estado</span>
+
+            <strong
+              className={
+                selectedUser.is_active
+                  ? "text-success"
+                  : "text-danger"
+              }
+            >
+              {selectedUser.is_active
+                ? "Ativo"
+                : "Inativo"}
+            </strong>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      {/* PERFIL DE PRESTADOR */}
+
+      {isProviderUser(selectedUser) && (
+
+        <>
+
+          {(() => {
+
+            const provider =
+              getUserProviderProfile(
+                selectedUser.id
+              );
+
+            if (!provider) {
+              return null;
+            }
+
+            return (
+
+              <div className="admin-user-detail-section">
+
+                <div className="admin-user-detail-section-title">
+
+                  <span>
+                    🔧
+                  </span>
+
+                  <div>
+
+                    <strong>
+                      Perfil profissional
+                    </strong>
+
+                    <small>
+                      Informações como prestador.
+                    </small>
+
+                  </div>
+
+                </div>
+
+
+                <div className="admin-provider-profile-card">
+
+                  <div className="admin-provider-profile-top">
+
+                    <div>
+
+                      <span>
+                        PROFISSÃO
+                      </span>
+
+                      <strong>
+                        {provider.profession || "-"}
+                      </strong>
+
+                    </div>
+
+
+                    <span
+                      className={
+                        provider.is_verified
+                          ? "admin-status success"
+                          : "admin-status warning"
+                      }
+                    >
+                      {provider.is_verified
+                        ? "✓ Verificado"
+                        : "Pendente"}
+                    </span>
+
+                  </div>
+
+
+                  <div className="admin-user-info-grid">
+
+                    <div className="admin-user-info-item">
+
+                      <span>Localização</span>
+
+                      <strong>
+                        {provider.location || "-"}
+                      </strong>
+
+                    </div>
+
+
+                    <div className="admin-user-info-item">
+
+                      <span>Experiência</span>
+
+                      <strong>
+                        {provider.experience_years !== null &&
+                        provider.experience_years !== undefined
+                          ? `${provider.experience_years} anos`
+                          : "-"}
+                      </strong>
+
+                    </div>
+
+
+                    <div className="admin-user-info-item">
+
+                      <span>Preço por hora</span>
+
+                      <strong>
+                        {provider.hourly_rate
+                          ? formatCurrency(
+                              provider.hourly_rate
+                            )
+                          : "-"}
+                      </strong>
+
+                    </div>
+
+
+                    <div className="admin-user-info-item">
+
+                      <span>Estado</span>
+
+                      <strong
+                        className={
+                          provider.is_active
+                            ? "text-success"
+                            : "text-danger"
+                        }
+                      >
+                        {provider.is_active
+                          ? "Ativo"
+                          : "Inativo"}
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+
+                  {provider.bio && (
+
+                    <div className="admin-provider-bio">
+
+                      <span>
+                        BIOGRAFIA
+                      </span>
+
+                      <p>
+                        {provider.bio}
+                      </p>
+
+                    </div>
+
+                  )}
+
+                </div>
+
+              </div>
+
+            );
+
+          })()}
+
+        </>
+
+      )}
+
+
+      {/* CAPACIDADES */}
+
+      <div className="admin-user-detail-section">
+
+        <div className="admin-user-detail-section-title">
+
+          <span>
+            🛡️
+          </span>
+
+          <div>
+
+            <strong>
+              O que este usuário pode fazer
+            </strong>
+
+            <small>
+              Capacidades associadas à função da conta.
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <div className="admin-user-capabilities">
+
+          {getUserCapabilities(selectedUser).map(
+            (capability, index) => (
+
+              <div
+                className="admin-user-capability"
+                key={index}
+              >
+
+                <div className="admin-user-capability-icon">
+                  {capability.icon}
+                </div>
+
+                <div>
+
+                  <strong>
+                    {capability.title}
+                  </strong>
+
+                  <p>
+                    {capability.description}
+                  </p>
+
+                </div>
+
+                <span className="admin-user-capability-check">
+                  ✓
+                </span>
+
+              </div>
+
+            )
+          )}
+
+        </div>
+
+      </div>
+
+
+      {/* ATIVIDADE */}
+
+      <div className="admin-user-detail-section">
+
+        <div className="admin-user-detail-section-title">
+
+          <span>
+            📊
+          </span>
+
+          <div>
+
+            <strong>
+              Atividade na plataforma
+            </strong>
+
+            <small>
+              Registos relacionados a este usuário.
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <div className="admin-user-activity-grid">
+
+          <div className="admin-user-activity-card">
+
+            <span>
+              📋
+            </span>
+
+            <strong>
+              {
+                projects.filter(
+                  (project) =>
+                    String(project.client_id) ===
+                    String(selectedUser.id)
+                ).length
+              }
+            </strong>
+
+            <small>
+              Projetos
+            </small>
+
+          </div>
+
+
+          <div className="admin-user-activity-card">
+
+            <span>
+              🛠️
+            </span>
+
+            <strong>
+              {
+                services.filter(
+                  (service) =>
+                    String(service.provider_id) ===
+                    String(selectedUser.id)
+                ).length
+              }
+            </strong>
+
+            <small>
+              Serviços
+            </small>
+
+          </div>
+
+
+          <div className="admin-user-activity-card">
+
+            <span>
+              ⭐
+            </span>
+
+            <strong>
+              {
+                reviews.filter(
+                  (review) =>
+                    String(review.provider_user_id) ===
+                    String(selectedUser.id)
+                ).length
+              }
+            </strong>
+
+            <small>
+              Avaliações
+            </small>
+
+          </div>
+
+
+          <div className="admin-user-activity-card">
+
+            <span>
+              💼
+            </span>
+
+            <strong>
+              —
+            </strong>
+
+            <small>
+              Propostas
+            </small>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      {/* AÇÕES */}
+
+      <div className="admin-user-modal-footer">
+
+        <button
+          className="admin-user-modal-secondary"
+          onClick={closeUserDetails}
+        >
+          Fechar
+        </button>
+
+
+        {selectedUser.id !== user?.id && (
+
+          <button
+            className={
+              selectedUser.is_active
+                ? "admin-user-modal-danger"
+                : "admin-user-modal-success"
+            }
+            onClick={async () => {
+
+              await handleUserStatus(
+                selectedUser.id
+              );
+
+              const updatedUsers =
+                await getAdminUsers();
+
+              const updated =
+                updatedUsers.find(
+                  (item) =>
+                    String(item.id) ===
+                    String(selectedUser.id)
+                );
+
+              setUsers(updatedUsers);
+
+              if (updated) {
+                setSelectedUser(updated);
+              }
+
+            }}
+          >
+
+            {selectedUser.is_active
+              ? "Desativar conta"
+              : "Ativar conta"}
+
+          </button>
+
+        )}
+
+      </div>
+
+    </div>
+
+  </div>
+
+)}
 
     </div>
 

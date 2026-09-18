@@ -36,13 +36,11 @@ function ProviderProject() {
     }
 
     if (typeof category === "object") {
-
       return (
         category?.name ||
         category?.title ||
         "Serviço"
       );
-
     }
 
     return String(category);
@@ -182,7 +180,6 @@ function ProviderProject() {
         Number(price),
         message
       );
-
 
       setSuccess(
         "Proposta enviada com sucesso! 🎉"
@@ -328,7 +325,6 @@ function ProviderProject() {
           <a
             href="/provider/projects"
             className="provider-project-back"
-            aria-label="Voltar para projetos"
           >
 
             <span className="provider-project-back-arrow">
@@ -385,7 +381,7 @@ function ProviderProject() {
             Projetos
           </span>
 
-          <span className="provider-project-breadcrumb-separator">
+          <span>
             /
           </span>
 
@@ -397,25 +393,23 @@ function ProviderProject() {
 
 
         {/* ===================================================
-            HERO DO PROJETO
+            HERO
         ==================================================== */}
 
         <section className="provider-project-hero">
 
-
-          <div className="provider-project-hero-decoration" />
-
+          <div className="provider-project-hero-shine" />
 
           <div className="provider-project-hero-main">
 
             <span className="provider-project-eyebrow">
-              OPORTUNIDADE PROFISSIONAL
+              NOVA OPORTUNIDADE
             </span>
 
 
             <div className="provider-project-category">
 
-              <span className="provider-project-category-icon">
+              <span>
                 🛠️
               </span>
 
@@ -492,19 +486,22 @@ function ProviderProject() {
           </div>
 
 
-          <div className="provider-project-hero-side">
+          {/* =================================================
+              ORÇAMENTO
+          ================================================= */}
 
+          <div className="provider-project-hero-side">
 
             <span className="provider-project-status">
 
               <span className="provider-project-status-dot" />
 
-              Projeto aberto
+              Aberto
 
             </span>
 
 
-            <span className="provider-project-budget-kicker">
+            <span className="provider-project-budget-label">
               ORÇAMENTO DO CLIENTE
             </span>
 
@@ -515,15 +512,14 @@ function ProviderProject() {
 
 
             <span className="provider-project-budget-note">
-              Valor de referência fornecido
-              pelo cliente
+              Valor de referência do projeto
             </span>
 
 
-            <div className="provider-project-budget-line" />
+            <div className="provider-project-budget-divider" />
 
 
-            <div className="provider-project-budget-footer">
+            <div className="provider-project-budget-tip">
 
               <span>
                 💡
@@ -538,23 +534,21 @@ function ProviderProject() {
 
           </div>
 
-
         </section>
 
 
         {/* ===================================================
-            GRID PRINCIPAL
+            GRID
         ==================================================== */}
 
         <div className="provider-project-grid">
 
 
           {/* =================================================
-              DETALHES
+              SOBRE O PROJETO
           ================================================= */}
 
-          <section className="provider-project-card">
-
+          <section className="provider-project-card provider-project-info-card">
 
             <div className="provider-project-card-header">
 
@@ -565,7 +559,7 @@ function ProviderProject() {
               <div>
 
                 <span className="provider-project-card-label">
-                  VISÃO GERAL
+                  INFORMAÇÕES
                 </span>
 
                 <h2>
@@ -579,7 +573,7 @@ function ProviderProject() {
 
             <div className="provider-project-description">
 
-              <div className="provider-project-description-accent" />
+              <div className="provider-project-description-line" />
 
               <div>
 
@@ -597,12 +591,8 @@ function ProviderProject() {
             </div>
 
 
-            <div className="provider-project-details-heading">
-
-              <span>
-                INFORMAÇÕES DO PROJETO
-              </span>
-
+            <div className="provider-project-section-title">
+              DETALHES DO PROJETO
             </div>
 
 
@@ -696,7 +686,6 @@ function ProviderProject() {
 
             </div>
 
-
           </section>
 
 
@@ -706,8 +695,7 @@ function ProviderProject() {
 
           <section className="provider-project-card provider-project-proposal-card">
 
-
-            <div className="provider-project-proposal-glow" />
+            <div className="provider-project-proposal-top-glow" />
 
 
             <div className="provider-project-card-header">
@@ -719,7 +707,7 @@ function ProviderProject() {
               <div>
 
                 <span className="provider-project-card-label">
-                  OPORTUNIDADE
+                  SUA OPORTUNIDADE
                 </span>
 
                 <h2>
@@ -731,9 +719,9 @@ function ProviderProject() {
             </div>
 
 
-            <div className="provider-project-proposal-intro-box">
+            <div className="provider-project-proposal-intro">
 
-              <span className="provider-project-proposal-intro-icon">
+              <span>
                 ✨
               </span>
 
@@ -752,7 +740,7 @@ function ProviderProject() {
 
               <div className="provider-project-alert provider-project-alert-error">
 
-                <span className="provider-project-alert-icon">
+                <span>
                   ⚠️
                 </span>
 
@@ -771,7 +759,7 @@ function ProviderProject() {
 
               <div className="provider-project-alert provider-project-alert-success">
 
-                <span className="provider-project-alert-icon">
+                <span>
                   ✓
                 </span>
 
@@ -899,16 +887,13 @@ function ProviderProject() {
                   🔒
                 </span>
 
-                <span>
-                  A sua proposta será enviada diretamente
-                  ao cliente.
-                </span>
+                A sua proposta será enviada
+                diretamente ao cliente.
 
               </div>
 
 
             </form>
-
 
           </section>
 

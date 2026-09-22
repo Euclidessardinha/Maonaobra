@@ -7,6 +7,8 @@ from app.models.user import User
 from app.models.provider import ProviderProfile
 from app.models.category import Category
 from app.models.service import Service
+from app.models.service_promotion import ServicePromotion
+
 from app.models.service_request import ServiceRequest
 from app.models.review import Review
 from app.models.favorite import Favorite

@@ -81,6 +81,66 @@ function AdminDashboard() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // =========================================================
+  // PLANOS E MONETIZAÇÃO (CONFIGURAÇÃO LOCAL - FRONTEND)
+  // =========================================================
+
+  const [editingPlan, setEditingPlan] = useState(null);
+  const [promotionSettings, setPromotionSettings] = useState({
+    duration: 7,
+    price: 100,
+    active: true
+  });
+
+  const [plans, setPlans] = useState([
+    {
+      id: "free",
+      name: "Gratuito",
+      price: 0,
+      period: "mês",
+      description: "Recursos essenciais para começar.",
+      badge: "Plano base",
+      features: [
+        "Criar serviços",
+        "Receber pedidos",
+        "Enviar propostas",
+        "Chat",
+        "Avaliações"
+      ]
+    },
+    {
+      id: "professional",
+      name: "Profissional",
+      price: 499,
+      period: "mês",
+      description: "Mais visibilidade e estatísticas.",
+      badge: "Mais utilizado",
+      features: [
+        "Tudo do Gratuito",
+        "Ver visitantes do perfil",
+        "Estatísticas",
+        "Serviços mais vistos",
+        "Destaque como prestador",
+        "Benefícios em promoções"
+      ]
+    },
+    {
+      id: "premium",
+      name: "Premium",
+      price: 999,
+      period: "mês",
+      description: "Mais recursos para ganhar visibilidade.",
+      badge: "Premium",
+      features: [
+        "Tudo do Profissional",
+        "Maior destaque",
+        "Mais visibilidade",
+        "Promoções incluídas",
+        "Estatísticas avançadas"
+      ]
+    }
+  ]);
+
 
   // =========================================================
   // CARREGAR DADOS ADMINISTRATIVOS
@@ -940,6 +1000,23 @@ function AdminDashboard() {
           >
             <span>⭐</span>
             <span>Avaliações</span>
+          </button>
+
+
+          {/* PLANOS E MONETIZAÇÃO */}
+
+          <button
+            className={
+              activeSection === "monetization"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              handleSectionChange("monetization")
+            }
+          >
+            <span>💳</span>
+            <span>Planos e Monetização</span>
           </button>
 
 
@@ -2727,6 +2804,405 @@ function AdminDashboard() {
                 </div>
 
               )}
+
+            </div>
+
+          </section>
+
+        )}
+
+
+        {/* =====================================================
+            PLANOS E MONETIZAÇÃO
+        ===================================================== */}
+
+        {activeSection === "monetization" && (
+
+          <section className="admin-monetization-page">
+
+            <div className="admin-section-heading admin-monetization-heading">
+
+              <div>
+                <span className="admin-monetization-eyebrow">
+                  MONETIZAÇÃO
+                </span>
+
+                <h1>
+                  Planos e Monetização
+                </h1>
+
+                <p>
+                  Gerencie planos, promoções e recursos de visibilidade da plataforma.
+                </p>
+              </div>
+
+              <div className="admin-monetization-heading-badge">
+                <span>●</span>
+                Estrutura comercial
+              </div>
+
+            </div>
+
+
+            {/* RESUMO */}
+
+            <div className="admin-monetization-stats-grid">
+
+              <div className="admin-monetization-stat-card revenue">
+                <div className="admin-monetization-stat-icon">💰</div>
+                <div>
+                  <span>RECEITA</span>
+                  <strong>— MT</strong>
+                  <small>Aguardando integração financeira</small>
+                </div>
+              </div>
+
+              <div className="admin-monetization-stat-card promotion">
+                <div className="admin-monetization-stat-icon">🚀</div>
+                <div>
+                  <span>PROMOÇÕES</span>
+                  <strong>—</strong>
+                  <small>Serviços promovidos</small>
+                </div>
+              </div>
+
+              <div className="admin-monetization-stat-card highlight">
+                <div className="admin-monetization-stat-icon">⭐</div>
+                <div>
+                  <span>DESTAQUES</span>
+                  <strong>—</strong>
+                  <small>Prestadores em destaque</small>
+                </div>
+              </div>
+
+              <div className="admin-monetization-stat-card subscribers">
+                <div className="admin-monetization-stat-icon">👥</div>
+                <div>
+                  <span>ASSINATURAS</span>
+                  <strong>—</strong>
+                  <small>Planos pagos ativos</small>
+                </div>
+              </div>
+
+            </div>
+
+
+            {/* VISÃO GERAL */}
+
+            <div className="admin-monetization-overview-grid">
+
+              <div className="admin-monetization-panel admin-revenue-panel">
+
+                <div className="admin-monetization-panel-header">
+                  <div>
+                    <span>DESEMPENHO</span>
+                    <h2>Receita da plataforma</h2>
+                  </div>
+
+                  <select className="admin-monetization-period">
+                    <option>Últimos 30 dias</option>
+                    <option>Últimos 3 meses</option>
+                    <option>Últimos 6 meses</option>
+                    <option>Último ano</option>
+                  </select>
+                </div>
+
+                <div className="admin-revenue-placeholder">
+                  <div className="admin-revenue-placeholder-icon">📈</div>
+                  <strong>Dados financeiros ainda não integrados</strong>
+                  <p>
+                    O gráfico será preenchido quando as transações e pagamentos forem ligados ao backend.
+                  </p>
+                </div>
+
+              </div>
+
+
+              <div className="admin-monetization-panel">
+
+                <div className="admin-monetization-panel-header">
+                  <div>
+                    <span>ASSINATURAS</span>
+                    <h2>Distribuição dos planos</h2>
+                  </div>
+                </div>
+
+                <div className="admin-plan-distribution">
+                  <div className="admin-plan-distribution-row">
+                    <div><span className="dot free" />Gratuito</div>
+                    <strong>—</strong>
+                  </div>
+                  <div className="admin-plan-progress"><span style={{ width: "72%" }} /></div>
+
+                  <div className="admin-plan-distribution-row">
+                    <div><span className="dot professional" />Profissional</div>
+                    <strong>—</strong>
+                  </div>
+                  <div className="admin-plan-progress"><span style={{ width: "21%" }} /></div>
+
+                  <div className="admin-plan-distribution-row">
+                    <div><span className="dot premium" />Premium</div>
+                    <strong>—</strong>
+                  </div>
+                  <div className="admin-plan-progress"><span style={{ width: "7%" }} /></div>
+
+                  <p className="admin-monetization-note">
+                    Percentagens ilustrativas enquanto os dados de assinaturas não estiverem ligados ao backend.
+                  </p>
+                </div>
+
+              </div>
+
+            </div>
+
+
+            {/* PLANOS */}
+
+            <div className="admin-monetization-block">
+
+              <div className="admin-monetization-block-heading">
+                <div>
+                  <span>PLANOS</span>
+                  <h2>Planos de uso</h2>
+                </div>
+                <p>
+                  Os planos definem recursos de visibilidade. Nesta fase, não limitam a criação de projetos ou serviços.
+                </p>
+              </div>
+
+              <div className="admin-plans-grid">
+
+                {plans.map((plan) => (
+
+                  <div
+                    className={`admin-plan-card ${
+                      plan.id === "professional" ? "featured" : ""
+                    }`}
+                    key={plan.id}
+                  >
+
+                    {plan.id === "professional" && (
+                      <span className="admin-plan-featured-badge">
+                        MAIS UTILIZADO
+                      </span>
+                    )}
+
+                    <div className="admin-plan-card-top">
+                      <div>
+                        <span className="admin-plan-badge">{plan.badge}</span>
+                        <h3>{plan.name}</h3>
+                        <p>{plan.description}</p>
+                      </div>
+                    </div>
+
+                    <div className="admin-plan-price">
+                      <strong>{plan.price.toLocaleString("pt-MZ")}</strong>
+                      <span>MT / {plan.period}</span>
+                    </div>
+
+                    <div className="admin-plan-features">
+                      {plan.features.map((feature, index) => (
+                        <div key={index}>
+                          <span>✓</span>
+                          <p>{feature}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {editingPlan === plan.id ? (
+                      <div className="admin-plan-edit-box">
+                        <label>
+                          Preço mensal
+                          <input
+                            type="number"
+                            min="0"
+                            value={plan.price}
+                            onChange={(event) => {
+                              const value = Number(event.target.value);
+                              setPlans((current) =>
+                                current.map((item) =>
+                                  item.id === plan.id
+                                    ? { ...item, price: Number.isFinite(value) ? value : 0 }
+                                    : item
+                                )
+                              );
+                            }}
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          className="admin-plan-save"
+                          onClick={() => setEditingPlan(null)}
+                        >
+                          Guardar
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="admin-plan-edit"
+                        onClick={() => setEditingPlan(plan.id)}
+                      >
+                        Editar plano
+                      </button>
+                    )}
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            </div>
+
+
+            {/* PROMOÇÃO */}
+
+            <div className="admin-monetization-block">
+
+              <div className="admin-monetization-block-heading">
+                <div>
+                  <span>PROMOÇÕES</span>
+                  <h2>Promoção de serviço</h2>
+                </div>
+                <p>
+                  Crie uma forma simples de monetizar a visibilidade dos serviços dos prestadores.
+                </p>
+              </div>
+
+              <div className="admin-promotion-card">
+
+                <div className="admin-promotion-icon">🚀</div>
+
+                <div className="admin-promotion-content">
+                  <div className="admin-promotion-title-row">
+                    <div>
+                      <span className="admin-promotion-label">PROMOÇÃO ATUAL</span>
+                      <h3>Destaque de serviço</h3>
+                    </div>
+
+                    <span className={
+                      promotionSettings.active
+                        ? "admin-monetization-status active"
+                        : "admin-monetization-status inactive"
+                    }>
+                      {promotionSettings.active ? "● Ativa" : "● Inativa"}
+                    </span>
+                  </div>
+
+                  <p>
+                    O serviço promovido recebe maior destaque para potenciais clientes durante o período definido.
+                  </p>
+
+                  <div className="admin-promotion-values">
+                    <div>
+                      <span>DURAÇÃO</span>
+                      <strong>{promotionSettings.duration} dias</strong>
+                    </div>
+                    <div>
+                      <span>PREÇO</span>
+                      <strong>{promotionSettings.price.toLocaleString("pt-MZ")} MT</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="admin-promotion-editor">
+                  <label>
+                    Duração
+                    <select
+                      value={promotionSettings.duration}
+                      onChange={(event) =>
+                        setPromotionSettings((current) => ({
+                          ...current,
+                          duration: Number(event.target.value)
+                        }))
+                      }
+                    >
+                      <option value={3}>3 dias</option>
+                      <option value={7}>7 dias</option>
+                      <option value={15}>15 dias</option>
+                      <option value={30}>30 dias</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    Preço (MT)
+                    <input
+                      type="number"
+                      min="0"
+                      value={promotionSettings.price}
+                      onChange={(event) =>
+                        setPromotionSettings((current) => ({
+                          ...current,
+                          price: Number(event.target.value) || 0
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <button
+                    type="button"
+                    className="admin-promotion-toggle"
+                    onClick={() =>
+                      setPromotionSettings((current) => ({
+                        ...current,
+                        active: !current.active
+                      }))
+                    }
+                  >
+                    {promotionSettings.active ? "Desativar promoção" : "Ativar promoção"}
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+
+
+            {/* DESEMPENHO */}
+
+            <div className="admin-monetization-panel admin-promotion-performance">
+
+              <div className="admin-monetization-panel-header">
+                <div>
+                  <span>DESEMPENHO</span>
+                  <h2>Resultados das promoções</h2>
+                </div>
+              </div>
+
+              <div className="admin-promotion-performance-grid">
+                <div><span>🚀</span><strong>—</strong><small>Serviços promovidos</small></div>
+                <div><span>👁️</span><strong>—</strong><small>Visualizações geradas</small></div>
+                <div><span>💬</span><strong>—</strong><small>Contactos gerados</small></div>
+                <div><span>💰</span><strong>— MT</strong><small>Receita</small></div>
+              </div>
+
+            </div>
+
+
+            {/* TRANSAÇÕES */}
+
+            <div className="admin-monetization-panel admin-transactions-panel">
+
+              <div className="admin-monetization-panel-header">
+                <div>
+                  <span>HISTÓRICO</span>
+                  <h2>Transações recentes</h2>
+                </div>
+
+                <button type="button" className="admin-monetization-filter-button">
+                  Todas as transações ▾
+                </button>
+              </div>
+
+              <div className="admin-transactions-empty">
+                <div>🧾</div>
+                <strong>Nenhuma transação registada</strong>
+                <p>
+                  As transações aparecerão aqui quando o sistema de pagamentos estiver integrado.
+                </p>
+              </div>
 
             </div>
 

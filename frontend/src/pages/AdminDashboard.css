@@ -847,3 +847,993 @@
   }
 
 }
+
+
+/* =========================================================
+   PLANOS E MONETIZAÇÃO
+   DESIGN PREMIUM — ESTILOS TOTALMENTE ISOLADOS
+========================================================= */
+
+.admin-monetization-page {
+  width: 100%;
+  min-height: 100%;
+  padding: 2px 0 42px;
+  color: #172033;
+}
+
+/* =========================================================
+   CABEÇALHO
+========================================================= */
+
+.admin-monetization-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 26px;
+}
+
+.admin-monetization-heading > div:first-child {
+  min-width: 0;
+}
+
+.admin-monetization-heading h1 {
+  margin: 0 0 7px;
+  color: #172033;
+  font-size: clamp(25px, 3vw, 34px);
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+}
+
+.admin-monetization-heading p {
+  max-width: 690px;
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.admin-monetization-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-height: 31px;
+  padding: 0 12px;
+  border: 1px solid #fed7aa;
+  border-radius: 999px;
+  background: #fffaf5;
+  color: #c2410c;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-monetization-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f97316;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.10);
+}
+
+/* =========================================================
+   RESUMO
+========================================================= */
+
+.admin-monetization-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 13px;
+  margin-bottom: 31px;
+}
+
+.admin-monetization-stat-card {
+  position: relative;
+  min-width: 0;
+  min-height: 112px;
+  overflow: hidden;
+  padding: 18px 19px;
+  border: 1px solid #e8edf3;
+  border-radius: 17px;
+  background: #ffffff;
+  box-shadow: 0 7px 22px rgba(15, 23, 42, 0.045);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-monetization-stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: #f97316;
+  opacity: 0.9;
+}
+
+.admin-monetization-stat-card::after {
+  content: "";
+  position: absolute;
+  right: -38px;
+  bottom: -50px;
+  width: 125px;
+  height: 125px;
+  border-radius: 50%;
+  background: rgba(249, 115, 22, 0.035);
+}
+
+.admin-monetization-stat-card:hover {
+  transform: translateY(-2px);
+  border-color: #fed7aa;
+  box-shadow: 0 13px 30px rgba(15, 23, 42, 0.075);
+}
+
+.admin-monetization-stat-card > span:first-child {
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin-bottom: 10px;
+  color: #94a3b8;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+.admin-monetization-stat-card strong {
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin-bottom: 5px;
+  color: #172033;
+  font-size: 25px;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.admin-monetization-stat-card small {
+  position: relative;
+  z-index: 1;
+  display: block;
+  color: #94a3b8;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   SEÇÕES
+========================================================= */
+
+.admin-monetization-section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 13px;
+}
+
+.admin-monetization-section-label::before {
+  content: "";
+  width: 3px;
+  height: 18px;
+  border-radius: 999px;
+  background: #f97316;
+}
+
+.admin-monetization-section-label h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.admin-monetization-section-label p {
+  margin: 2px 0 0;
+  color: #94a3b8;
+  font-size: 9px;
+}
+
+/* =========================================================
+   VISÃO GERAL
+========================================================= */
+
+.admin-monetization-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+  gap: 14px;
+  margin-bottom: 30px;
+}
+
+.admin-monetization-panel {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #e8edf3;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 7px 22px rgba(15, 23, 42, 0.04);
+}
+
+.admin-monetization-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 17px;
+}
+
+.admin-monetization-panel-header h2 {
+  margin: 0 0 4px;
+  color: #172033;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: -0.015em;
+}
+
+.admin-monetization-panel-header p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.admin-monetization-period {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #e1e7ee;
+  border-radius: 8px;
+  outline: none;
+  background: #f8fafc;
+  color: #475569;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-monetization-period:focus {
+  border-color: #fdba74;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.07);
+}
+
+.admin-monetization-empty-chart {
+  min-height: 204px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  border: 1px dashed #d9e1ea;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, #fcfdff 0%, #f8fafc 100%);
+  text-align: center;
+}
+
+.admin-monetization-empty-chart > span {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  background: #fff7ed;
+  color: #ea580c;
+  font-size: 17px;
+}
+
+.admin-monetization-empty-chart strong {
+  margin-bottom: 4px;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.admin-monetization-empty-chart p {
+  max-width: 370px;
+  margin: 0;
+  color: #94a3b8;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.admin-plan-distribution {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-plan-distribution-row {
+  display: grid;
+  grid-template-columns: 85px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 9px;
+}
+
+.admin-plan-distribution-row > span {
+  color: #475569;
+  font-size: 9px;
+  font-weight: 850;
+}
+
+.admin-plan-distribution-row > strong {
+  color: #172033;
+  font-size: 9px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.admin-plan-distribution-bar {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf1f5;
+}
+
+.admin-plan-distribution-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f97316, #fb923c);
+}
+
+.admin-plan-distribution-note {
+  margin: 1px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #edf1f5;
+  color: #94a3b8;
+  font-size: 8px;
+  line-height: 1.55;
+}
+
+/* =========================================================
+   PLANOS
+========================================================= */
+
+.admin-plans-section {
+  margin-bottom: 31px;
+}
+
+.admin-plans-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 13px;
+}
+
+.admin-plans-section-header h2 {
+  margin: 0 0 4px;
+  color: #172033;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.admin-plans-section-header p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 9px;
+}
+
+.admin-plans-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.admin-plan-card {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 21px;
+  border: 1px solid #e5eaf0;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 7px 22px rgba(15, 23, 42, 0.04);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-plan-card:hover {
+  transform: translateY(-3px);
+  border-color: #cbd5e1;
+  box-shadow: 0 15px 31px rgba(15, 23, 42, 0.08);
+}
+
+.admin-plan-card.featured {
+  border-color: #f97316;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(249, 115, 22, 0.10), transparent 32%),
+    #ffffff;
+  box-shadow:
+    0 13px 30px rgba(249, 115, 22, 0.09),
+    inset 0 0 0 1px rgba(249, 115, 22, 0.05);
+}
+
+.admin-plan-card.featured::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 21px;
+  right: 21px;
+  height: 3px;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(90deg, #f97316, #fb923c);
+}
+
+.admin-plan-card-badge {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  margin-bottom: 11px;
+  padding: 0 8px;
+  border: 1px solid #fed7aa;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-plan-card h3 {
+  margin: 0 0 5px;
+  color: #172033;
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.admin-plan-card-description {
+  min-height: 31px;
+  margin: 0 0 16px;
+  color: #64748b;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.admin-plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-bottom: 16px;
+}
+
+.admin-plan-price strong {
+  color: #172033;
+  font-size: 28px;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.admin-plan-price span {
+  color: #94a3b8;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.admin-plan-features {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+  margin: 0 0 17px;
+  padding: 15px 0 0;
+  border-top: 1px solid #edf1f5;
+  list-style: none;
+}
+
+.admin-plan-features li {
+  position: relative;
+  padding-left: 20px;
+  color: #475569;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.admin-plan-features li::before {
+  content: "✓";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #fff7ed;
+  color: #ea580c;
+  font-size: 7px;
+  font-weight: 950;
+}
+
+.admin-plan-edit-button {
+  width: 100%;
+  min-height: 35px;
+  padding: 0 11px;
+  border: 1px solid #e1e7ee;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475569;
+  font: inherit;
+  font-size: 8px;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.admin-plan-edit-button:hover {
+  transform: translateY(-1px);
+  border-color: #fed7aa;
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.admin-plan-edit-box {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-top: 13px;
+  border-top: 1px solid #edf1f5;
+}
+
+.admin-plan-edit-box input {
+  width: 100%;
+  min-width: 0;
+  height: 35px;
+  padding: 0 9px;
+  border: 1px solid #dbe3ec;
+  border-radius: 8px;
+  outline: none;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.admin-plan-edit-box input:focus {
+  border-color: #fb923c;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.07);
+}
+
+.admin-plan-edit-box button {
+  min-height: 35px;
+  padding: 0 10px;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: #c2410c;
+  font: inherit;
+  font-size: 8px;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.admin-plan-edit-box button:hover {
+  transform: translateY(-1px);
+  background: #ffedd5;
+}
+
+/* =========================================================
+   PROMOÇÃO DE SERVIÇOS
+========================================================= */
+
+.admin-promotion-card {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 31px;
+  padding: 23px;
+  border: 1px solid #273449;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(249, 115, 22, 0.17), transparent 29%),
+    radial-gradient(circle at 0% 100%, rgba(59, 130, 246, 0.08), transparent 32%),
+    linear-gradient(145deg, #111827 0%, #172033 55%, #0f172a 100%);
+  color: #ffffff;
+  box-shadow: 0 17px 38px rgba(15, 23, 42, 0.17);
+}
+
+.admin-promotion-card::before {
+  content: "";
+  position: absolute;
+  top: -100px;
+  right: -78px;
+  width: 230px;
+  height: 230px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 35px rgba(255, 255, 255, 0.018),
+    0 0 0 70px rgba(255, 255, 255, 0.012);
+}
+
+.admin-promotion-card-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.admin-promotion-card-header h2 {
+  margin: 0 0 5px;
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.admin-promotion-card-header p {
+  max-width: 640px;
+  margin: 0;
+  color: #aab6c8;
+  font-size: 9px;
+  line-height: 1.65;
+}
+
+.admin-promotion-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  min-height: 27px;
+  padding: 0 10px;
+  border: 1px solid rgba(34, 197, 94, 0.24);
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.08);
+  color: #86efac;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-promotion-status::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.09);
+}
+
+.admin-promotion-status.inactive {
+  border-color: rgba(148, 163, 184, 0.18);
+  background: rgba(148, 163, 184, 0.07);
+  color: #94a3b8;
+}
+
+.admin-promotion-status.inactive::before {
+  background: #64748b;
+  box-shadow: none;
+}
+
+.admin-promotion-editor {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 11px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.admin-promotion-field {
+  min-width: 0;
+}
+
+.admin-promotion-field label {
+  display: block;
+  margin-bottom: 6px;
+  color: #94a3b8;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.admin-promotion-field select,
+.admin-promotion-field input {
+  width: 100%;
+  height: 37px;
+  min-width: 0;
+  padding: 0 10px;
+  border: 1px solid rgba(148, 163, 184, 0.19);
+  border-radius: 8px;
+  outline: none;
+  background: #111827;
+  color: #f8fafc;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.admin-promotion-field select:focus,
+.admin-promotion-field input:focus {
+  border-color: rgba(249, 115, 22, 0.65);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.09);
+}
+
+.admin-promotion-action {
+  height: 37px;
+  padding: 0 14px;
+  border: 1px solid #f97316;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: #ffffff;
+  font: inherit;
+  font-size: 8px;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 7px 17px rgba(249, 115, 22, 0.18);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-promotion-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(249, 115, 22, 0.23);
+}
+
+/* =========================================================
+   DESEMPENHO
+========================================================= */
+
+.admin-promotion-performance-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.admin-promotion-performance-card {
+  min-width: 0;
+  min-height: 89px;
+  padding: 16px;
+  border: 1px solid #e8edf3;
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow: 0 6px 19px rgba(15, 23, 42, 0.035);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.admin-promotion-performance-card:hover {
+  transform: translateY(-2px);
+  border-color: #dbe3ec;
+}
+
+.admin-promotion-performance-card > span {
+  display: block;
+  margin-bottom: 8px;
+  color: #94a3b8;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-promotion-performance-card strong {
+  color: #172033;
+  font-size: 21px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+/* =========================================================
+   TRANSAÇÕES
+========================================================= */
+
+.admin-transactions-panel {
+  margin-bottom: 18px;
+}
+
+.admin-transactions-empty {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 17px;
+  border: 1px dashed #d9e1ea;
+  border-radius: 14px;
+  background: #fbfcfe;
+}
+
+.admin-transactions-empty > span {
+  width: 39px;
+  height: 39px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #fed7aa;
+  border-radius: 11px;
+  background: #fff7ed;
+  color: #ea580c;
+  font-size: 16px;
+}
+
+.admin-transactions-empty strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #334155;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.admin-transactions-empty p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 8px;
+  line-height: 1.55;
+}
+
+/* =========================================================
+   RESPONSIVIDADE
+   SOMENTE PLANOS E MONETIZAÇÃO
+========================================================= */
+
+@media (max-width: 1100px) {
+  .admin-monetization-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-monetization-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-plans-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-promotion-performance-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .admin-monetization-page {
+    padding-bottom: 28px;
+  }
+
+  .admin-monetization-heading {
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .admin-monetization-heading h1 {
+    font-size: 25px;
+  }
+
+  .admin-monetization-heading p {
+    font-size: 10px;
+  }
+
+  .admin-monetization-badge {
+    align-self: flex-start;
+  }
+
+  .admin-monetization-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    margin-bottom: 25px;
+  }
+
+  .admin-monetization-stat-card {
+    min-height: 100px;
+    padding: 15px;
+    border-radius: 14px;
+  }
+
+  .admin-monetization-stat-card strong {
+    font-size: 20px;
+  }
+
+  .admin-monetization-panel {
+    padding: 15px;
+    border-radius: 16px;
+  }
+
+  .admin-monetization-panel-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-monetization-period {
+    width: 100%;
+  }
+
+  .admin-plans-section-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-plan-card {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .admin-promotion-card {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .admin-promotion-card-header {
+    flex-direction: column;
+    gap: 11px;
+  }
+
+  .admin-promotion-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-promotion-action {
+    width: 100%;
+  }
+
+  .admin-promotion-performance-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .admin-monetization-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-monetization-stat-card {
+    min-height: 91px;
+    padding: 14px;
+  }
+
+  .admin-plan-distribution-row {
+    grid-template-columns: 73px minmax(0, 1fr) 29px;
+    gap: 7px;
+  }
+
+  .admin-promotion-performance-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-transactions-empty {
+    align-items: flex-start;
+    padding: 14px;
+  }
+}

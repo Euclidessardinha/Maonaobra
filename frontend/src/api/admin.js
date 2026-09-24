@@ -220,3 +220,79 @@ export async function getAdminReviews() {
     "Erro ao buscar avaliações."
   );
 }
+
+// =========================================================
+// PROMOÇÕES DE SERVIÇOS
+// =========================================================
+
+export async function getAdminServicePromotions() {
+
+  const token = getToken();
+
+  const response = await fetch(
+    `${API_URL}/admin/service-promotions`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return await handleResponse(
+    response,
+    "Erro ao buscar promoções de serviços."
+  );
+}
+
+
+// =========================================================
+// ESTATÍSTICAS DE PROMOÇÕES
+// =========================================================
+
+export async function getAdminPromotionStats() {
+
+  const token = getToken();
+
+  const response = await fetch(
+    `${API_URL}/admin/service-promotions/stats`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return await handleResponse(
+    response,
+    "Erro ao buscar estatísticas de promoções."
+  );
+}
+
+
+// =========================================================
+// ATUALIZAR STATUS DA PROMOÇÃO
+// =========================================================
+
+export async function updateAdminPromotionStatus(
+  promotionId,
+  status
+) {
+
+  const token = getToken();
+
+  const response = await fetch(
+    `${API_URL}/admin/service-promotions/${promotionId}/status?status=${encodeURIComponent(status)}`,
+    {
+      method: "PATCH",
+
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return await handleResponse(
+    response,
+    "Erro ao atualizar o status da promoção."
+  );
+}

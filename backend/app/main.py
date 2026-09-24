@@ -40,6 +40,7 @@ from app.routes.proposals import router as proposals_router
 from app.routes.chat import router as chat_router
 from app.routes.notifications import router as notifications_router
 from app.routes.admin import router as admin_router
+from app.routes import service_promotions
 
 
 # Criar as tabelas
@@ -77,6 +78,9 @@ app.include_router(proposals_router)
 app.include_router(chat_router)
 app.include_router(notifications_router)
 app.include_router(admin_router)
+app.include_router(
+    service_promotions.router
+)
 
 
 @app.get("/")

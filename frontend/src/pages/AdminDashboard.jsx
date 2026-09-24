@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 
 import { useAuth } from "../context/AuthContext";
@@ -13,7 +12,10 @@ import {
   updateProviderVerification,
   getAdminProjects,
   getAdminServices,
-  getAdminReviews
+  getAdminReviews,
+  getAdminServicePromotions,
+  getAdminPromotionStats,
+  updateAdminPromotionStatus
 } from "../api/admin";
 
 
@@ -28,10 +30,10 @@ function AdminDashboard() {
   const [stats, setStats] = useState(null);
 
   const [users, setUsers] = useState([]);
-  
+
   const [selectedUser, setSelectedUser] = useState(null);
 
-
+  const [userActivityView, setUserActivityView] = useState(null);
 
 
   // =========================================================
@@ -81,16 +83,23 @@ function AdminDashboard() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+
   // =========================================================
   // PLANOS E MONETIZAÇÃO (CONFIGURAÇÃO LOCAL - FRONTEND)
   // =========================================================
 
+  // =========================================================
+// PROMOÇÕES
+// =========================================================
+
+  const [promotions, setPromotions] = useState([]);
+  const [promotionStats, setPromotionStats] = useState(null);
+  const [promotionLoading, setPromotionLoading] = useState(false);
+  const [promotionActionLoading, setPromotionActionLoading] = useState(null);
+  const [promotionError, setPromotionError] = useState("");
+
   const [editingPlan, setEditingPlan] = useState(null);
-  const [promotionSettings, setPromotionSettings] = useState({
-    duration: 7,
-    price: 100,
-    active: true
-  });
+
 
   const [plans, setPlans] = useState([
     {
@@ -205,6 +214,77 @@ function AdminDashboard() {
     loadAdminData();
 
   }, []);
+
+
+  // =========================================================
+// CARREGAR PROMOÇÕES
+// =========================================================
+
+  async function loadPromotionData() {
+    try {
+      setPromotionLoading(true);
+      setPromotionError("");
+
+      const [
+        promotionsData,
+        promotionStatsData
+      ] = await Promise.all([
+        getAdminServicePromotions(),
+        getAdminPromotionStats()
+      ]);
+
+      setPromotions(promotionsData);
+      setPromotionStats(promotionStatsData);
+
+    } catch (err) {
+      console.error(
+        "Erro ao carregar promoções:",
+        err
+      );
+
+      setPromotionError(
+        err.message ||
+        "Não foi possível carregar as promoções."
+      );
+
+    } finally {
+      setPromotionLoading(false);
+    }
+  }
+
+  async function handlePromotionStatus(promotionId, status) {
+    try {
+      setPromotionActionLoading(promotionId);
+      setPromotionError("");
+
+      await updateAdminPromotionStatus(
+        promotionId,
+        status
+      );
+
+      await loadPromotionData();
+
+    } catch (err) {
+      console.error(
+        "Erro ao atualizar promoção:",
+        err
+      );
+
+      setPromotionError(
+        err.message ||
+        "Não foi possível atualizar a promoção."
+      );
+
+    } finally {
+      setPromotionActionLoading(null);
+    }
+  }
+
+  useEffect(() => {
+    if (activeSection === "monetization") {
+      loadPromotionData();
+    }
+  }, [activeSection]);
 
 
   // =========================================================
@@ -436,21 +516,61 @@ function AdminDashboard() {
 
 
   // =========================================================
-// DETALHES DO USUÁRIO
-// =========================================================
+  // DETALHES DO USUÁRIO
+  // =========================================================
 
   function openUserDetails(item) {
+
     setSelectedUser(item);
+    setUserActivityView(null);
+
   }
+
 
   function closeUserDetails() {
+
     setSelectedUser(null);
+    setUserActivityView(null);
+
   }
 
 
-// =========================================================
-// OBTER PERFIL DE PRESTADOR DO USUÁRIO
-// =========================================================
+  // =========================================================
+  // NAVEGAÇÃO DENTRO DO DETALHE DO USUÁRIO
+  // =========================================================
+
+  function openUserActivity(view) {
+
+    setUserActivityView(view);
+
+  }
+
+
+  function closeUserActivity() {
+
+    setUserActivityView(null);
+
+  }
+
+
+  // =========================================================
+  // OBTER PROJETOS DO USUÁRIO
+  // =========================================================
+
+  function getUserProjects(userId) {
+
+    return projects.filter(
+      (project) =>
+        String(project.client_id) ===
+        String(userId)
+    );
+
+  }
+
+
+  // =========================================================
+  // OBTER PERFIL DE PRESTADOR DO USUÁRIO
+  // =========================================================
 
   function getUserProviderProfile(userId) {
 
@@ -463,9 +583,120 @@ function AdminDashboard() {
   }
 
 
-// =========================================================
-// VERIFICAR SE O USUÁRIO POSSUI PERFIL DE PRESTADOR
-// =========================================================
+  // =========================================================
+  // OBTER SERVIÇOS DO USUÁRIO
+  // =========================================================
+
+  function getUserServices(userId) {
+
+    const provider =
+      getUserProviderProfile(userId);
+
+
+    const possibleProviderIds = new Set([
+      String(userId)
+    ]);
+
+
+    if (provider?.user_id !== undefined &&
+        provider?.user_id !== null) {
+
+      possibleProviderIds.add(
+        String(provider.user_id)
+      );
+
+    }
+
+
+    if (provider?.provider_id !== undefined &&
+        provider?.provider_id !== null) {
+
+      possibleProviderIds.add(
+        String(provider.provider_id)
+      );
+
+    }
+
+
+    return services.filter(
+      (service) =>
+        possibleProviderIds.has(
+          String(service.provider_id)
+        )
+    );
+
+  }
+
+
+  // =========================================================
+  // OBTER AVALIAÇÕES DO USUÁRIO
+  // =========================================================
+
+  function getUserReviews(userId) {
+
+    const provider =
+      getUserProviderProfile(userId);
+
+
+    const possibleProviderIds = new Set([
+      String(userId)
+    ]);
+
+
+    if (provider?.user_id !== undefined &&
+        provider?.user_id !== null) {
+
+      possibleProviderIds.add(
+        String(provider.user_id)
+      );
+
+    }
+
+
+    if (provider?.provider_id !== undefined &&
+        provider?.provider_id !== null) {
+
+      possibleProviderIds.add(
+        String(provider.provider_id)
+      );
+
+    }
+
+
+    return reviews.filter((review) => {
+
+      const providerUserId =
+        review.provider_user_id;
+
+      const reviewProviderId =
+        review.provider_id;
+
+
+      return (
+        (
+          providerUserId !== undefined &&
+          providerUserId !== null &&
+          possibleProviderIds.has(
+            String(providerUserId)
+          )
+        ) ||
+        (
+          reviewProviderId !== undefined &&
+          reviewProviderId !== null &&
+          possibleProviderIds.has(
+            String(reviewProviderId)
+          )
+        )
+      );
+
+    });
+
+  }
+
+
+  // =========================================================
+  // VERIFICAR SE O USUÁRIO POSSUI PERFIL DE PRESTADOR
+  // =========================================================
 
   function isProviderUser(item) {
 
@@ -480,12 +711,13 @@ function AdminDashboard() {
     return Boolean(
       getUserProviderProfile(item.id)
     );
+
   }
 
 
-// =========================================================
-// CAPACIDADES DO USUÁRIO
-// =========================================================
+  // =========================================================
+  // CAPACIDADES DO USUÁRIO
+  // =========================================================
 
   function getUserCapabilities(item) {
 
@@ -493,7 +725,9 @@ function AdminDashboard() {
       return [];
     }
 
+
     const capabilities = [];
+
 
     if (item.role === "ADMIN") {
 
@@ -533,83 +767,83 @@ function AdminDashboard() {
     }
 
 
-  if (item.role === "PROVIDER") {
+    if (item.role === "PROVIDER") {
+
+      return [
+        {
+          icon: "👤",
+          title: "Manter perfil profissional",
+          description: "Criar e atualizar as informações profissionais."
+        },
+        {
+          icon: "🛠️",
+          title: "Publicar serviços",
+          description: "Disponibilizar serviços para clientes."
+        },
+        {
+          icon: "📋",
+          title: "Consultar projetos",
+          description: "Encontrar projetos publicados por clientes."
+        },
+        {
+          icon: "💼",
+          title: "Enviar propostas",
+          description: "Apresentar propostas para projetos disponíveis."
+        },
+        {
+          icon: "💬",
+          title: "Comunicar com clientes",
+          description: "Trocar mensagens relacionadas aos projetos."
+        },
+        {
+          icon: "⭐",
+          title: "Receber avaliações",
+          description: "Receber avaliações após trabalhos realizados."
+        }
+      ];
+
+    }
+
 
     return [
       {
-        icon: "👤",
-        title: "Manter perfil profissional",
-        description: "Criar e atualizar as informações profissionais."
-      },
-      {
-        icon: "🛠️",
-        title: "Publicar serviços",
-        description: "Disponibilizar serviços para clientes."
-      },
-      {
         icon: "📋",
-        title: "Consultar projetos",
-        description: "Encontrar projetos publicados por clientes."
+        title: "Criar projetos",
+        description: "Publicar pedidos de serviços na plataforma."
+      },
+      {
+        icon: "🔎",
+        title: "Procurar prestadores",
+        description: "Encontrar profissionais disponíveis."
       },
       {
         icon: "💼",
-        title: "Enviar propostas",
-        description: "Apresentar propostas para projetos disponíveis."
+        title: "Receber propostas",
+        description: "Receber propostas dos prestadores."
+      },
+      {
+        icon: "🤝",
+        title: "Selecionar prestadores",
+        description: "Escolher um profissional para realizar um projeto."
       },
       {
         icon: "💬",
-        title: "Comunicar com clientes",
+        title: "Comunicar com prestadores",
         description: "Trocar mensagens relacionadas aos projetos."
       },
       {
         icon: "⭐",
-        title: "Receber avaliações",
-        description: "Receber avaliações após trabalhos realizados."
+        title: "Avaliar serviços",
+        description: "Avaliar prestadores após a realização do trabalho."
       }
     ];
 
   }
 
 
-  return [
-    {
-      icon: "📋",
-      title: "Criar projetos",
-      description: "Publicar pedidos de serviços na plataforma."
-    },
-    {
-      icon: "🔎",
-      title: "Procurar prestadores",
-      description: "Encontrar profissionais disponíveis."
-    },
-    {
-      icon: "💼",
-      title: "Receber propostas",
-      description: "Receber propostas dos prestadores."
-    },
-    {
-      icon: "🤝",
-      title: "Selecionar prestadores",
-      description: "Escolher um profissional para realizar um projeto."
-    },
-    {
-      icon: "💬",
-      title: "Comunicar com prestadores",
-      description: "Trocar mensagens relacionadas aos projetos."
-    },
-    {
-      icon: "⭐",
-      title: "Avaliar serviços",
-      description: "Avaliar prestadores após a realização do trabalho."
-    }
-  ];
-
-}
-
-
-// =========================================================
-// NOME DA FUNÇÃO
-// =========================================================
+  // =========================================================
+  // NOME DA FUNÇÃO
+  // =========================================================
 
   function getRoleName(role) {
 
@@ -626,9 +860,9 @@ function AdminDashboard() {
   }
 
 
-// =========================================================
-// COR DA FUNÇÃO
-// =========================================================
+  // =========================================================
+  // COR DA FUNÇÃO
+  // =========================================================
 
   function getRoleClass(role) {
 
@@ -791,6 +1025,50 @@ function AdminDashboard() {
 
     return "";
 
+  }
+
+  function formatPromotionStatus(status) {
+    switch (status) {
+      case "PENDING":
+        return "Pendente";
+
+      case "ACTIVE":
+        return "Ativa";
+
+      case "EXPIRED":
+        return "Expirada";
+
+      case "REJECTED":
+        return "Rejeitada";
+
+      case "CANCELLED":
+        return "Cancelada";
+
+      default:
+        return status || "Desconhecido";
+    }
+  }
+
+  function getPromotionStatusClass(status) {
+    switch (status) {
+      case "PENDING":
+        return "pending";
+
+      case "ACTIVE":
+        return "active";
+
+      case "EXPIRED":
+        return "expired";
+
+      case "REJECTED":
+        return "rejected";
+
+      case "CANCELLED":
+        return "cancelled";
+
+      default:
+        return "default";
+    }
   }
 
 
@@ -1744,9 +2022,10 @@ function AdminDashboard() {
 
                     {filteredUsers.map((item) => (
 
-                      <tr key={item.id}
-                          className="admin-user-row"
-                          onClick={() => openUserDetails(item)}
+                      <tr
+                        key={item.id}
+                        className="admin-user-row"
+                        onClick={() => openUserDetails(item)}
                       >
 
 
@@ -1834,11 +2113,10 @@ function AdminDashboard() {
                                   ? "admin-action danger"
                                   : "admin-action success"
                               }
-                              onClick={(event) =>{
+                              onClick={(event) => {
                                 event.stopPropagation();
-                                handleUserStatus(item.id)
+                                handleUserStatus(item.id);
                               }}
-                              
                             >
 
                               {item.is_active
@@ -2823,6 +3101,7 @@ function AdminDashboard() {
             <div className="admin-section-heading admin-monetization-heading">
 
               <div>
+
                 <span className="admin-monetization-eyebrow">
                   MONETIZAÇÃO
                 </span>
@@ -2834,57 +3113,171 @@ function AdminDashboard() {
                 <p>
                   Gerencie planos, promoções e recursos de visibilidade da plataforma.
                 </p>
+
               </div>
 
               <div className="admin-monetization-heading-badge">
-                <span>●</span>
+
+                <span>
+                  ●
+                </span>
+
                 Estrutura comercial
+
               </div>
 
             </div>
 
 
             {/* RESUMO */}
+<div className="admin-monetization-stats-grid">
 
-            <div className="admin-monetization-stats-grid">
+  {/* VALOR DAS PROMOÇÕES */}
+  <div className="admin-monetization-stat-card revenue">
+    <div className="admin-monetization-stat-icon">
+      💰
+    </div>
 
-              <div className="admin-monetization-stat-card revenue">
-                <div className="admin-monetization-stat-icon">💰</div>
-                <div>
-                  <span>RECEITA</span>
-                  <strong>— MT</strong>
-                  <small>Aguardando integração financeira</small>
-                </div>
-              </div>
+    <div>
+      <span>VALOR APROVADO</span>
 
-              <div className="admin-monetization-stat-card promotion">
-                <div className="admin-monetization-stat-icon">🚀</div>
-                <div>
-                  <span>PROMOÇÕES</span>
-                  <strong>—</strong>
-                  <small>Serviços promovidos</small>
-                </div>
-              </div>
+      <strong>
+        {promotionLoading
+          ? "..."
+          : `${Number(
+              promotionStats?.revenue || 0
+            ).toLocaleString("pt-MZ")} MT`}
+      </strong>
 
-              <div className="admin-monetization-stat-card highlight">
-                <div className="admin-monetization-stat-icon">⭐</div>
-                <div>
-                  <span>DESTAQUES</span>
-                  <strong>—</strong>
-                  <small>Prestadores em destaque</small>
-                </div>
-              </div>
+      <small>
+        Promoções ativas e expiradas
+      </small>
+    </div>
+  </div>
 
-              <div className="admin-monetization-stat-card subscribers">
-                <div className="admin-monetization-stat-icon">👥</div>
-                <div>
-                  <span>ASSINATURAS</span>
-                  <strong>—</strong>
-                  <small>Planos pagos ativos</small>
-                </div>
-              </div>
 
-            </div>
+  {/* TOTAL DE PROMOÇÕES */}
+  <div className="admin-monetization-stat-card promotion">
+    <div className="admin-monetization-stat-icon">
+      🚀
+    </div>
+
+    <div>
+      <span>PROMOÇÕES</span>
+
+      <strong>
+        {promotionLoading
+          ? "..."
+          : promotionStats?.total ?? 0}
+      </strong>
+
+      <small>
+        Total de promoções registadas
+      </small>
+    </div>
+  </div>
+
+  {/* STATUS DAS PROMOÇÕES */}
+<div className="admin-promotion-status-grid">
+
+  <div className="admin-promotion-status-card pending">
+    <span className="admin-promotion-status-dot">●</span>
+
+    <div>
+      <span>PENDENTES</span>
+      <strong>
+        {promotionLoading
+          ? "..."
+          : promotionStats?.pending ?? 0}
+      </strong>
+    </div>
+  </div>
+
+
+  <div className="admin-promotion-status-card active">
+    <span className="admin-promotion-status-dot">●</span>
+
+    <div>
+      <span>ATIVAS</span>
+      <strong>
+        {promotionLoading
+          ? "..."
+          : promotionStats?.active ?? 0}
+      </strong>
+    </div>
+  </div>
+
+
+  <div className="admin-promotion-status-card expired">
+    <span className="admin-promotion-status-dot">●</span>
+
+    <div>
+      <span>EXPIRADAS</span>
+      <strong>
+        {promotionLoading
+          ? "..."
+          : promotionStats?.expired ?? 0}
+      </strong>
+    </div>
+  </div>
+
+
+  <div className="admin-promotion-status-card rejected">
+    <span className="admin-promotion-status-dot">●</span>
+
+    <div>
+      <span>REJEITADAS</span>
+      <strong>
+        {promotionLoading
+          ? "..."
+          : promotionStats?.rejected ?? 0}
+      </strong>
+    </div>
+  </div>
+
+</div>
+
+
+  {/* PROMOÇÕES ATIVAS */}
+  <div className="admin-monetization-stat-card highlight">
+    <div className="admin-monetization-stat-icon">
+      ⭐
+    </div>
+
+    <div>
+      <span>ATIVAS</span>
+
+      <strong>
+        {promotionLoading
+          ? "..."
+          : promotionStats?.active ?? 0}
+      </strong>
+
+      <small>
+        Promoções atualmente ativas
+      </small>
+    </div>
+  </div>
+
+
+  {/* ASSINATURAS */}
+  <div className="admin-monetization-stat-card subscribers">
+    <div className="admin-monetization-stat-icon">
+      👥
+    </div>
+
+    <div>
+      <span>ASSINATURAS</span>
+
+      <strong>—</strong>
+
+      <small>
+        Planos pagos ainda não integrados
+      </small>
+    </div>
+  </div>
+
+</div>
 
 
             {/* VISÃO GERAL */}
@@ -2894,25 +3287,55 @@ function AdminDashboard() {
               <div className="admin-monetization-panel admin-revenue-panel">
 
                 <div className="admin-monetization-panel-header">
+
                   <div>
-                    <span>DESEMPENHO</span>
-                    <h2>Receita da plataforma</h2>
+
+                    <span>
+                      DESEMPENHO
+                    </span>
+
+                    <h2>
+                      Receita da plataforma
+                    </h2>
+
                   </div>
 
                   <select className="admin-monetization-period">
-                    <option>Últimos 30 dias</option>
-                    <option>Últimos 3 meses</option>
-                    <option>Últimos 6 meses</option>
-                    <option>Último ano</option>
+
+                    <option>
+                      Últimos 30 dias
+                    </option>
+
+                    <option>
+                      Últimos 3 meses
+                    </option>
+
+                    <option>
+                      Últimos 6 meses
+                    </option>
+
+                    <option>
+                      Último ano
+                    </option>
+
                   </select>
+
                 </div>
 
                 <div className="admin-revenue-placeholder">
-                  <div className="admin-revenue-placeholder-icon">📈</div>
-                  <strong>Dados financeiros ainda não integrados</strong>
+
+                  <div className="admin-revenue-placeholder-icon">
+                    📈
+                  </div>
+
+                  <strong>
+                    Dados financeiros ainda não integrados
+                  </strong>
+
                   <p>
                     O gráfico será preenchido quando as transações e pagamentos forem ligados ao backend.
                   </p>
+
                 </div>
 
               </div>
@@ -2921,34 +3344,83 @@ function AdminDashboard() {
               <div className="admin-monetization-panel">
 
                 <div className="admin-monetization-panel-header">
+
                   <div>
-                    <span>ASSINATURAS</span>
-                    <h2>Distribuição dos planos</h2>
+
+                    <span>
+                      ASSINATURAS
+                    </span>
+
+                    <h2>
+                      Distribuição dos planos
+                    </h2>
+
                   </div>
+
                 </div>
 
                 <div className="admin-plan-distribution">
-                  <div className="admin-plan-distribution-row">
-                    <div><span className="dot free" />Gratuito</div>
-                    <strong>—</strong>
-                  </div>
-                  <div className="admin-plan-progress"><span style={{ width: "72%" }} /></div>
 
                   <div className="admin-plan-distribution-row">
-                    <div><span className="dot professional" />Profissional</div>
-                    <strong>—</strong>
+
+                    <div>
+                      <span className="dot free" />
+                      Gratuito
+                    </div>
+
+                    <strong>
+                      —
+                    </strong>
+
                   </div>
-                  <div className="admin-plan-progress"><span style={{ width: "21%" }} /></div>
+
+                  <div className="admin-plan-progress">
+                    <span style={{ width: "72%" }} />
+                  </div>
+
 
                   <div className="admin-plan-distribution-row">
-                    <div><span className="dot premium" />Premium</div>
-                    <strong>—</strong>
+
+                    <div>
+                      <span className="dot professional" />
+                      Profissional
+                    </div>
+
+                    <strong>
+                      —
+                    </strong>
+
                   </div>
-                  <div className="admin-plan-progress"><span style={{ width: "7%" }} /></div>
+
+                  <div className="admin-plan-progress">
+                    <span style={{ width: "21%" }} />
+                  </div>
+
+
+                  <div className="admin-plan-distribution-row">
+
+                    <div>
+                      <span className="dot premium" />
+                      Premium
+                    </div>
+
+                    <strong>
+                      —
+                    </strong>
+
+                  </div>
+
+                  <div className="admin-plan-progress">
+                    <span style={{ width: "7%" }} />
+                  </div>
+
 
                   <p className="admin-monetization-note">
+
                     Percentagens ilustrativas enquanto os dados de assinaturas não estiverem ligados ao backend.
+
                   </p>
+
                 </div>
 
               </div>
@@ -2961,13 +3433,23 @@ function AdminDashboard() {
             <div className="admin-monetization-block">
 
               <div className="admin-monetization-block-heading">
+
                 <div>
-                  <span>PLANOS</span>
-                  <h2>Planos de uso</h2>
+
+                  <span>
+                    PLANOS
+                  </span>
+
+                  <h2>
+                    Planos de uso
+                  </h2>
+
                 </div>
+
                 <p>
                   Os planos definem recursos de visibilidade. Nesta fase, não limitam a criação de projetos ou serviços.
                 </p>
+
               </div>
 
               <div className="admin-plans-grid">
@@ -2976,76 +3458,137 @@ function AdminDashboard() {
 
                   <div
                     className={`admin-plan-card ${
-                      plan.id === "professional" ? "featured" : ""
+                      plan.id === "professional"
+                        ? "featured"
+                        : ""
                     }`}
                     key={plan.id}
                   >
 
                     {plan.id === "professional" && (
+
                       <span className="admin-plan-featured-badge">
                         MAIS UTILIZADO
                       </span>
+
                     )}
 
+
                     <div className="admin-plan-card-top">
+
                       <div>
-                        <span className="admin-plan-badge">{plan.badge}</span>
-                        <h3>{plan.name}</h3>
-                        <p>{plan.description}</p>
+
+                        <span className="admin-plan-badge">
+                          {plan.badge}
+                        </span>
+
+                        <h3>
+                          {plan.name}
+                        </h3>
+
+                        <p>
+                          {plan.description}
+                        </p>
+
                       </div>
+
                     </div>
+
 
                     <div className="admin-plan-price">
-                      <strong>{plan.price.toLocaleString("pt-MZ")}</strong>
-                      <span>MT / {plan.period}</span>
+
+                      <strong>
+                        {plan.price.toLocaleString("pt-MZ")}
+                      </strong>
+
+                      <span>
+                        MT / {plan.period}
+                      </span>
+
                     </div>
+
 
                     <div className="admin-plan-features">
+
                       {plan.features.map((feature, index) => (
+
                         <div key={index}>
-                          <span>✓</span>
-                          <p>{feature}</p>
+
+                          <span>
+                            ✓
+                          </span>
+
+                          <p>
+                            {feature}
+                          </p>
+
                         </div>
+
                       ))}
+
                     </div>
 
+
                     {editingPlan === plan.id ? (
+
                       <div className="admin-plan-edit-box">
+
                         <label>
+
                           Preço mensal
+
                           <input
                             type="number"
                             min="0"
                             value={plan.price}
                             onChange={(event) => {
-                              const value = Number(event.target.value);
+
+                              const value =
+                                Number(event.target.value);
+
                               setPlans((current) =>
                                 current.map((item) =>
                                   item.id === plan.id
-                                    ? { ...item, price: Number.isFinite(value) ? value : 0 }
+                                    ? {
+                                        ...item,
+                                        price: Number.isFinite(value)
+                                          ? value
+                                          : 0
+                                      }
                                     : item
                                 )
                               );
+
                             }}
                           />
+
                         </label>
+
 
                         <button
                           type="button"
                           className="admin-plan-save"
-                          onClick={() => setEditingPlan(null)}
+                          onClick={() =>
+                            setEditingPlan(null)
+                          }
                         >
                           Guardar
                         </button>
+
                       </div>
+
                     ) : (
+
                       <button
                         type="button"
                         className="admin-plan-edit"
-                        onClick={() => setEditingPlan(plan.id)}
+                        onClick={() =>
+                          setEditingPlan(plan.id)
+                        }
                       >
                         Editar plano
                       </button>
+
                     )}
 
                   </div>
@@ -3056,108 +3599,424 @@ function AdminDashboard() {
 
             </div>
 
+{/* ===================================================== */}
+{/* FUNCIONAMENTO DAS PROMOÇÕES */}
+{/* ===================================================== */}
 
-            {/* PROMOÇÃO */}
+<div className="admin-monetization-block admin-promotion-info-block">
 
-            <div className="admin-monetization-block">
+  <div className="admin-monetization-block-header">
+    <div>
+      <span className="admin-monetization-eyebrow">
+        CONFIGURAÇÃO
+      </span>
 
-              <div className="admin-monetization-block-heading">
-                <div>
-                  <span>PROMOÇÕES</span>
-                  <h2>Promoção de serviço</h2>
-                </div>
-                <p>
-                  Crie uma forma simples de monetizar a visibilidade dos serviços dos prestadores.
-                </p>
-              </div>
+      <h2>Funcionamento das promoções</h2>
 
-              <div className="admin-promotion-card">
+      <p>
+        Regras utilizadas pelo sistema para gerir as
+        promoções de serviços.
+      </p>
+    </div>
+  </div>
 
-                <div className="admin-promotion-icon">🚀</div>
 
-                <div className="admin-promotion-content">
-                  <div className="admin-promotion-title-row">
-                    <div>
-                      <span className="admin-promotion-label">PROMOÇÃO ATUAL</span>
-                      <h3>Destaque de serviço</h3>
-                    </div>
+  <div className="admin-promotion-info-grid">
 
-                    <span className={
-                      promotionSettings.active
-                        ? "admin-monetization-status active"
-                        : "admin-monetization-status inactive"
-                    }>
-                      {promotionSettings.active ? "● Ativa" : "● Inativa"}
-                    </span>
+    {/* SUBMISSÃO */}
+    <div className="admin-promotion-info-card">
+
+      <div className="admin-promotion-info-icon">
+        🚀
+      </div>
+
+      <div>
+        <span>SUBMISSÃO</span>
+
+        <h3>
+          Criada pelo prestador
+        </h3>
+
+        <p>
+          O prestador escolhe o serviço, o preço e a
+          duração da promoção.
+        </p>
+      </div>
+
+    </div>
+
+
+    {/* APROVAÇÃO */}
+    <div className="admin-promotion-info-card">
+
+      <div className="admin-promotion-info-icon">
+        🛡️
+      </div>
+
+      <div>
+        <span>APROVAÇÃO</span>
+
+        <h3>
+          Revisão administrativa
+        </h3>
+
+        <p>
+          Toda nova promoção fica pendente até ser
+          aprovada ou rejeitada pelo administrador.
+        </p>
+      </div>
+
+    </div>
+
+
+    {/* ATIVAÇÃO */}
+    <div className="admin-promotion-info-card">
+
+      <div className="admin-promotion-info-icon">
+        ⚡
+      </div>
+
+      <div>
+        <span>ATIVAÇÃO</span>
+
+        <h3>
+          Início automático
+        </h3>
+
+        <p>
+          Ao aprovar, a promoção começa imediatamente
+          e a data de expiração é calculada automaticamente.
+        </p>
+      </div>
+
+    </div>
+
+
+    {/* EXPIRAÇÃO */}
+    <div className="admin-promotion-info-card">
+
+      <div className="admin-promotion-info-icon">
+        ⏱️
+      </div>
+
+      <div>
+        <span>EXPIRAÇÃO</span>
+
+        <h3>
+          Controle automático
+        </h3>
+
+        <p>
+          Quando o prazo termina, o sistema altera
+          automaticamente o estado para expirada.
+        </p>
+      </div>
+
+    </div>
+
+
+    {/* VALOR */}
+    <div className="admin-promotion-info-card">
+
+      <div className="admin-promotion-info-icon">
+        💰
+      </div>
+
+      <div>
+        <span>VALOR</span>
+
+        <h3>
+          Valor das promoções
+        </h3>
+
+        <p>
+          O valor das promoções ativas e expiradas é
+          apresentado nas estatísticas administrativas.
+        </p>
+      </div>
+
+    </div>
+
+
+    {/* ESTADOS */}
+    <div className="admin-promotion-info-card">
+
+      <div className="admin-promotion-info-icon">
+        📊
+      </div>
+
+      <div>
+        <span>ESTADOS</span>
+
+        <h3>
+          Acompanhamento
+        </h3>
+
+        <p>
+          O painel acompanha promoções pendentes,
+          ativas, expiradas, rejeitadas e canceladas.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+            {/* ===================================================== */}
+{/* PROMOÇÕES DE SERVIÇOS */}
+{/* ===================================================== */}
+
+<div className="admin-monetization-panel admin-promotions-list-panel">
+
+  <div className="admin-monetization-panel-header">
+    <div>
+      <span className="admin-monetization-eyebrow">
+        GESTÃO
+      </span>
+
+      <h2>Promoções de serviços</h2>
+
+      <p>
+        Analise e gerencie as promoções submetidas pelos prestadores.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      className="admin-promotion-refresh"
+      onClick={loadPromotionData}
+      disabled={promotionLoading}
+    >
+      {promotionLoading ? "A atualizar..." : "↻ Atualizar"}
+    </button>
+  </div>
+
+
+  {/* ERRO */}
+  {promotionError && (
+    <div className="admin-promotion-error">
+      {promotionError}
+    </div>
+  )}
+
+
+  {/* CARREGANDO */}
+  {promotionLoading && promotions.length === 0 ? (
+    <div className="admin-transactions-empty">
+      <div className="admin-revenue-placeholder-icon">
+        ⏳
+      </div>
+
+      <strong>
+        Carregando promoções...
+      </strong>
+
+      <p>
+        Estamos buscando as promoções no servidor.
+      </p>
+    </div>
+
+  ) : promotions.length === 0 ? (
+
+    /* SEM PROMOÇÕES */
+    <div className="admin-transactions-empty">
+
+      <div className="admin-revenue-placeholder-icon">
+        🚀
+      </div>
+
+      <strong>
+        Nenhuma promoção registada
+      </strong>
+
+      <p>
+        Quando os prestadores criarem promoções,
+        elas aparecerão aqui.
+      </p>
+
+    </div>
+
+  ) : (
+
+    /* LISTA */
+    <div className="admin-promotions-table-wrapper">
+
+      <table className="admin-promotions-table">
+
+        <thead>
+          <tr>
+            <th>Serviço</th>
+            <th>Prestador</th>
+            <th>Preço</th>
+            <th>Duração</th>
+            <th>Estado</th>
+            <th>Validade</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {promotions.map((promotion) => {
+
+            const isPending =
+              promotion.status === "PENDING";
+
+            const isActionLoading =
+              promotionActionLoading === promotion.id;
+
+            return (
+              <tr key={promotion.id}>
+
+                {/* SERVIÇO */}
+                <td>
+                  <div className="admin-promotion-service">
+                    <strong>
+                      {promotion.service_title}
+                    </strong>
+
+                    <small>
+                      ID #{promotion.service_id}
+                    </small>
                   </div>
+                </td>
 
-                  <p>
-                    O serviço promovido recebe maior destaque para potenciais clientes durante o período definido.
-                  </p>
 
-                  <div className="admin-promotion-values">
-                    <div>
-                      <span>DURAÇÃO</span>
-                      <strong>{promotionSettings.duration} dias</strong>
-                    </div>
-                    <div>
-                      <span>PREÇO</span>
-                      <strong>{promotionSettings.price.toLocaleString("pt-MZ")} MT</strong>
-                    </div>
+                {/* PRESTADOR */}
+                <td>
+                  <div className="admin-promotion-provider">
+                    <strong>
+                      {promotion.provider_name}
+                    </strong>
+
+                    <small>
+                      {promotion.provider_email}
+                    </small>
                   </div>
-                </div>
+                </td>
 
-                <div className="admin-promotion-editor">
-                  <label>
-                    Duração
-                    <select
-                      value={promotionSettings.duration}
-                      onChange={(event) =>
-                        setPromotionSettings((current) => ({
-                          ...current,
-                          duration: Number(event.target.value)
-                        }))
-                      }
-                    >
-                      <option value={3}>3 dias</option>
-                      <option value={7}>7 dias</option>
-                      <option value={15}>15 dias</option>
-                      <option value={30}>30 dias</option>
-                    </select>
-                  </label>
 
-                  <label>
-                    Preço (MT)
-                    <input
-                      type="number"
-                      min="0"
-                      value={promotionSettings.price}
-                      onChange={(event) =>
-                        setPromotionSettings((current) => ({
-                          ...current,
-                          price: Number(event.target.value) || 0
-                        }))
-                      }
-                    />
-                  </label>
+                {/* PREÇO */}
+                <td>
+                  <strong>
+                    {Number(
+                      promotion.price || 0
+                    ).toLocaleString("pt-MZ")} MT
+                  </strong>
+                </td>
 
-                  <button
-                    type="button"
-                    className="admin-promotion-toggle"
-                    onClick={() =>
-                      setPromotionSettings((current) => ({
-                        ...current,
-                        active: !current.active
-                      }))
-                    }
+
+                {/* DURAÇÃO */}
+                <td>
+                  {promotion.duration_days} dias
+                </td>
+
+
+                {/* ESTADO */}
+                <td>
+                  <span
+                    className={`admin-promotion-status-badge ${getPromotionStatusClass(
+                      promotion.status
+                    )}`}
                   >
-                    {promotionSettings.active ? "Desativar promoção" : "Ativar promoção"}
-                  </button>
-                </div>
+                    {formatPromotionStatus(
+                      promotion.status
+                    )}
+                  </span>
+                </td>
 
-              </div>
 
-            </div>
+                {/* VALIDADE */}
+                <td>
+                  <div className="admin-promotion-dates">
+
+                    {promotion.status === "PENDING" ? (
+                      <small>
+                        Aguardando aprovação
+                      </small>
+                    ) : (
+                      <>
+                        <small>
+                          Início:{" "}
+                          {formatDate(
+                            promotion.starts_at
+                          )}
+                        </small>
+
+                        <small>
+                          Fim:{" "}
+                          {formatDate(
+                            promotion.expires_at
+                          )}
+                        </small>
+                      </>
+                    )}
+
+                  </div>
+                </td>
+
+
+                {/* AÇÕES */}
+                <td>
+                  {isPending ? (
+
+                    <div className="admin-promotion-actions">
+
+                      <button
+                        type="button"
+                        className="admin-promotion-approve"
+                        disabled={isActionLoading}
+                        onClick={() =>
+                          handlePromotionStatus(
+                            promotion.id,
+                            "ACTIVE"
+                          )
+                        }
+                      >
+                        {isActionLoading
+                          ? "..."
+                          : "Aprovar"}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="admin-promotion-reject"
+                        disabled={isActionLoading}
+                        onClick={() =>
+                          handlePromotionStatus(
+                            promotion.id,
+                            "REJECTED"
+                          )
+                        }
+                      >
+                        {isActionLoading
+                          ? "..."
+                          : "Rejeitar"}
+                      </button>
+
+                    </div>
+
+                  ) : (
+                    <span className="admin-promotion-no-action">
+                      —
+                    </span>
+                  )}
+                </td>
+
+              </tr>
+            );
+          })}
+
+        </tbody>
+
+      </table>
+
+    </div>
+  )}
+
+</div>
 
 
             {/* DESEMPENHO */}
@@ -3165,17 +4024,48 @@ function AdminDashboard() {
             <div className="admin-monetization-panel admin-promotion-performance">
 
               <div className="admin-monetization-panel-header">
+
                 <div>
-                  <span>DESEMPENHO</span>
-                  <h2>Resultados das promoções</h2>
+
+                  <span>
+                    DESEMPENHO
+                  </span>
+
+                  <h2>
+                    Resultados das promoções
+                  </h2>
+
                 </div>
+
               </div>
 
+
               <div className="admin-promotion-performance-grid">
-                <div><span>🚀</span><strong>—</strong><small>Serviços promovidos</small></div>
-                <div><span>👁️</span><strong>—</strong><small>Visualizações geradas</small></div>
-                <div><span>💬</span><strong>—</strong><small>Contactos gerados</small></div>
-                <div><span>💰</span><strong>— MT</strong><small>Receita</small></div>
+
+                <div>
+                  <span>🚀</span>
+                  <strong>—</strong>
+                  <small>Serviços promovidos</small>
+                </div>
+
+                <div>
+                  <span>👁️</span>
+                  <strong>—</strong>
+                  <small>Visualizações geradas</small>
+                </div>
+
+                <div>
+                  <span>💬</span>
+                  <strong>—</strong>
+                  <small>Contactos gerados</small>
+                </div>
+
+                <div>
+                  <span>💰</span>
+                  <strong>— MT</strong>
+                  <small>Receita</small>
+                </div>
+
               </div>
 
             </div>
@@ -3186,22 +4076,44 @@ function AdminDashboard() {
             <div className="admin-monetization-panel admin-transactions-panel">
 
               <div className="admin-monetization-panel-header">
+
                 <div>
-                  <span>HISTÓRICO</span>
-                  <h2>Transações recentes</h2>
+
+                  <span>
+                    HISTÓRICO
+                  </span>
+
+                  <h2>
+                    Transações recentes
+                  </h2>
+
                 </div>
 
-                <button type="button" className="admin-monetization-filter-button">
+
+                <button
+                  type="button"
+                  className="admin-monetization-filter-button"
+                >
                   Todas as transações ▾
                 </button>
+
               </div>
 
+
               <div className="admin-transactions-empty">
-                <div>🧾</div>
-                <strong>Nenhuma transação registada</strong>
+
+                <div>
+                  🧾
+                </div>
+
+                <strong>
+                  Nenhuma transação registada
+                </strong>
+
                 <p>
                   As transações aparecerão aqui quando o sistema de pagamentos estiver integrado.
                 </p>
+
               </div>
 
             </div>
@@ -3293,245 +4205,521 @@ function AdminDashboard() {
 
       )}
 
+
       {/* =====================================================
-    MODAL / PERFIL DO USUÁRIO
-===================================================== */}
+          MODAL / PERFIL DO USUÁRIO
+      ===================================================== */}
 
-{selectedUser && (
+      {selectedUser && (
 
-  <div
-    className="admin-user-modal-overlay"
-    onClick={closeUserDetails}
-  >
-
-    <div
-      className="admin-user-modal"
-      onClick={(event) =>
-        event.stopPropagation()
-      }
-    >
-
-      {/* HEADER */}
-
-      <div className="admin-user-modal-header">
-
-        <div>
-
-          <span className="admin-user-modal-eyebrow">
-            PERFIL DO USUÁRIO
-          </span>
-
-          <h2>
-            Informações da conta
-          </h2>
-
-        </div>
-
-        <button
-          className="admin-user-modal-close"
+        <div
+          className="admin-user-modal-overlay"
           onClick={closeUserDetails}
-          aria-label="Fechar"
         >
-          ×
-        </button>
 
-      </div>
-
-
-      {/* PERFIL PRINCIPAL */}
-
-      <div className="admin-user-profile">
-
-        <div className="admin-user-profile-avatar">
-
-          {selectedUser.name
-            ?.charAt(0)
-            .toUpperCase() || "U"}
-
-        </div>
-
-
-        <div className="admin-user-profile-main">
-
-          <h3>
-            {selectedUser.name || "Usuário"}
-          </h3>
-
-          <p>
-            {selectedUser.email || "-"}
-          </p>
-
-          <div className="admin-user-profile-badges">
-
-            <span
-              className={`admin-user-role-badge ${getRoleClass(
-                selectedUser.role
-              )}`}
-            >
-              {getRoleName(selectedUser.role)}
-            </span>
-
-            <span
-              className={
-                selectedUser.is_active
-                  ? "admin-user-status-badge active"
-                  : "admin-user-status-badge inactive"
-              }
-            >
-              <span />
-
-              {selectedUser.is_active
-                ? "Conta ativa"
-                : "Conta inativa"}
-            </span>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      {/* INFORMAÇÕES DA CONTA */}
-
-      <div className="admin-user-detail-section">
-
-        <div className="admin-user-detail-section-title">
-
-          <span>
-            🔐
-          </span>
-
-          <div>
-
-            <strong>
-              Informações da conta
-            </strong>
-
-            <small>
-              Dados básicos do usuário.
-            </small>
-
-          </div>
-
-        </div>
-
-
-        <div className="admin-user-info-grid">
-
-          <div className="admin-user-info-item">
-
-            <span>ID do usuário</span>
-
-            <strong>
-              #{selectedUser.id}
-            </strong>
-
-          </div>
-
-
-          <div className="admin-user-info-item">
-
-            <span>Função</span>
-
-            <strong>
-              {getRoleName(selectedUser.role)}
-            </strong>
-
-          </div>
-
-
-          <div className="admin-user-info-item">
-
-            <span>Email</span>
-
-            <strong>
-              {selectedUser.email || "-"}
-            </strong>
-
-          </div>
-
-
-          <div className="admin-user-info-item">
-
-            <span>Telefone</span>
-
-            <strong>
-              {selectedUser.phone || "-"}
-            </strong>
-
-          </div>
-
-
-          <div className="admin-user-info-item">
-
-            <span>Cadastro</span>
-
-            <strong>
-              {formatDate(selectedUser.created_at)}
-            </strong>
-
-          </div>
-
-
-          <div className="admin-user-info-item">
-
-            <span>Estado</span>
-
-            <strong
-              className={
-                selectedUser.is_active
-                  ? "text-success"
-                  : "text-danger"
-              }
-            >
-              {selectedUser.is_active
-                ? "Ativo"
-                : "Inativo"}
-            </strong>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      {/* PERFIL DE PRESTADOR */}
-
-      {isProviderUser(selectedUser) && (
-
-        <>
-
-          {(() => {
-
-            const provider =
-              getUserProviderProfile(
-                selectedUser.id
-              );
-
-            if (!provider) {
-              return null;
+          <div
+            className="admin-user-modal"
+            onClick={(event) =>
+              event.stopPropagation()
             }
+          >
 
-            return (
+            {/* =================================================
+                HEADER
+            ================================================= */}
+
+            <div className="admin-user-modal-header">
+
+              <div>
+
+                <span className="admin-user-modal-eyebrow">
+
+                  {userActivityView
+                    ? "ATIVIDADE DO USUÁRIO"
+                    : "PERFIL DO USUÁRIO"}
+
+                </span>
+
+                <h2>
+
+                  {userActivityView === "projects"
+                    ? "Projetos do usuário"
+                    : userActivityView === "services"
+                    ? "Serviços do usuário"
+                    : userActivityView === "reviews"
+                    ? "Avaliações do usuário"
+                    : userActivityView === "proposals"
+                    ? "Propostas do usuário"
+                    : "Informações da conta"}
+
+                </h2>
+
+              </div>
+
+
+              <button
+                className="admin-user-modal-close"
+                onClick={closeUserDetails}
+                aria-label="Fechar"
+              >
+                ×
+              </button>
+
+            </div>
+
+
+            {/* =================================================
+                PERFIL PRINCIPAL
+            ================================================= */}
+
+            <div className="admin-user-profile">
+
+              <div className="admin-user-profile-avatar">
+
+                {selectedUser.name
+                  ?.charAt(0)
+                  .toUpperCase() || "U"}
+
+              </div>
+
+
+              <div className="admin-user-profile-main">
+
+                <h3>
+                  {selectedUser.name || "Usuário"}
+                </h3>
+
+                <p>
+                  {selectedUser.email || "-"}
+                </p>
+
+                <div className="admin-user-profile-badges">
+
+                  <span
+                    className={`admin-user-role-badge ${getRoleClass(
+                      selectedUser.role
+                    )}`}
+                  >
+                    {getRoleName(selectedUser.role)}
+                  </span>
+
+                  <span
+                    className={
+                      selectedUser.is_active
+                        ? "admin-user-status-badge active"
+                        : "admin-user-status-badge inactive"
+                    }
+                  >
+
+                    <span />
+
+                    {selectedUser.is_active
+                      ? "Conta ativa"
+                      : "Conta inativa"}
+
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            {/* =================================================
+                INFORMAÇÕES DA CONTA
+            ================================================= */}
+
+            <div className="admin-user-detail-section">
+
+              <div className="admin-user-detail-section-title">
+
+                <span>
+                  🔐
+                </span>
+
+                <div>
+
+                  <strong>
+                    Informações da conta
+                  </strong>
+
+                  <small>
+                    Dados básicos do usuário.
+                  </small>
+
+                </div>
+
+              </div>
+
+
+              <div className="admin-user-info-grid">
+
+                <div className="admin-user-info-item">
+
+                  <span>
+                    ID do usuário
+                  </span>
+
+                  <strong>
+                    #{selectedUser.id}
+                  </strong>
+
+                </div>
+
+
+                <div className="admin-user-info-item">
+
+                  <span>
+                    Função
+                  </span>
+
+                  <strong>
+                    {getRoleName(selectedUser.role)}
+                  </strong>
+
+                </div>
+
+
+                <div className="admin-user-info-item">
+
+                  <span>
+                    Email
+                  </span>
+
+                  <strong>
+                    {selectedUser.email || "-"}
+                  </strong>
+
+                </div>
+
+
+                <div className="admin-user-info-item">
+
+                  <span>
+                    Telefone
+                  </span>
+
+                  <strong>
+                    {selectedUser.phone || "-"}
+                  </strong>
+
+                </div>
+
+
+                <div className="admin-user-info-item">
+
+                  <span>
+                    Cadastro
+                  </span>
+
+                  <strong>
+                    {formatDate(selectedUser.created_at)}
+                  </strong>
+
+                </div>
+
+
+                <div className="admin-user-info-item">
+
+                  <span>
+                    Estado
+                  </span>
+
+                  <strong
+                    className={
+                      selectedUser.is_active
+                        ? "text-success"
+                        : "text-danger"
+                    }
+                  >
+
+                    {selectedUser.is_active
+                      ? "Ativo"
+                      : "Inativo"}
+
+                  </strong>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            {/* =================================================
+                PERFIL DE PRESTADOR
+            ================================================= */}
+
+            {isProviderUser(selectedUser) && (
+
+              <>
+
+                {(() => {
+
+                  const provider =
+                    getUserProviderProfile(
+                      selectedUser.id
+                    );
+
+                  if (!provider) {
+                    return null;
+                  }
+
+                  return (
+
+                    <div className="admin-user-detail-section">
+
+                      <div className="admin-user-detail-section-title">
+
+                        <span>
+                          🔧
+                        </span>
+
+                        <div>
+
+                          <strong>
+                            Perfil profissional
+                          </strong>
+
+                          <small>
+                            Informações como prestador.
+                          </small>
+
+                        </div>
+
+                      </div>
+
+
+                      <div className="admin-provider-profile-card">
+
+                        <div className="admin-provider-profile-top">
+
+                          <div>
+
+                            <span>
+                              PROFISSÃO
+                            </span>
+
+                            <strong>
+                              {provider.profession || "-"}
+                            </strong>
+
+                          </div>
+
+
+                          <span
+                            className={
+                              provider.is_verified
+                                ? "admin-status success"
+                                : "admin-status warning"
+                            }
+                          >
+
+                            {provider.is_verified
+                              ? "✓ Verificado"
+                              : "Pendente"}
+
+                          </span>
+
+                        </div>
+
+
+                        <div className="admin-user-info-grid">
+
+                          <div className="admin-user-info-item">
+
+                            <span>
+                              Localização
+                            </span>
+
+                            <strong>
+                              {provider.location || "-"}
+                            </strong>
+
+                          </div>
+
+
+                          <div className="admin-user-info-item">
+
+                            <span>
+                              Experiência
+                            </span>
+
+                            <strong>
+
+                              {provider.experience_years !== null &&
+                              provider.experience_years !== undefined
+                                ? `${provider.experience_years} anos`
+                                : "-"}
+
+                            </strong>
+
+                          </div>
+
+
+                          <div className="admin-user-info-item">
+
+                            <span>
+                              Preço por hora
+                            </span>
+
+                            <strong>
+
+                              {provider.hourly_rate
+                                ? formatCurrency(
+                                    provider.hourly_rate
+                                  )
+                                : "-"}
+
+                            </strong>
+
+                          </div>
+
+
+                          <div className="admin-user-info-item">
+
+                            <span>
+                              Estado
+                            </span>
+
+                            <strong
+                              className={
+                                provider.is_active
+                                  ? "text-success"
+                                  : "text-danger"
+                              }
+                            >
+
+                              {provider.is_active
+                                ? "Ativo"
+                                : "Inativo"}
+
+                            </strong>
+
+                          </div>
+
+                        </div>
+
+
+                        {provider.bio && (
+
+                          <div className="admin-provider-bio">
+
+                            <span>
+                              BIOGRAFIA
+                            </span>
+
+                            <p>
+                              {provider.bio}
+                            </p>
+
+                          </div>
+
+                        )}
+
+                      </div>
+
+                    </div>
+
+                  );
+
+                })()}
+
+              </>
+
+            )}
+
+
+            {/* =================================================
+                CAPACIDADES
+            ================================================= */}
+
+            <div className="admin-user-detail-section">
+
+              <div className="admin-user-detail-section-title">
+
+                <span>
+                  🛡️
+                </span>
+
+                <div>
+
+                  <strong>
+                    O que este usuário pode fazer
+                  </strong>
+
+                  <small>
+                    Capacidades associadas à função da conta.
+                  </small>
+
+                </div>
+
+              </div>
+
+
+              <div className="admin-user-capabilities">
+
+                {getUserCapabilities(selectedUser).map(
+                  (capability, index) => (
+
+                    <div
+                      className="admin-user-capability"
+                      key={index}
+                    >
+
+                      <div className="admin-user-capability-icon">
+                        {capability.icon}
+                      </div>
+
+                      <div>
+
+                        <strong>
+                          {capability.title}
+                        </strong>
+
+                        <p>
+                          {capability.description}
+                        </p>
+
+                      </div>
+
+                      <span className="admin-user-capability-check">
+                        ✓
+                      </span>
+
+                    </div>
+
+                  )
+                )}
+
+              </div>
+
+            </div>
+
+
+            {/* =================================================
+                ATIVIDADE NA PLATAFORMA
+            ================================================= */}
+
+            {!userActivityView && (
 
               <div className="admin-user-detail-section">
 
                 <div className="admin-user-detail-section-title">
 
                   <span>
-                    🔧
+                    📊
                   </span>
 
                   <div>
 
                     <strong>
-                      Perfil profissional
+                      Atividade na plataforma
                     </strong>
 
                     <small>
-                      Informações como prestador.
+                      Clique numa categoria para consultar os registos deste usuário.
                     </small>
 
                   </div>
@@ -3539,111 +4727,261 @@ function AdminDashboard() {
                 </div>
 
 
-                <div className="admin-provider-profile-card">
-
-                  <div className="admin-provider-profile-top">
-
-                    <div>
-
-                      <span>
-                        PROFISSÃO
-                      </span>
-
-                      <strong>
-                        {provider.profession || "-"}
-                      </strong>
-
-                    </div>
+                <div className="admin-user-activity-grid">
 
 
-                    <span
-                      className={
-                        provider.is_verified
-                          ? "admin-status success"
-                          : "admin-status warning"
-                      }
-                    >
-                      {provider.is_verified
-                        ? "✓ Verificado"
-                        : "Pendente"}
+                  {/* PROJETOS */}
+
+                  <button
+                    type="button"
+                    className="admin-user-activity-card admin-user-activity-card-clickable"
+                    onClick={() =>
+                      openUserActivity("projects")
+                    }
+                  >
+
+                    <span>
+                      📋
                     </span>
 
+                    <strong>
+                      {
+                        getUserProjects(
+                          selectedUser.id
+                        ).length
+                      }
+                    </strong>
+
+                    <small>
+                      Projetos
+                    </small>
+
+                    <em>
+                      Ver projetos →
+                    </em>
+
+                  </button>
+
+
+                  {/* SERVIÇOS */}
+
+                  <button
+                    type="button"
+                    className="admin-user-activity-card admin-user-activity-card-clickable"
+                    onClick={() =>
+                      openUserActivity("services")
+                    }
+                  >
+
+                    <span>
+                      🛠️
+                    </span>
+
+                    <strong>
+                      {
+                        getUserServices(
+                          selectedUser.id
+                        ).length
+                      }
+                    </strong>
+
+                    <small>
+                      Serviços
+                    </small>
+
+                    <em>
+                      Ver serviços →
+                    </em>
+
+                  </button>
+
+
+                  {/* AVALIAÇÕES */}
+
+                  <button
+                    type="button"
+                    className="admin-user-activity-card admin-user-activity-card-clickable"
+                    onClick={() =>
+                      openUserActivity("reviews")
+                    }
+                  >
+
+                    <span>
+                      ⭐
+                    </span>
+
+                    <strong>
+                      {
+                        getUserReviews(
+                          selectedUser.id
+                        ).length
+                      }
+                    </strong>
+
+                    <small>
+                      Avaliações
+                    </small>
+
+                    <em>
+                      Ver avaliações →
+                    </em>
+
+                  </button>
+
+
+                  {/* PROPOSTAS */}
+
+                  <button
+                    type="button"
+                    className="admin-user-activity-card admin-user-activity-card-clickable"
+                    onClick={() =>
+                      openUserActivity("proposals")
+                    }
+                  >
+
+                    <span>
+                      💼
+                    </span>
+
+                    <strong>
+                      —
+                    </strong>
+
+                    <small>
+                      Propostas
+                    </small>
+
+                    <em>
+                      Ver propostas →
+                    </em>
+
+                  </button>
+
+                </div>
+
+              </div>
+
+            )}
+
+
+            {/* =================================================
+                LISTA DE PROJETOS DO USUÁRIO
+            ================================================= */}
+
+            {userActivityView === "projects" && (
+
+              <div className="admin-user-detail-section">
+
+                <div className="admin-user-activity-view-header">
+
+                  <button
+                    type="button"
+                    className="admin-user-activity-back"
+                    onClick={closeUserActivity}
+                  >
+                    ← Voltar
+                  </button>
+
+
+                  <div>
+
+                    <span>
+                      PROJETOS
+                    </span>
+
+                    <strong>
+                      Projetos publicados por este usuário
+                    </strong>
+
                   </div>
 
-
-                  <div className="admin-user-info-grid">
-
-                    <div className="admin-user-info-item">
-
-                      <span>Localização</span>
-
-                      <strong>
-                        {provider.location || "-"}
-                      </strong>
-
-                    </div>
+                </div>
 
 
-                    <div className="admin-user-info-item">
+                <div className="admin-user-activity-list">
 
-                      <span>Experiência</span>
+                  {getUserProjects(selectedUser.id).map(
+                    (project) => (
 
-                      <strong>
-                        {provider.experience_years !== null &&
-                        provider.experience_years !== undefined
-                          ? `${provider.experience_years} anos`
-                          : "-"}
-                      </strong>
-
-                    </div>
-
-
-                    <div className="admin-user-info-item">
-
-                      <span>Preço por hora</span>
-
-                      <strong>
-                        {provider.hourly_rate
-                          ? formatCurrency(
-                              provider.hourly_rate
-                            )
-                          : "-"}
-                      </strong>
-
-                    </div>
-
-
-                    <div className="admin-user-info-item">
-
-                      <span>Estado</span>
-
-                      <strong
-                        className={
-                          provider.is_active
-                            ? "text-success"
-                            : "text-danger"
-                        }
+                      <div
+                        className="admin-user-activity-list-card"
+                        key={project.id}
                       >
-                        {provider.is_active
-                          ? "Ativo"
-                          : "Inativo"}
+
+                        <div className="admin-user-activity-list-icon">
+                          📋
+                        </div>
+
+
+                        <div className="admin-user-activity-list-main">
+
+                          <div className="admin-user-activity-list-title-row">
+
+                            <strong>
+                              {project.title || "Projeto sem título"}
+                            </strong>
+
+                            <span
+                              className={`admin-status ${getStatusClass(
+                                project.status
+                              )}`}
+                            >
+                              {formatProjectStatus(
+                                project.status
+                              )}
+                            </span>
+
+                          </div>
+
+
+                          <p>
+                            {project.description ||
+                              "Sem descrição disponível."}
+                          </p>
+
+
+                          <div className="admin-user-activity-list-meta">
+
+                            <span>
+                              📂 {project.category || "Sem categoria"}
+                            </span>
+
+                            <span>
+                              📍 {project.location || "Sem localização"}
+                            </span>
+
+                            <span>
+                              💰 {formatCurrency(project.budget)}
+                            </span>
+
+                            <span>
+                              📅 {formatDate(project.created_at)}
+                            </span>
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    )
+                  )}
+
+
+                  {getUserProjects(selectedUser.id).length === 0 && (
+
+                    <div className="admin-empty">
+
+                      <div className="admin-user-activity-empty-icon">
+                        📋
+                      </div>
+
+                      <strong>
+                        Nenhum projeto encontrado
                       </strong>
-
-                    </div>
-
-                  </div>
-
-
-                  {provider.bio && (
-
-                    <div className="admin-provider-bio">
-
-                      <span>
-                        BIOGRAFIA
-                      </span>
 
                       <p>
-                        {provider.bio}
+                        Este usuário ainda não publicou nenhum projeto.
                       </p>
 
                     </div>
@@ -3654,257 +4992,405 @@ function AdminDashboard() {
 
               </div>
 
-            );
-
-          })()}
-
-        </>
-
-      )}
+            )}
 
 
-      {/* CAPACIDADES */}
+            {/* =================================================
+                LISTA DE SERVIÇOS DO USUÁRIO
+            ================================================= */}
 
-      <div className="admin-user-detail-section">
+            {userActivityView === "services" && (
 
-        <div className="admin-user-detail-section-title">
+              <div className="admin-user-detail-section">
 
-          <span>
-            🛡️
-          </span>
+                <div className="admin-user-activity-view-header">
 
-          <div>
-
-            <strong>
-              O que este usuário pode fazer
-            </strong>
-
-            <small>
-              Capacidades associadas à função da conta.
-            </small>
-
-          </div>
-
-        </div>
+                  <button
+                    type="button"
+                    className="admin-user-activity-back"
+                    onClick={closeUserActivity}
+                  >
+                    ← Voltar
+                  </button>
 
 
-        <div className="admin-user-capabilities">
+                  <div>
 
-          {getUserCapabilities(selectedUser).map(
-            (capability, index) => (
+                    <span>
+                      SERVIÇOS
+                    </span>
 
-              <div
-                className="admin-user-capability"
-                key={index}
-              >
+                    <strong>
+                      Serviços publicados por este usuário
+                    </strong>
 
-                <div className="admin-user-capability-icon">
-                  {capability.icon}
+                  </div>
+
                 </div>
 
-                <div>
+
+                <div className="admin-user-activity-list">
+
+                  {getUserServices(selectedUser.id).map(
+                    (service) => (
+
+                      <div
+                        className="admin-user-activity-list-card"
+                        key={service.id}
+                      >
+
+                        <div className="admin-user-activity-list-icon">
+                          🛠️
+                        </div>
+
+
+                        <div className="admin-user-activity-list-main">
+
+                          <div className="admin-user-activity-list-title-row">
+
+                            <strong>
+                              {service.title || "Serviço sem título"}
+                            </strong>
+
+                            <span
+                              className={
+                                service.is_active
+                                  ? "admin-status success"
+                                  : "admin-status danger"
+                              }
+                            >
+                              {service.is_active
+                                ? "Ativo"
+                                : "Inativo"}
+                            </span>
+
+                          </div>
+
+
+                          <p>
+                            {service.description ||
+                              "Sem descrição disponível."}
+                          </p>
+
+
+                          <div className="admin-user-activity-list-meta">
+
+                            <span>
+                              📂 {service.category_name || "Sem categoria"}
+                            </span>
+
+                            <span>
+                              💰 {formatCurrency(service.price)}
+                            </span>
+
+                            <span>
+                              📅 {formatDate(service.created_at)}
+                            </span>
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    )
+                  )}
+
+
+                  {getUserServices(selectedUser.id).length === 0 && (
+
+                    <div className="admin-empty">
+
+                      <div className="admin-user-activity-empty-icon">
+                        🛠️
+                      </div>
+
+                      <strong>
+                        Nenhum serviço encontrado
+                      </strong>
+
+                      <p>
+                        Este usuário ainda não publicou nenhum serviço.
+                      </p>
+
+                    </div>
+
+                  )}
+
+                </div>
+
+              </div>
+
+            )}
+
+
+            {/* =================================================
+                LISTA DE AVALIAÇÕES DO USUÁRIO
+            ================================================= */}
+
+            {userActivityView === "reviews" && (
+
+              <div className="admin-user-detail-section">
+
+                <div className="admin-user-activity-view-header">
+
+                  <button
+                    type="button"
+                    className="admin-user-activity-back"
+                    onClick={closeUserActivity}
+                  >
+                    ← Voltar
+                  </button>
+
+
+                  <div>
+
+                    <span>
+                      AVALIAÇÕES
+                    </span>
+
+                    <strong>
+                      Avaliações relacionadas a este usuário
+                    </strong>
+
+                  </div>
+
+                </div>
+
+
+                <div className="admin-user-activity-list">
+
+                  {getUserReviews(selectedUser.id).map(
+                    (review) => (
+
+                      <div
+                        className="admin-user-review-list-card"
+                        key={review.id}
+                      >
+
+                        <div className="admin-user-review-list-top">
+
+                          <div className="admin-avatar">
+                            {review.client_name
+                              ?.charAt(0)
+                              .toUpperCase() || "C"}
+                          </div>
+
+
+                          <div>
+
+                            <strong>
+                              {review.client_name ||
+                                "Cliente"}
+                            </strong>
+
+                            <span>
+                              {formatDate(
+                                review.created_at
+                              )}
+                            </span>
+
+                          </div>
+
+
+                          <div className="admin-stars">
+
+                            {"★".repeat(
+                              Number(review.rating) || 0
+                            )}
+
+                            {"☆".repeat(
+                              Math.max(
+                                0,
+                                5 -
+                                (Number(review.rating) || 0)
+                              )
+                            )}
+
+                          </div>
+
+                        </div>
+
+
+                        <p className="admin-review-comment">
+
+                          {review.comment ||
+                            "O cliente não deixou um comentário."}
+
+                        </p>
+
+
+                        <div className="admin-user-review-list-footer">
+
+                          <span>
+                            Prestador #{review.provider_id || "-"}
+                          </span>
+
+                        </div>
+
+                      </div>
+
+                    )
+                  )}
+
+
+                  {getUserReviews(selectedUser.id).length === 0 && (
+
+                    <div className="admin-empty">
+
+                      <div className="admin-user-activity-empty-icon">
+                        ⭐
+                      </div>
+
+                      <strong>
+                        Nenhuma avaliação encontrada
+                      </strong>
+
+                      <p>
+                        Não existem avaliações relacionadas a este usuário.
+                      </p>
+
+                    </div>
+
+                  )}
+
+                </div>
+
+              </div>
+
+            )}
+
+
+            {/* =================================================
+                PROPOSTAS
+            ================================================= */}
+
+            {userActivityView === "proposals" && (
+
+              <div className="admin-user-detail-section">
+
+                <div className="admin-user-activity-view-header">
+
+                  <button
+                    type="button"
+                    className="admin-user-activity-back"
+                    onClick={closeUserActivity}
+                  >
+                    ← Voltar
+                  </button>
+
+
+                  <div>
+
+                    <span>
+                      PROPOSTAS
+                    </span>
+
+                    <strong>
+                      Propostas deste usuário
+                    </strong>
+
+                  </div>
+
+                </div>
+
+
+                <div className="admin-empty">
+
+                  <div className="admin-user-activity-empty-icon">
+                    💼
+                  </div>
 
                   <strong>
-                    {capability.title}
+                    Propostas ainda não disponíveis
                   </strong>
 
                   <p>
-                    {capability.description}
+                    A área visual já está preparada. A listagem será ligada à API de propostas na próxima etapa.
                   </p>
 
                 </div>
 
-                <span className="admin-user-capability-check">
-                  ✓
-                </span>
-
               </div>
 
-            )
-          )}
-
-        </div>
-
-      </div>
+            )}
 
 
-      {/* ATIVIDADE */}
+            {/* =================================================
+                AÇÕES
+            ================================================= */}
 
-      <div className="admin-user-detail-section">
+            <div className="admin-user-modal-footer">
 
-        <div className="admin-user-detail-section-title">
+              <button
+                className="admin-user-modal-secondary"
+                onClick={
+                  userActivityView
+                    ? closeUserActivity
+                    : closeUserDetails
+                }
+              >
 
-          <span>
-            📊
-          </span>
+                {userActivityView
+                  ? "← Voltar"
+                  : "Fechar"}
 
-          <div>
-
-            <strong>
-              Atividade na plataforma
-            </strong>
-
-            <small>
-              Registos relacionados a este usuário.
-            </small>
-
-          </div>
-
-        </div>
+              </button>
 
 
-        <div className="admin-user-activity-grid">
+              {!userActivityView &&
+                selectedUser.id !== user?.id && (
 
-          <div className="admin-user-activity-card">
+                <button
+                  className={
+                    selectedUser.is_active
+                      ? "admin-user-modal-danger"
+                      : "admin-user-modal-success"
+                  }
+                  onClick={async () => {
 
-            <span>
-              📋
-            </span>
-
-            <strong>
-              {
-                projects.filter(
-                  (project) =>
-                    String(project.client_id) ===
-                    String(selectedUser.id)
-                ).length
-              }
-            </strong>
-
-            <small>
-              Projetos
-            </small>
-
-          </div>
+                    await handleUserStatus(
+                      selectedUser.id
+                    );
 
 
-          <div className="admin-user-activity-card">
-
-            <span>
-              🛠️
-            </span>
-
-            <strong>
-              {
-                services.filter(
-                  (service) =>
-                    String(service.provider_id) ===
-                    String(selectedUser.id)
-                ).length
-              }
-            </strong>
-
-            <small>
-              Serviços
-            </small>
-
-          </div>
+                    const updatedUsers =
+                      await getAdminUsers();
 
 
-          <div className="admin-user-activity-card">
-
-            <span>
-              ⭐
-            </span>
-
-            <strong>
-              {
-                reviews.filter(
-                  (review) =>
-                    String(review.provider_user_id) ===
-                    String(selectedUser.id)
-                ).length
-              }
-            </strong>
-
-            <small>
-              Avaliações
-            </small>
-
-          </div>
+                    const updated =
+                      updatedUsers.find(
+                        (item) =>
+                          String(item.id) ===
+                          String(selectedUser.id)
+                      );
 
 
-          <div className="admin-user-activity-card">
+                    setUsers(updatedUsers);
 
-            <span>
-              💼
-            </span>
 
-            <strong>
-              —
-            </strong>
+                    if (updated) {
+                      setSelectedUser(updated);
+                    }
 
-            <small>
-              Propostas
-            </small>
+                  }}
+                >
+
+                  {selectedUser.is_active
+                    ? "Desativar conta"
+                    : "Ativar conta"}
+
+                </button>
+
+              )}
+
+            </div>
 
           </div>
 
         </div>
 
-      </div>
-
-
-      {/* AÇÕES */}
-
-      <div className="admin-user-modal-footer">
-
-        <button
-          className="admin-user-modal-secondary"
-          onClick={closeUserDetails}
-        >
-          Fechar
-        </button>
-
-
-        {selectedUser.id !== user?.id && (
-
-          <button
-            className={
-              selectedUser.is_active
-                ? "admin-user-modal-danger"
-                : "admin-user-modal-success"
-            }
-            onClick={async () => {
-
-              await handleUserStatus(
-                selectedUser.id
-              );
-
-              const updatedUsers =
-                await getAdminUsers();
-
-              const updated =
-                updatedUsers.find(
-                  (item) =>
-                    String(item.id) ===
-                    String(selectedUser.id)
-                );
-
-              setUsers(updatedUsers);
-
-              if (updated) {
-                setSelectedUser(updated);
-              }
-
-            }}
-          >
-
-            {selectedUser.is_active
-              ? "Desativar conta"
-              : "Ativar conta"}
-
-          </button>
-
-        )}
-
-      </div>
-
-    </div>
-
-  </div>
-
-)}
+      )}
 
     </div>
 
@@ -3914,4 +5400,3 @@ function AdminDashboard() {
 
 
 export default AdminDashboard;
-

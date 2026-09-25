@@ -5,6 +5,7 @@ from app.core.dependencies import require_role
 from app.database.connection import get_db
 from app.models.user import User
 from app.models.plan import Plan
+from app.schemas.plan import PlanUpdate
 
 
 router = APIRouter(
@@ -92,12 +93,7 @@ def initialize_admin_plans(
 @router.patch("/{plan_id}")
 def update_admin_plan(
     plan_id: int,
-    name: str | None = None,
-    price: float | None = None,
-    period: str | None = None,
-    description: str | None = None,
-    badge: str | None = None,
-    is_active: bool | None = None,
+    data: PlanUpdate,
     current_user: User = Depends(require_role("ADMIN")),
     db: Session = Depends(get_db)
 ):
@@ -113,8 +109,13 @@ def update_admin_plan(
             detail="Plano não encontrado."
         )
 
-    if name is not None:
-        name = name.strip()
+    # =========================================================
+    # NOME
+    # =========================================================
+
+    if data.name is not None:
+
+        name = data.name.strip()
 
         if not name:
             raise HTTPException(
@@ -139,17 +140,29 @@ def update_admin_plan(
 
         plan.name = name
 
-    if price is not None:
-        if price < 0:
+
+    # =========================================================
+    # PREÇO
+    # =========================================================
+
+    if data.price is not None:
+
+        if data.price < 0:
             raise HTTPException(
                 status_code=400,
                 detail="O preço não pode ser negativo."
             )
 
-        plan.price = price
+        plan.price = data.price
 
-    if period is not None:
-        period = period.strip()
+
+    # =========================================================
+    # PERÍODO
+    # =========================================================
+
+    if data.period is not None:
+
+        period = data.period.strip()
 
         if not period:
             raise HTTPException(
@@ -159,8 +172,14 @@ def update_admin_plan(
 
         plan.period = period
 
-    if description is not None:
-        description = description.strip()
+
+    # =========================================================
+    # DESCRIÇÃO
+    # =========================================================
+
+    if data.description is not None:
+
+        description = data.description.strip()
 
         if not description:
             raise HTTPException(
@@ -170,17 +189,37 @@ def update_admin_plan(
 
         plan.description = description
 
-    if badge is not None:
-        plan.badge = badge.strip()
 
-    if is_active is not None:
-        plan.is_active = is_active
+    # =========================================================
+    # BADGE
+    # =========================================================
+
+    if data.badge is not None:
+
+        plan.badge = data.badge.strip()
+
+
+    # =========================================================
+    # ESTADO
+    # =========================================================
+
+    if data.is_active is not None:
+
+        plan.is_active = data.is_active
+
+
+    # =========================================================
+    # GUARDAR
+    # =========================================================
 
     db.commit()
+
     db.refresh(plan)
+
 
     return {
         "message": "Plano atualizado com sucesso.",
+
         "plan": {
             "id": plan.id,
             "name": plan.name,

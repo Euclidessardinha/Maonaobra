@@ -79,6 +79,29 @@ export async function getAdminUsers() {
   );
 }
 
+// =========================================================
+// ASSINATURA DO USUÁRIO
+// =========================================================
+
+export async function getAdminUserSubscription(userId) {
+
+  const token = getToken();
+
+  const response = await fetch(
+    `${API_URL}/admin/users/${userId}/subscription`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return await handleResponse(
+    response,
+    "Erro ao buscar assinatura do usuário."
+  );
+}
+
 
 export async function updateUserStatus(userId) {
 
@@ -294,5 +317,60 @@ export async function updateAdminPromotionStatus(
   return await handleResponse(
     response,
     "Erro ao atualizar o status da promoção."
+  );
+}
+
+// =========================================================
+// PLANOS
+// =========================================================
+
+export async function getAdminPlans() {
+
+  const token = getToken();
+
+  const response = await fetch(
+    `${API_URL}/admin/plans`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return await handleResponse(
+    response,
+    "Erro ao buscar planos."
+  );
+}
+
+
+// =========================================================
+// ATUALIZAR PLANO
+// =========================================================
+
+export async function updateAdminPlan(
+  planId,
+  planData
+) {
+
+  const token = getToken();
+
+  const response = await fetch(
+    `${API_URL}/admin/plans/${planId}`,
+    {
+      method: "PATCH",
+
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+
+      body: JSON.stringify(planData),
+    }
+  );
+
+  return await handleResponse(
+    response,
+    "Erro ao atualizar o plano."
   );
 }

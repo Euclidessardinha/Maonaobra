@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import require_role
@@ -63,3 +63,61 @@ def get_admin_subscriptions(
     db.commit()
 
     return result
+
+
+@router.post("/initialize-free")
+def initialize_free_subscriptions(
+    current_user: User = Depends(require_role("ADMIN")),
+    db: Session = Depends(get_db)
+):
+    # Procurar o plano Gratuito
+    free_plan = (
+        db.query(Plan)
+        .filter(
+            Plan.name == "Gratuito",
+            Plan.is_active == True
+        )
+        .first()
+    )
+
+    if not free_plan:
+        raise HTTPException(
+            status_code=404,
+            detail="O plano Gratuito não está configurado."
+        )
+
+    # Buscar todos os utilizadores
+    users = db.query(User).all()
+
+    created = 0
+
+    for user in users:
+
+        # Verificar se o utilizador já possui alguma assinatura
+        existing_subscription = (
+            db.query(Subscription)
+            .filter(
+                Subscription.user_id == user.id
+            )
+            .first()
+        )
+
+        # Se já possui, não fazer nada
+        if existing_subscription:
+            continue
+
+        subscription = Subscription(
+            user_id=user.id,
+            plan_id=free_plan.id,
+            status="ACTIVE"
+        )
+
+        db.add(subscription)
+        created += 1
+
+    db.commit()
+
+    return {
+        "message": "Assinaturas gratuitas inicializadas com sucesso.",
+        "created": created
+    }

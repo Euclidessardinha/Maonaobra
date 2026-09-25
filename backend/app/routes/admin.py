@@ -12,6 +12,8 @@ from app.models.service import Service
 from app.models.service_promotion import ServicePromotion
 from app.models.review import Review
 from app.models.category import Category
+from app.models.subscription import Subscription
+from app.models.plan import Plan
 
 router = APIRouter(
     prefix="/admin",
@@ -109,6 +111,90 @@ def get_admin_users(
         }
         for user in users
     ]
+
+
+# =========================================================
+# ASSINATURA DO USUÁRIO
+# =========================================================
+
+@router.get("/users/{user_id}/subscription")
+def get_user_subscription(
+    user_id: int,
+    current_user: User = Depends(require_role("ADMIN")),
+    db: Session = Depends(get_db)
+):
+
+    user = (
+        db.query(User)
+        .filter(User.id == user_id)
+        .first()
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Usuário não encontrado."
+        )
+
+    subscription_data = (
+        db.query(
+            Subscription,
+            Plan
+        )
+        .join(
+            Plan,
+            Subscription.plan_id == Plan.id
+        )
+        .filter(
+            Subscription.user_id == user_id
+        )
+        .order_by(
+            Subscription.created_at.desc()
+        )
+        .first()
+    )
+
+    if subscription_data is None:
+        return {
+            "user_id": user.id,
+            "user_name": user.name,
+            "subscription": None
+        }
+
+    subscription, plan = subscription_data
+
+    now = datetime.now(timezone.utc)
+
+    # Verificar se a assinatura está expirada
+    if (
+        subscription.status == "ACTIVE"
+        and subscription.expires_at is not None
+        and subscription.expires_at <= now
+    ):
+        subscription.status = "EXPIRED"
+        db.commit()
+        db.refresh(subscription)
+
+    return {
+        "user_id": user.id,
+        "user_name": user.name,
+        "user_email": user.email,
+
+        "subscription": {
+            "id": subscription.id,
+
+            "plan_id": plan.id,
+            "plan_name": plan.name,
+            "plan_price": float(plan.price),
+
+            "status": subscription.status,
+
+            "starts_at": subscription.starts_at,
+            "expires_at": subscription.expires_at,
+
+            "created_at": subscription.created_at
+        }
+    }
 
 
 # =========================================================

@@ -7,6 +7,7 @@ import "./AdminDashboard.css";
 import {
   getAdminStats,
   getAdminUsers,
+  getAdminUserSubscription,
   updateUserStatus,
   getAdminProviders,
   updateProviderVerification,
@@ -15,7 +16,9 @@ import {
   getAdminReviews,
   getAdminServicePromotions,
   getAdminPromotionStats,
-  updateAdminPromotionStatus
+  updateAdminPromotionStatus,
+  getAdminPlans,
+  updateAdminPlan,
 } from "../api/admin";
 
 
@@ -34,6 +37,9 @@ function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState(null);
 
   const [userActivityView, setUserActivityView] = useState(null);
+
+  const [userSubscription, setUserSubscription] = useState(null);
+  const [loadingUserSubscription, setLoadingUserSubscription] = useState(false);
 
 
   // =========================================================
@@ -101,54 +107,43 @@ function AdminDashboard() {
   const [editingPlan, setEditingPlan] = useState(null);
 
 
-  const [plans, setPlans] = useState([
-    {
-      id: "free",
-      name: "Gratuito",
-      price: 0,
-      period: "mês",
-      description: "Recursos essenciais para começar.",
-      badge: "Plano base",
-      features: [
-        "Criar serviços",
-        "Receber pedidos",
-        "Enviar propostas",
-        "Chat",
-        "Avaliações"
-      ]
-    },
-    {
-      id: "professional",
-      name: "Profissional",
-      price: 499,
-      period: "mês",
-      description: "Mais visibilidade e estatísticas.",
-      badge: "Mais utilizado",
-      features: [
-        "Tudo do Gratuito",
-        "Ver visitantes do perfil",
-        "Estatísticas",
-        "Serviços mais vistos",
-        "Destaque como prestador",
-        "Benefícios em promoções"
-      ]
-    },
-    {
-      id: "premium",
-      name: "Premium",
-      price: 999,
-      period: "mês",
-      description: "Mais recursos para ganhar visibilidade.",
-      badge: "Premium",
-      features: [
-        "Tudo do Profissional",
-        "Maior destaque",
-        "Mais visibilidade",
-        "Promoções incluídas",
-        "Estatísticas avançadas"
-      ]
-    }
-  ]);
+  const [plans, setPlans] = useState([]);
+
+  const [plansLoading, setPlansLoading] = useState(false);
+  const [plansError, setPlansError] = useState("");
+
+
+  // =========================================================
+// FEATURES VISUAIS DOS PLANOS
+// =========================================================
+
+  const planFeatures = {
+    Gratuito: [
+      "Criar serviços",
+      "Receber pedidos",
+      "Enviar propostas",
+      "Chat",
+      "Avaliações"
+    ],
+
+    Profissional: [
+      "Tudo do Gratuito",
+      "Ver visitantes do perfil",
+      "Estatísticas",
+      "Serviços mais vistos",
+      "Destaque como prestador",
+      "Benefícios em promoções"
+    ],
+
+    Premium: [
+      "Tudo do Profissional",
+      "Maior destaque",
+      "Mais visibilidade",
+      "Promoções incluídas",
+      "Estatísticas avançadas"
+    ]
+  };
+
 
 
   // =========================================================
@@ -217,6 +212,47 @@ function AdminDashboard() {
 
 
   // =========================================================
+// CARREGAR PLANOS
+// =========================================================
+
+async function loadPlans() {
+
+  try {
+
+    setPlansLoading(true);
+    setPlansError("");
+
+    const plansData = await getAdminPlans();
+
+    const plansWithFeatures = plansData.map((plan) => ({
+      ...plan,
+      features:
+        planFeatures[plan.name] || []
+    }));
+
+    setPlans(plansWithFeatures);
+
+  } catch (err) {
+
+    console.error(
+      "Erro ao carregar planos:",
+      err
+    );
+
+    setPlansError(
+      err.message ||
+      "Não foi possível carregar os planos."
+    );
+
+  } finally {
+
+    setPlansLoading(false);
+
+  }
+}
+
+
+  // =========================================================
 // CARREGAR PROMOÇÕES
 // =========================================================
 
@@ -252,6 +288,65 @@ function AdminDashboard() {
     }
   }
 
+
+  // =========================================================
+// ATUALIZAR PLANO
+// =========================================================
+
+async function handlePlanUpdate(plan) {
+
+  try {
+
+    setPlansLoading(true);
+    setPlansError("");
+
+    const updatedPlan = await updateAdminPlan(
+      plan.id,
+      {
+        name: plan.name,
+        price: Number(plan.price) || 0,
+        period: plan.period,
+        description: plan.description,
+        badge: plan.badge,
+        is_active: plan.is_active
+      }
+    );
+
+    setPlans((current) =>
+      current.map((item) =>
+        item.id === updatedPlan.id
+          ? {
+              ...updatedPlan,
+              features:
+                planFeatures[updatedPlan.name] || []
+            }
+          : item
+      )
+    );
+
+    setEditingPlan(null);
+
+  } catch (err) {
+
+    console.error(
+      "Erro ao atualizar plano:",
+      err
+    );
+
+    setPlansError(
+      err.message ||
+      "Não foi possível atualizar o plano."
+    );
+
+  } finally {
+
+    setPlansLoading(false);
+
+  }
+}
+
+
+
   async function handlePromotionStatus(promotionId, status) {
     try {
       setPromotionActionLoading(promotionId);
@@ -283,6 +378,7 @@ function AdminDashboard() {
   useEffect(() => {
     if (activeSection === "monetization") {
       loadPromotionData();
+      loadPlans();
     }
   }, [activeSection]);
 
@@ -519,11 +615,26 @@ function AdminDashboard() {
   // DETALHES DO USUÁRIO
   // =========================================================
 
-  function openUserDetails(item) {
-
+  async function openUserDetails(item) {
     setSelectedUser(item);
     setUserActivityView(null);
+    setUserSubscription(null);
+    setLoadingUserSubscription(true);
 
+    try {
+      const subscriptionData = await getAdminUserSubscription(item.id);
+
+      setUserSubscription(subscriptionData);
+    } catch (err) {
+      console.error(
+        "Erro ao carregar assinatura do usuário:",
+        err
+      );
+
+      setUserSubscription(null);
+    } finally {
+      setLoadingUserSubscription(false);
+    }
   }
 
 
@@ -531,6 +642,8 @@ function AdminDashboard() {
 
     setSelectedUser(null);
     setUserActivityView(null);
+    setUserSubscription(null);
+    setLoadingUserSubscription(false);
 
   }
 
@@ -937,6 +1050,39 @@ function AdminDashboard() {
       }
     ).format(value);
 
+  }
+
+  function getSubscriptionStatusName(status) {
+    switch (status) {
+      case "ACTIVE":
+        return "Ativa";
+
+      case "EXPIRED":
+        return "Expirada";
+
+      case "CANCELLED":
+        return "Cancelada";
+
+      default:
+        return status || "Sem assinatura";
+    }
+  }
+
+
+  function getSubscriptionStatusClass(status) {
+    switch (status) {
+      case "ACTIVE":
+        return "active";
+
+      case "EXPIRED":
+        return "expired";
+
+      case "CANCELLED":
+        return "cancelled";
+
+      default:
+        return "inactive";
+    }
   }
 
 
@@ -3450,6 +3596,14 @@ function AdminDashboard() {
                   Os planos definem recursos de visibilidade. Nesta fase, não limitam a criação de projetos ou serviços.
                 </p>
 
+                {plansError && (
+                  <div className="admin-promotion-error">
+                    {plansError}
+                  </div>
+                )}
+
+
+
               </div>
 
               <div className="admin-plans-grid">
@@ -3458,14 +3612,14 @@ function AdminDashboard() {
 
                   <div
                     className={`admin-plan-card ${
-                      plan.id === "professional"
+                      plan.name === "Profissional"
                         ? "featured"
                         : ""
                     }`}
                     key={plan.id}
                   >
 
-                    {plan.id === "professional" && (
+                    {plan.name === "Profissional" && (
 
                       <span className="admin-plan-featured-badge">
                         MAIS UTILIZADO
@@ -3531,65 +3685,68 @@ function AdminDashboard() {
 
                     {editingPlan === plan.id ? (
 
-                      <div className="admin-plan-edit-box">
+  <div className="admin-plan-edit-box">
 
-                        <label>
+    <label>
 
-                          Preço mensal
+      Preço mensal
 
-                          <input
-                            type="number"
-                            min="0"
-                            value={plan.price}
-                            onChange={(event) => {
+      <input
+        type="number"
+        min="0"
+        value={plan.price}
+        onChange={(event) => {
 
-                              const value =
-                                Number(event.target.value);
+          const value =
+            Number(event.target.value);
 
-                              setPlans((current) =>
-                                current.map((item) =>
-                                  item.id === plan.id
-                                    ? {
-                                        ...item,
-                                        price: Number.isFinite(value)
-                                          ? value
-                                          : 0
-                                      }
-                                    : item
-                                )
-                              );
+          setPlans((current) =>
+            current.map((item) =>
+              item.id === plan.id
+                ? {
+                    ...item,
+                    price: Number.isFinite(value)
+                      ? value
+                      : 0
+                  }
+                : item
+            )
+          );
 
-                            }}
-                          />
+        }}
+      />
 
-                        </label>
+    </label>
 
 
-                        <button
-                          type="button"
-                          className="admin-plan-save"
-                          onClick={() =>
-                            setEditingPlan(null)
-                          }
-                        >
-                          Guardar
-                        </button>
+    <button
+      type="button"
+      className="admin-plan-save"
+      onClick={() =>
+        handlePlanUpdate(plan)
+      }
+      disabled={plansLoading}
+    >
+      {plansLoading
+        ? "A guardar..."
+        : "Guardar"}
+    </button>
 
-                      </div>
+  </div>
 
-                    ) : (
+) : (
 
-                      <button
-                        type="button"
-                        className="admin-plan-edit"
-                        onClick={() =>
-                          setEditingPlan(plan.id)
-                        }
-                      >
-                        Editar plano
-                      </button>
+  <button
+    type="button"
+    className="admin-plan-edit"
+    onClick={() =>
+      setEditingPlan(plan.id)
+    }
+  >
+    Editar plano
+  </button>
 
-                    )}
+)}
 
                   </div>
 
@@ -4445,6 +4602,131 @@ function AdminDashboard() {
               </div>
 
             </div>
+
+
+            {/* =====================================================
+    ASSINATURA
+===================================================== */}
+
+<section className="admin-user-modal-section admin-user-subscription-section">
+
+  <div className="admin-user-section-header">
+    <div>
+      <span className="admin-section-eyebrow">
+        MONETIZAÇÃO
+      </span>
+
+      <h3>Assinatura</h3>
+    </div>
+  </div>
+
+  {loadingUserSubscription ? (
+    <div className="admin-user-subscription-loading">
+      <span>Carregando assinatura...</span>
+    </div>
+  ) : userSubscription?.subscription ? (
+
+    <div className="admin-user-subscription-card">
+
+      <div className="admin-user-subscription-top">
+
+        <div>
+          <span className="admin-user-subscription-label">
+            Plano atual
+          </span>
+
+          <h4>
+            {userSubscription.subscription.plan_name}
+          </h4>
+        </div>
+
+        <span
+          className={`admin-subscription-status ${getSubscriptionStatusClass(
+            userSubscription.subscription.status
+          )}`}
+        >
+          {getSubscriptionStatusName(
+            userSubscription.subscription.status
+          )}
+        </span>
+
+      </div>
+
+
+      <div className="admin-user-subscription-price">
+
+        <strong>
+          {formatCurrency(
+            userSubscription.subscription.plan_price
+          )}
+        </strong>
+
+        <span>
+          / mês
+        </span>
+
+      </div>
+
+
+      <div className="admin-user-subscription-grid">
+
+        <div className="admin-user-subscription-item">
+          <span>Início</span>
+
+          <strong>
+            {formatDate(
+              userSubscription.subscription.starts_at
+            )}
+          </strong>
+        </div>
+
+
+        <div className="admin-user-subscription-item">
+          <span>Expiração</span>
+
+          <strong>
+            {userSubscription.subscription.expires_at
+              ? formatDate(
+                  userSubscription.subscription.expires_at
+                )
+              : "Sem expiração"}
+          </strong>
+        </div>
+
+
+        <div className="admin-user-subscription-item">
+          <span>ID da assinatura</span>
+
+          <strong>
+            #{userSubscription.subscription.id}
+          </strong>
+        </div>
+
+      </div>
+
+    </div>
+
+  ) : (
+
+    <div className="admin-user-subscription-empty">
+
+      <div className="admin-user-subscription-empty-icon">
+        ○
+      </div>
+
+      <div>
+        <strong>Sem assinatura</strong>
+
+        <p>
+          Este usuário ainda não possui uma assinatura registrada.
+        </p>
+      </div>
+
+    </div>
+
+  )}
+
+</section>
 
 
             {/* =================================================

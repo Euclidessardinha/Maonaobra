@@ -1,5 +1,7 @@
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
 
 from app.core.dependencies import (
 get_current_user,
@@ -10,6 +12,9 @@ from app.database.connection import get_db
 
 from app.models.user import User
 from app.models.provider import ProviderProfile
+
+from app.models.plan import Plan
+from app.models.subscription import Subscription
 
 from app.schemas.user import (
 UserCreate,
@@ -38,13 +43,12 @@ tags=["Authentication"]
 def register(
     user_data: UserCreate,
     db: Session = Depends(get_db)
-    ):
+):
     existing_user = (
-    db.query(User)
-    .filter(User.email == user_data.email)
-    .first()
+        db.query(User)
+        .filter(User.email == user_data.email)
+        .first()
     )
-
 
     if existing_user:
         raise HTTPException(
@@ -63,6 +67,29 @@ def register(
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    # =====================================================
+    # ATRIBUIR PLANO GRATUITO AUTOMATICAMENTE
+    # =====================================================
+
+    free_plan = (
+        db.query(Plan)
+        .filter(
+            Plan.name == "Gratuito",
+            Plan.is_active == True
+        )
+        .first()
+    )
+
+    if free_plan:
+        subscription = Subscription(
+            user_id=new_user.id,
+            plan_id=free_plan.id,
+            status="ACTIVE"
+        )
+
+        db.add(subscription)
+        db.commit()
 
     return {
         "message": "Usuário criado com sucesso!",

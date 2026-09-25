@@ -10,6 +10,8 @@ from app.models.service import Service
 from app.models.service_promotion import ServicePromotion
 
 from app.models.plan import Plan
+from app.models.subscription import Subscription
+
 
 from app.models.service_request import ServiceRequest
 from app.models.review import Review
@@ -43,7 +45,8 @@ from app.routes.chat import router as chat_router
 from app.routes.notifications import router as notifications_router
 from app.routes.admin import router as admin_router
 from app.routes import service_promotions
-
+from app.routes import plans
+from app.routes import subscriptions
 
 # Criar as tabelas
 Base.metadata.create_all(bind=engine)
@@ -83,7 +86,12 @@ app.include_router(admin_router)
 app.include_router(
     service_promotions.router
 )
-
+app.include_router(
+    plans.router
+)
+app.include_router(
+    subscriptions.router
+)
 
 @app.get("/")
 def root():

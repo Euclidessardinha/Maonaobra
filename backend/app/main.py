@@ -11,6 +11,8 @@ from app.models.service_promotion import ServicePromotion
 
 from app.models.plan import Plan
 from app.models.subscription import Subscription
+from app.models.promotion_event import PromotionEvent
+
 
 
 from app.models.service_request import ServiceRequest

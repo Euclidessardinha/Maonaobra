@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field
 class ConversationCreate(BaseModel):
     provider_id: int
 
+    service_id: int | None = None
+
 
 class ConversationResponse(BaseModel):
     id: int

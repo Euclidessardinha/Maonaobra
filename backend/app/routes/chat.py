@@ -1,12 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from datetime import datetime, timezone
+
 from app.core.dependencies import get_current_user
 from app.database.connection import get_db
 
 from app.models.user import User
 from app.models.provider import ProviderProfile
 from app.models.conversation import Conversation
+from app.models.service import Service
+
+from app.models.service_promotion import ServicePromotion
+from app.models.promotion_event import PromotionEvent
 
 from app.models.message import Message
 from app.models.notification import Notification
@@ -58,6 +64,35 @@ def create_conversation(
             detail="Profissional não encontrado."
         )
 
+
+        # Verificar o serviço, quando informado
+    service = None
+
+    if conversation_data.service_id is not None:
+
+        service = (
+            db.query(Service)
+            .filter(
+                Service.id ==
+                conversation_data.service_id
+            )
+            .first()
+        )
+
+        if not service:
+            raise HTTPException(
+                status_code=404,
+                detail="Serviço não encontrado."
+            )
+
+        # Garantir que o serviço pertence ao profissional
+        if service.provider_id != provider.id:
+            raise HTTPException(
+                status_code=400,
+                detail="Este serviço não pertence ao profissional."
+            )
+    
+
     # Impedir conversa consigo mesmo
     if provider.user_id == current_user.id:
         raise HTTPException(
@@ -92,10 +127,40 @@ def create_conversation(
     # Criar nova conversa
     conversation = Conversation(
         client_id=current_user.id,
-        provider_id=provider.id
+        provider_id=provider.id,
+        service_id=conversation_data.service_id
     )
 
     db.add(conversation)
+
+    # ==========================================
+    # REGISTRAR CONTACTO DA PROMOÇÃO
+    # ==========================================
+
+    if service:
+
+        now = datetime.now(timezone.utc)
+
+        promotion = (
+            db.query(ServicePromotion)
+            .filter(
+                ServicePromotion.service_id == service.id,
+                ServicePromotion.status == "ACTIVE",
+                ServicePromotion.starts_at <= now,
+                ServicePromotion.expires_at > now
+            )
+            .first()
+        )
+
+        if promotion:
+
+            contact_event = PromotionEvent(
+                promotion_id=promotion.id,
+                event_type="CONTACT"
+            )
+
+            db.add(contact_event)
+
     db.commit()
     db.refresh(conversation)
 

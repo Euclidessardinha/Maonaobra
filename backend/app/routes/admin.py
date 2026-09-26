@@ -663,6 +663,14 @@ def get_admin_service_promotion_stats(
         .count()
     )
 
+    contacts = (
+        db.query(PromotionEvent)
+        .filter(
+            PromotionEvent.event_type == "CONTACT"
+        )
+        .count()
+    )
+
     return {
         "total": total,
         "pending": pending,
@@ -673,6 +681,7 @@ def get_admin_service_promotion_stats(
         "revenue": revenue, 
         "promoted_services": promoted_services,
         "views": views,
+        "contacts": contacts,
     }
 
 

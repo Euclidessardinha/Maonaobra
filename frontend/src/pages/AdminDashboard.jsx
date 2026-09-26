@@ -4224,7 +4224,7 @@ async function handlePlanUpdate(plan) {
 
                 <div>
                   <span>💬</span>
-                  <strong>—</strong>
+                  <strong>{promotionStats?.contacts ?? 0}</strong>
                   <small>Contactos gerados</small>
                 </div>
 

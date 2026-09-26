@@ -2,6 +2,8 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from sqlalchemy import func
+
 from app.core.dependencies import require_role
 from app.database.connection import get_db
 
@@ -584,6 +586,19 @@ def get_admin_service_promotion_stats(
         .all()
     )
 
+    promoted_services = (
+        db.query(
+            func.count(
+                func.distinct(ServicePromotion.service_id)
+            )
+        )
+        .filter(
+            ServicePromotion.status.in_(["ACTIVE", "EXPIRED"])
+        )
+        .scalar()
+        or 0
+    )
+
     now = datetime.now(timezone.utc)
 
     # Atualizar expiradas
@@ -646,7 +661,8 @@ def get_admin_service_promotion_stats(
         "expired": expired,
         "cancelled": cancelled,
         "rejected": rejected,
-        "revenue": revenue
+        "revenue": revenue, 
+        "promoted_services": promoted_services,
     }
 
 

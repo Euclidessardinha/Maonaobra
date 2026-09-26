@@ -374,3 +374,22 @@ export async function updateAdminPlan(
     "Erro ao atualizar o plano."
   );
 }
+
+
+export async function getAdminSubscriptionStats() {
+  const token = getToken();
+
+  const response = await fetch(
+    `${API_URL}/admin/subscriptions/stats`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return await handleResponse(
+    response,
+    "Erro ao buscar estatísticas das assinaturas."
+  );
+}

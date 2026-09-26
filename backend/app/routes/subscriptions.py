@@ -121,3 +121,65 @@ def initialize_free_subscriptions(
         "message": "Assinaturas gratuitas inicializadas com sucesso.",
         "created": created
     }
+
+
+# =========================================================
+# ESTATÍSTICAS DE ASSINATURAS
+# =========================================================
+
+@router.get("/stats")
+def get_subscription_stats(
+    current_user: User = Depends(require_role("ADMIN")),
+    db: Session = Depends(get_db)
+):
+    now = datetime.now(timezone.utc)
+
+    # Buscar todos os planos ativos
+    plans = (
+        db.query(Plan)
+        .filter(Plan.is_active == True)
+        .order_by(Plan.id.asc())
+        .all()
+    )
+
+    plan_stats = []
+
+    total = 0
+
+    for plan in plans:
+
+        count = (
+            db.query(Subscription)
+            .filter(
+                Subscription.plan_id == plan.id,
+                Subscription.status == "ACTIVE",
+                (
+                    (Subscription.expires_at.is_(None))
+                    | (Subscription.expires_at > now)
+                )
+            )
+            .count()
+        )
+
+        total += count
+
+        plan_stats.append({
+            "plan_id": plan.id,
+            "plan_name": plan.name,
+            "count": count
+        })
+
+    # Calcular percentagens
+    for item in plan_stats:
+        if total > 0:
+            item["percentage"] = round(
+                (item["count"] / total) * 100,
+                1
+            )
+        else:
+            item["percentage"] = 0
+
+    return {
+        "total": total,
+        "plans": plan_stats
+    }

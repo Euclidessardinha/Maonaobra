@@ -19,6 +19,7 @@ import {
   updateAdminPromotionStatus,
   getAdminPlans,
   updateAdminPlan,
+  getAdminSubscriptionStats,
 } from "../api/admin";
 
 
@@ -107,10 +108,14 @@ function AdminDashboard() {
   const [editingPlan, setEditingPlan] = useState(null);
 
 
+
   const [plans, setPlans] = useState([]);
 
   const [plansLoading, setPlansLoading] = useState(false);
   const [plansError, setPlansError] = useState("");
+
+  const [subscriptionStats, setSubscriptionStats] = useState(null);
+  const [subscriptionStatsLoading, setSubscriptionStatsLoading] = useState(false);
 
 
   // =========================================================
@@ -252,6 +257,24 @@ async function loadPlans() {
 }
 
 
+async function loadSubscriptionStats() {
+  try {
+    setSubscriptionStatsLoading(true);
+
+    const data = await getAdminSubscriptionStats();
+
+    setSubscriptionStats(data);
+  } catch (err) {
+    console.error(
+      "Erro ao carregar estatísticas das assinaturas:",
+      err
+    );
+  } finally {
+    setSubscriptionStatsLoading(false);
+  }
+}
+
+
   // =========================================================
 // CARREGAR PROMOÇÕES
 // =========================================================
@@ -300,7 +323,7 @@ async function handlePlanUpdate(plan) {
     setPlansLoading(true);
     setPlansError("");
 
-    const updatedPlan = await updateAdminPlan(
+    const response = await updateAdminPlan(
       plan.id,
       {
         name: plan.name,
@@ -311,6 +334,8 @@ async function handlePlanUpdate(plan) {
         is_active: plan.is_active
       }
     );
+
+    const updatedPlan = response.plan;
 
     setPlans((current) =>
       current.map((item) =>
@@ -379,6 +404,7 @@ async function handlePlanUpdate(plan) {
     if (activeSection === "monetization") {
       loadPromotionData();
       loadPlans();
+      loadSubscriptionStats();
     }
   }, [activeSection]);
 
@@ -3497,6 +3523,16 @@ async function handlePlanUpdate(plan) {
                       ASSINATURAS
                     </span>
 
+                    <div className="mb-4">
+  <p className="text-sm text-gray-500">
+    Total de assinaturas ativas
+  </p>
+
+  <p className="text-2xl font-bold text-gray-900">
+    {subscriptionStats?.total ?? 0}
+  </p>
+</div>
+
                     <h2>
                       Distribuição dos planos
                     </h2>
@@ -3505,69 +3541,44 @@ async function handlePlanUpdate(plan) {
 
                 </div>
 
-                <div className="admin-plan-distribution">
+                {subscriptionStatsLoading ? (
+  <div className="text-sm text-gray-500">
+    A carregar distribuição dos planos...
+  </div>
+) : subscriptionStats?.plans?.length ? (
+  <div className="space-y-4">
+    {subscriptionStats.plans.map((plan) => (
+      <div key={plan.plan_id}>
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-sm font-medium text-gray-700">
+            {plan.plan_name}
+          </span>
 
-                  <div className="admin-plan-distribution-row">
+          <span className="text-sm font-semibold text-gray-900">
+            {plan.percentage}%
+          </span>
+        </div>
 
-                    <div>
-                      <span className="dot free" />
-                      Gratuito
-                    </div>
+        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-blue-600 rounded-full transition-all duration-500"
+            style={{
+              width: `${plan.percentage}%`,
+            }}
+          />
+        </div>
 
-                    <strong>
-                      —
-                    </strong>
-
-                  </div>
-
-                  <div className="admin-plan-progress">
-                    <span style={{ width: "72%" }} />
-                  </div>
-
-
-                  <div className="admin-plan-distribution-row">
-
-                    <div>
-                      <span className="dot professional" />
-                      Profissional
-                    </div>
-
-                    <strong>
-                      —
-                    </strong>
-
-                  </div>
-
-                  <div className="admin-plan-progress">
-                    <span style={{ width: "21%" }} />
-                  </div>
-
-
-                  <div className="admin-plan-distribution-row">
-
-                    <div>
-                      <span className="dot premium" />
-                      Premium
-                    </div>
-
-                    <strong>
-                      —
-                    </strong>
-
-                  </div>
-
-                  <div className="admin-plan-progress">
-                    <span style={{ width: "7%" }} />
-                  </div>
-
-
-                  <p className="admin-monetization-note">
-
-                    Percentagens ilustrativas enquanto os dados de assinaturas não estiverem ligados ao backend.
-
-                  </p>
-
-                </div>
+        <div className="mt-1 text-xs text-gray-500">
+          {plan.count} {plan.count === 1 ? "assinatura" : "assinaturas"}
+        </div>
+      </div>
+    ))}
+  </div>
+) : (
+  <div className="text-sm text-gray-500">
+    Nenhuma assinatura encontrada.
+  </div>
+)}
 
               </div>
 
@@ -4201,7 +4212,7 @@ async function handlePlanUpdate(plan) {
 
                 <div>
                   <span>🚀</span>
-                  <strong>—</strong>
+                  <strong>{promotionStats?.promoted_services ?? 0}</strong>
                   <small>Serviços promovidos</small>
                 </div>
 
@@ -4219,7 +4230,7 @@ async function handlePlanUpdate(plan) {
 
                 <div>
                   <span>💰</span>
-                  <strong>— MT</strong>
+                  <strong>{Number(promotionStats?.revenue ?? 0).toLocaleString("pt-MZ")} MT</strong>
                   <small>Receita</small>
                 </div>
 

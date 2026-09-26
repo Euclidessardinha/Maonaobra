@@ -4218,7 +4218,7 @@ async function handlePlanUpdate(plan) {
 
                 <div>
                   <span>👁️</span>
-                  <strong>—</strong>
+                  <strong>{promotionStats?.views ?? 0}</strong>
                   <small>Visualizações geradas</small>
                 </div>
 

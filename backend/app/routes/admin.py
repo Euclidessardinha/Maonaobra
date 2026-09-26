@@ -16,6 +16,7 @@ from app.models.review import Review
 from app.models.category import Category
 from app.models.subscription import Subscription
 from app.models.plan import Plan
+from app.models.promotion_event import PromotionEvent
 
 router = APIRouter(
     prefix="/admin",
@@ -654,6 +655,14 @@ def get_admin_service_promotion_stats(
         ]
     )
 
+    views = (
+        db.query(PromotionEvent)
+        .filter(
+            PromotionEvent.event_type == "VIEW"
+        )
+        .count()
+    )
+
     return {
         "total": total,
         "pending": pending,
@@ -663,6 +672,7 @@ def get_admin_service_promotion_stats(
         "rejected": rejected,
         "revenue": revenue, 
         "promoted_services": promoted_services,
+        "views": views,
     }
 
 

@@ -10,6 +10,7 @@ from app.models.provider import ProviderProfile
 from app.models.service import Service
 from app.models.service_promotion import ServicePromotion
 from app.models.user import User
+from app.models.promotion_event import PromotionEvent
 
 
 router = APIRouter(
@@ -340,4 +341,53 @@ def cancel_service_promotion(
             "service_title": promotion.service.title,
             "status": promotion.status
         }
+    }
+
+
+# =========================================================
+# REGISTRAR VISUALIZAÇÃO DE PROMOÇÃO
+# =========================================================
+
+@router.post("/{promotion_id}/view")
+def register_promotion_view(
+    promotion_id: int,
+    db: Session = Depends(get_db)
+):
+    promotion = (
+        db.query(ServicePromotion)
+        .filter(ServicePromotion.id == promotion_id)
+        .first()
+    )
+
+    if not promotion:
+        raise HTTPException(
+            status_code=404,
+            detail="Promoção não encontrada."
+        )
+
+    now = datetime.now(timezone.utc)
+
+    # Só registrar visualizações de promoções ativas
+    if promotion.status != "ACTIVE":
+        raise HTTPException(
+            status_code=400,
+            detail="Esta promoção não está ativa."
+        )
+
+    if promotion.expires_at <= now:
+        raise HTTPException(
+            status_code=400,
+            detail="Esta promoção já expirou."
+        )
+
+    event = PromotionEvent(
+        promotion_id=promotion.id,
+        event_type="VIEW"
+    )
+
+    db.add(event)
+    db.commit()
+
+    return {
+        "message": "Visualização registrada."
     }

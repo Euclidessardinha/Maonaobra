@@ -38,6 +38,12 @@ class Conversation(Base):
         nullable=False
     )
 
+    service_id: Mapped[int | None] = mapped_column(
+        ForeignKey("services.id"),
+        nullable=True,
+        index=True
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -52,6 +58,11 @@ class Conversation(Base):
     provider = relationship(
         "ProviderProfile",
         foreign_keys=[provider_id]
+    )
+
+    service = relationship(
+        "Service",
+        foreign_keys=[service_id]
     )
 
     messages = relationship(

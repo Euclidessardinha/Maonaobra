@@ -15,10 +15,15 @@ from app.core.storage import (
 )
 from app.database.connection import get_db
 
+from datetime import datetime, timezone
+
 from app.models.category import Category
 from app.models.provider import ProviderProfile
 from app.models.service import Service
 from app.models.user import User
+from app.models.service_promotion import ServicePromotion
+
+from sqlalchemy import and_, case
 
 from app.schemas.services import ServiceCreate, ServiceUpdate
 
@@ -490,6 +495,7 @@ def list_my_services(
     ]
 
 
+
 @router.get("/")
 def list_services(
     search: str | None = None,
@@ -497,10 +503,23 @@ def list_services(
     location: str | None = None,
     db: Session = Depends(get_db)
 ):
+    now = datetime.now(timezone.utc)
+
     query = (
-        db.query(Service)
+        db.query(Service, ServicePromotion)
         .join(ProviderProfile)
         .join(Category)
+        .outerjoin(
+            ServicePromotion,
+            and_(
+                ServicePromotion.service_id == Service.id,
+                ServicePromotion.status == "ACTIVE",
+                ServicePromotion.starts_at.isnot(None),
+                ServicePromotion.starts_at <= now,
+                ServicePromotion.expires_at.isnot(None),
+                ServicePromotion.expires_at > now
+            )
+        )
         .filter(
             Service.is_active.is_(True)
         )
@@ -519,9 +538,7 @@ def list_services(
     if category_id is not None:
         category = (
             db.query(Category)
-            .filter(
-                Category.id == category_id
-            )
+            .filter(Category.id == category_id)
             .first()
         )
 
@@ -542,7 +559,17 @@ def list_services(
             )
         )
 
-    services = query.all()
+    results = (
+        query
+        .order_by(
+            case(
+                (ServicePromotion.id.isnot(None), 0),
+                else_=1
+            ),
+            Service.created_at.desc()
+        )
+        .all()
+    )
 
     return [
         {
@@ -551,10 +578,23 @@ def list_services(
             "description": service.description,
             "price": service.price,
             "image_url": service.image_url,
+
+            "is_promoted": promotion is not None,
+
+            "promotion": (
+                {
+                    "id": promotion.id,
+                    "starts_at": promotion.starts_at,
+                    "expires_at": promotion.expires_at
+                }
+                if promotion else None
+            ),
+
             "category": {
                 "id": service.category.id,
                 "name": service.category.name
             },
+
             "provider": {
                 "id": service.provider.id,
                 "profession": service.provider.profession,
@@ -562,5 +602,5 @@ def list_services(
                 "is_verified": service.provider.is_verified
             }
         }
-        for service in services
+        for service, promotion in results
     ]

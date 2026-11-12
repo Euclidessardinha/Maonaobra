@@ -5259,3 +5259,161 @@ footer p {
   }
 
 }
+
+
+/* =========================================================
+   SERVIÇOS EM DESTAQUE — PÁGINA INICIAL
+========================================================= */
+
+.home-services {
+  padding: 90px 8%;
+  background: #f8fafc;
+  scroll-margin-top: 90px;
+}
+
+.home-services .section-header {
+  margin-bottom: 30px;
+}
+
+.home-service-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.home-service-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.home-service-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.09);
+}
+
+.home-service-image,
+.home-service-placeholder {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+}
+
+.home-service-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff7ed;
+  font-size: 45px;
+}
+
+.home-service-content {
+  padding: 20px;
+}
+
+.promoted-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  margin-bottom: 12px;
+  border-radius: 20px;
+  background: #fff7ed;
+  color: #ea580c;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.home-service-category {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.home-service-content h3 {
+  color: #0f172a;
+  font-size: 18px;
+  margin: 0 0 10px;
+}
+
+.home-service-description {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 42px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home-service-provider {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 15px;
+}
+
+.home-service-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.home-service-footer strong {
+  color: #f97316;
+  font-size: 17px;
+}
+
+.home-service-footer a {
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.home-service-footer a:hover {
+  text-decoration: underline;
+}
+
+.services-message {
+  color: #64748b;
+  text-align: center;
+  padding: 30px 0;
+}
+
+.home-services-action {
+  display: flex;
+  justify-content: center;
+  margin-top: 35px;
+}
+
+@media (max-width: 900px) {
+  .home-service-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .home-services {
+    padding: 60px 5%;
+  }
+
+  .home-service-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-service-image,
+  .home-service-placeholder {
+    height: 200px;
+  }
+}

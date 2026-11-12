@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 
-import { getCategories } from "./api/api";
+import { getCategories, getServices } from "./api/api";
 
 import Login from "./pages/login";
 import Register from "./pages/Register";
+
+import ServicesPage from "./pages/ServicesPage";
 
 import { useAuth } from "./context/AuthContext";
 
@@ -49,6 +51,8 @@ import ClientFavorites from "./pages/ClientFavorites";
 import ClientProfile from "./pages/ClientProfile";
 import ProviderProfile from "./pages/ProviderProfile";
 
+
+
 /* =========================================================
 PÁGINA INICIAL
 ========================================================= */
@@ -64,6 +68,8 @@ const [location, setLocation] = useState("");
 
 const [categories, setCategories] = useState([]);
 const [loadingCategories, setLoadingCategories] = useState(true);
+const [services, setServices] = useState([]);
+const [loadingServices, setLoadingServices] = useState(true);
 
 /* =======================================================
 CARREGAR CATEGORIAS
@@ -98,6 +104,25 @@ async function loadCategories() {
 loadCategories();
 
 
+}, []);
+
+/* =======================================================
+CARREGAR SERVIÇOS
+======================================================= */
+
+useEffect(() => {
+  async function loadServices() {
+    try {
+      const data = await getServices();
+      setServices(data);
+    } catch (error) {
+      console.error("Erro ao carregar serviços:", error);
+    } finally {
+      setLoadingServices(false);
+    }
+  }
+
+  loadServices();
 }, []);
 
 /* =======================================================
@@ -178,6 +203,13 @@ window.location.href = "/client";
 
 
 }
+
+// Colocar serviços promovidos primeiro
+const orderedServices = [...services].sort(
+  (a, b) =>
+    Number(Boolean(b.is_promoted)) -
+    Number(Boolean(a.is_promoted))
+);
 
 /* =======================================================
 RENDER
@@ -555,13 +587,141 @@ return (
   </section>
 
 
+
+{/* ===================================================
+    SERVIÇOS EM DESTAQUE
+=================================================== */}
+
+<section className="home-services" id="servicos">
+
+  <div className="section-header">
+    <div>
+      <span className="section-label">
+        DESCUBRA
+      </span>
+
+      <h2>Serviços em Destaque</h2>
+
+      <p>
+        Encontre profissionais disponíveis para realizar
+        os serviços de que precisa.
+      </p>
+    </div>
+  </div>
+
+  {loadingServices ? (
+
+    <p className="services-message">
+      Carregando serviços...
+    </p>
+
+  ) : services.length === 0 ? (
+
+    <p className="services-message">
+      Ainda não existem serviços disponíveis.
+    </p>
+
+  ) : (
+
+    <div className="home-service-grid">
+
+      {orderedServices.slice(0, 6).map((service) => (
+
+        <article
+          className="home-service-card"
+          key={service.id}
+        >
+
+          {service.image_url ? (
+
+            <img
+              src={service.image_url}
+              alt={service.title}
+              className="home-service-image"
+            />
+
+          ) : (
+
+            <div className="home-service-placeholder">
+              🔧
+            </div>
+
+          )}
+
+          <div className="home-service-content">
+
+            {service.is_promoted && (
+              <span className="promoted-badge">
+                ★ Em destaque
+              </span>
+            )}
+
+            <span className="home-service-category">
+              {service.category?.name}
+            </span>
+
+            <h3>{service.title}</h3>
+
+            <p className="home-service-description">
+              {service.description}
+            </p>
+
+            <div className="home-service-provider">
+              <span>
+                {service.provider?.profession}
+              </span>
+
+              <span>
+                📍 {service.provider?.location}
+              </span>
+            </div>
+
+            <div className="home-service-footer">
+
+              <strong>
+                {Number(service.price).toLocaleString("pt-MZ")} MT
+              </strong>
+
+              <a href="/client/providers">
+                Encontrar profissional →
+              </a>
+
+            </div>
+
+          </div>
+
+        </article>
+
+      ))}
+
+    </div>
+
+  )}
+
+  {services.length > 0 && (
+
+  <div className="home-services-action">
+    <a
+      href="/servicos"
+      className="view-all-btn"
+    >
+      Ver todos os serviços →
+    </a>
+  </div>
+
+)}
+
+</section>
+
+
+
   {/* ===================================================
       COMO FUNCIONA
   =================================================== */}
 
   <section
     className="how-it-works"
-    id="servicos"
+    id="como-funciona"
   >
 
     <span className="section-label">
@@ -699,6 +859,14 @@ logout
 
 const path =
 window.location.pathname;
+
+/* =======================================================
+CATÁLOGO PÚBLICO DE SERVIÇOS
+======================================================= */
+
+if (path === "/servicos") {
+  return <ServicesPage />;
+}
 
 
 /* =======================================================
@@ -893,7 +1061,6 @@ return (
   </ProtectedRoute>
 
 );
-
 
 }
 

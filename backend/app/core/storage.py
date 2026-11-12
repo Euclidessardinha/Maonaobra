@@ -1,6 +1,7 @@
 
 import os
-from urllib.parse import quote, unquote, urlparse
+import logging
+from urllib.parse import quote, unquote
 
 import requests
 from dotenv import load_dotenv
@@ -8,14 +9,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
 BUCKET_NAME = "service-images"
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
-SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv(
+    "SUPABASE_SERVICE_ROLE_KEY", ""
+).strip()
 
 
 def _get_headers(content_type: str | None = None):
     if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+        logger.error(
+            "Configuração do Supabase Storage incompleta."
+        )
         raise RuntimeError(
             "Configuração do Supabase Storage não encontrada."
         )
@@ -59,9 +67,20 @@ def upload_service_image(
             timeout=30
         )
 
-        response.raise_for_status()
+        if not response.ok:
+            logger.error(
+                "Supabase Storage rejeitou o upload. "
+                "HTTP %s | Resposta: %s",
+                response.status_code,
+                response.text[:1000]
+            )
+
+            response.raise_for_status()
 
     except requests.RequestException as exc:
+        logger.exception(
+            "Erro ao enviar imagem para o Supabase Storage."
+        )
         raise RuntimeError(
             "Não foi possível enviar a imagem para o armazenamento."
         ) from exc
@@ -109,6 +128,6 @@ def delete_service_image(image_url: str | None) -> None:
         response.raise_for_status()
 
     except requests.RequestException:
-        # A falha ao eliminar a imagem antiga não deve
-        # invalidar a nova imagem já guardada.
-        pass
+        logger.exception(
+            "Não foi possível eliminar a imagem antiga do Storage."
+        )

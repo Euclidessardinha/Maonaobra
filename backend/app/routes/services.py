@@ -1,8 +1,18 @@
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    File,
+    UploadFile
+)
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_current_user, require_provider
+from app.core.dependencies import require_provider
+from app.core.storage import (
+    upload_service_image,
+    delete_service_image
+)
 from app.database.connection import get_db
 
 from app.models.category import Category
@@ -17,6 +27,39 @@ router = APIRouter(
     prefix="/services",
     tags=["Services"]
 )
+
+
+MAX_IMAGE_SIZE = 5 * 1024 * 1024
+
+ALLOWED_IMAGE_TYPES = {
+    "jpeg": "image/jpeg",
+    "png": "image/png",
+    "webp": "image/webp"
+}
+
+
+def detect_image_type(file_bytes: bytes):
+    """
+    Verifica o formato real da imagem através da sua assinatura.
+    Não confia apenas no nome ou no Content-Type enviado pelo cliente.
+    """
+
+    if file_bytes.startswith(b"\xff\xd8\xff"):
+        return "jpeg"
+
+    if file_bytes.startswith(
+        b"\x89PNG\r\n\x1a\n"
+    ):
+        return "png"
+
+    if (
+        len(file_bytes) >= 12
+        and file_bytes[:4] == b"RIFF"
+        and file_bytes[8:12] == b"WEBP"
+    ):
+        return "webp"
+
+    return None
 
 
 @router.post("/")
@@ -63,7 +106,7 @@ def create_service(
 
     db.add(service)
     db.commit()
-    db.refresh(service)
+    #db.refresh(service)
 
     return {
         "message": "Serviço criado com sucesso!",
@@ -72,10 +115,123 @@ def create_service(
             "title": service.title,
             "description": service.description,
             "price": service.price,
+            "image_url": service.image_url,
             "category_id": service.category_id,
             "provider_id": service.provider_id,
             "is_active": service.is_active
         }
+    }
+
+
+# =========================================================
+# CARREGAR OU SUBSTITUIR FOTOGRAFIA DO SERVIÇO
+# =========================================================
+
+@router.post("/{service_id}/image")
+def upload_service_image_endpoint(
+    service_id: int,
+    file: UploadFile = File(...),
+    current_user: User = Depends(require_provider),
+    db: Session = Depends(get_db)
+):
+    provider = (
+        db.query(ProviderProfile)
+        .filter(
+            ProviderProfile.user_id == current_user.id
+        )
+        .first()
+    )
+
+    if not provider:
+        raise HTTPException(
+            status_code=404,
+            detail="Perfil profissional não encontrado."
+        )
+
+    service = (
+        db.query(Service)
+        .filter(
+            Service.id == service_id,
+            Service.provider_id == provider.id
+        )
+        .first()
+    )
+
+    if not service:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "Serviço não encontrado ou não pertence ao seu perfil."
+            )
+        )
+
+    file_bytes = file.file.read(MAX_IMAGE_SIZE + 1)
+
+    if not file_bytes:
+        raise HTTPException(
+            status_code=400,
+            detail="O ficheiro enviado está vazio."
+        )
+
+    if len(file_bytes) > MAX_IMAGE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail="A imagem não pode ultrapassar 5 MB."
+        )
+
+    extension = detect_image_type(file_bytes)
+
+    if not extension:
+        raise HTTPException(
+            status_code=400,
+            detail="Formato inválido. Envie JPEG, PNG ou WebP."
+        )
+
+    content_type = ALLOWED_IMAGE_TYPES[extension]
+
+    old_image_url = service.image_url
+
+    try:
+        new_image_url = upload_service_image(
+            service_id=service.id,
+            file_bytes=file_bytes,
+            content_type=content_type,
+            extension=extension
+        )
+
+    except RuntimeError:
+        raise HTTPException(
+            status_code=502,
+            detail="Não foi possível guardar a imagem. Tente novamente."
+        )
+
+    try:
+        service.image_url = new_image_url
+
+        db.commit()
+        #db.refresh(service)
+
+    except Exception:
+        db.rollback()
+
+        # Se a base de dados falhar, tentamos remover
+        # a nova imagem para evitar ficheiros abandonados.
+        delete_service_image(new_image_url)
+
+        raise HTTPException(
+            status_code=500,
+            detail="Não foi possível actualizar a fotografia do serviço."
+        )
+
+    # Só eliminamos a imagem antiga depois de a nova
+    # estar guardada e associada ao serviço.
+    if old_image_url and old_image_url != new_image_url:
+        delete_service_image(old_image_url)
+
+    return {
+        "message": "Fotografia do serviço actualizada com sucesso!",
+        "service_id": service.id,
+        "image_url": service.image_url
     }
 
 
@@ -135,15 +291,16 @@ def update_service(
     service.price = service_data.price
 
     db.commit()
-    db.refresh(service)
+    #db.refresh(service)
 
     return {
-        "message": "Serviço atualizado com sucesso!",
+        "message": "Serviço actualizado com sucesso!",
         "service": {
             "id": service.id,
             "title": service.title,
             "description": service.description,
             "price": service.price,
+            "image_url": service.image_url,
             "category_id": service.category_id,
             "provider_id": service.provider_id,
             "is_active": service.is_active,
@@ -197,9 +354,13 @@ def delete_service(
         )
 
     service_title = service.title
+    old_image_url = service.image_url
 
     db.delete(service)
     db.commit()
+
+    if old_image_url:
+        delete_service_image(old_image_url)
 
     return {
         "message": "Serviço excluído com sucesso!",
@@ -246,19 +407,20 @@ def toggle_service_status(
     service.is_active = not service.is_active
 
     db.commit()
-    db.refresh(service)
+    #db.refresh(service)
 
     return {
         "message": (
-            "Serviço ativado com sucesso!"
+            "Serviço activado com sucesso!"
             if service.is_active
-            else "Serviço desativado com sucesso!"
+            else "Serviço desactivado com sucesso!"
         ),
         "service": {
             "id": service.id,
             "title": service.title,
             "description": service.description,
             "price": service.price,
+            "image_url": service.image_url,
             "category_id": service.category_id,
             "provider_id": service.provider_id,
             "is_active": service.is_active,
@@ -311,6 +473,7 @@ def list_my_services(
             "title": service.title,
             "description": service.description,
             "price": service.price,
+            "image_url": service.image_url,
             "is_active": service.is_active,
             "category": {
                 "id": service.category.id,
@@ -387,6 +550,7 @@ def list_services(
             "title": service.title,
             "description": service.description,
             "price": service.price,
+            "image_url": service.image_url,
             "category": {
                 "id": service.category.id,
                 "name": service.category.name
@@ -400,4 +564,3 @@ def list_services(
         }
         for service in services
     ]
-

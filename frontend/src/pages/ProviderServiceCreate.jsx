@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 
 import NotificationBell from "../components/NotificationBell";
 
-import { createService } from "../api/services";
+import { createService, uploadServiceImage } from "../api/services";
 import { getCategories } from "../api/api";
 
 import "./ProviderServiceCreate.css";
@@ -24,6 +24,10 @@ function ProviderServiceCreate() {
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [price, setPrice] = useState("");
+
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [warning, setWarning] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -197,106 +201,169 @@ function ProviderServiceCreate() {
 
 
   /* =====================================================
-     CRIAR SERVIÇO
-  ===================================================== */
+   SELECCIONAR E VALIDAR FOTOGRAFIA
+===================================================== */
 
-  async function handleSubmit(event) {
+function handleImageChange(event) {
+  const file = event.target.files?.[0];
 
-    event.preventDefault();
+  setError("");
+  setWarning("");
 
-    setError("");
-    setSuccess("");
-
-
-    if (!title.trim()) {
-
-      setError(
-        "Informe o título do serviço."
-      );
-
-      return;
-
-    }
-
-
-    if (!description.trim()) {
-
-      setError(
-        "Informe a descrição do serviço."
-      );
-
-      return;
-
-    }
-
-
-    if (!categoryId) {
-
-      setError(
-        "Selecione uma categoria."
-      );
-
-      return;
-
-    }
-
-
-    if (!price || Number(price) <= 0) {
-
-      setError(
-        "Informe um preço válido."
-      );
-
-      return;
-
-    }
-
-
-    try {
-
-      setLoading(true);
-
-
-      await createService({
-
-        category_id: Number(categoryId),
-
-        title: title.trim(),
-
-        description: description.trim(),
-
-        price: Number(price),
-
-      });
-
-
-      setSuccess(
-        "Serviço criado com sucesso!"
-      );
-
-
-      setTitle("");
-      setDescription("");
-      setCategoryId("");
-      setPrice("");
-
-
-    } catch (error) {
-
-      console.error(error);
-
-      setError(
-        error.message ||
-        "Erro ao criar serviço."
-      );
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
+  if (!file) {
+    return;
   }
+
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+  ];
+
+  const maxSize = 5 * 1024 * 1024;
+
+  if (!allowedTypes.includes(file.type)) {
+    setError("Formato inválido. Seleccione JPEG, PNG ou WebP.");
+    event.target.value = "";
+    return;
+  }
+
+  if (file.size > maxSize) {
+    setError("A fotografia não pode ultrapassar 5 MB.");
+    event.target.value = "";
+    return;
+  }
+
+  setImage(file);
+  setImagePreview(URL.createObjectURL(file));
+}
+
+
+/* =====================================================
+   LIBERTAR URL DA PRÉ-VISUALIZAÇÃO
+===================================================== */
+
+useEffect(() => {
+  return () => {
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+  };
+}, [imagePreview]);
+
+
+/* =====================================================
+   REMOVER FOTOGRAFIA SELECCIONADA
+===================================================== */
+
+function handleRemoveImage() {
+  setImage(null);
+  setImagePreview("");
+
+  const input = document.getElementById(
+    "provider-service-image"
+  );
+
+  if (input) {
+    input.value = "";
+  }
+}
+
+/* =====================================================
+   CRIAR SERVIÇO
+===================================================== */
+
+async function handleSubmit(event) {
+  event.preventDefault();
+
+  setError("");
+  setSuccess("");
+  setWarning("");
+
+  if (!title.trim()) {
+    setError("Informe o título do serviço.");
+    return;
+  }
+
+  if (!description.trim()) {
+    setError("Informe a descrição do serviço.");
+    return;
+  }
+
+  if (!categoryId) {
+    setError("Selecione uma categoria.");
+    return;
+  }
+
+  if (!price || Number(price) <= 0) {
+    setError("Informe um preço válido.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    // 1. Criar primeiro o serviço
+    const result = await createService({
+      category_id: Number(categoryId),
+      title: title.trim(),
+      description: description.trim(),
+      price: Number(price),
+    });
+
+    const serviceId = result?.service?.id;
+
+    if (!serviceId) {
+      throw new Error(
+        "O serviço foi enviado, mas não foi possível confirmar o seu identificador."
+      );
+    }
+
+    // 2. Enviar fotografia, caso tenha sido seleccionada
+    if (image) {
+      try {
+        await uploadServiceImage(serviceId, image);
+      } catch (imageError) {
+        console.error(
+          "Erro ao carregar fotografia:",
+          imageError
+        );
+
+        setWarning(
+          `O serviço foi criado, mas a fotografia não foi carregada: ${imageError.message}. Poderá tentar adicionar a fotografia posteriormente.`
+        );
+      }
+    }
+
+    setSuccess("Serviço criado com sucesso!");
+
+    // 3. Limpar formulário
+    setTitle("");
+    setDescription("");
+    setCategoryId("");
+    setPrice("");
+    setImage(null);
+    setImagePreview("");
+
+    const imageInput = document.getElementById(
+      "provider-service-image"
+    );
+
+    if (imageInput) {
+      imageInput.value = "";
+    }
+
+  } catch (error) {
+    console.error(error);
+
+    setError(
+      error.message || "Erro ao criar serviço."
+    );
+
+  } finally {
+    setLoading(false);
+  }
+}
 
 
   return (
@@ -854,6 +921,24 @@ function ProviderServiceCreate() {
 
           )}
 
+          {warning && (
+  <div className="provider-create-alert error">
+    <div className="provider-create-alert-symbol">
+      !
+    </div>
+
+    <div>
+      <strong>
+        Atenção à fotografia
+      </strong>
+
+      <p>
+        {warning}
+      </p>
+    </div>
+  </div>
+)}
+
 
           <form
             onSubmit={handleSubmit}
@@ -941,6 +1026,60 @@ function ProviderServiceCreate() {
               </div>
 
             </div>
+
+            {/* =================================================
+    FOTOGRAFIA DO SERVIÇO
+================================================= */}
+
+<div className="provider-create-field">
+
+  <label htmlFor="provider-service-image">
+    Fotografia do serviço
+  </label>
+
+  <input
+    id="provider-service-image"
+    type="file"
+    accept="image/jpeg,image/png,image/webp"
+    onChange={handleImageChange}
+    disabled={loading}
+  />
+
+  <small>
+    Escolha uma fotografia que represente o serviço.
+    Formatos: JPEG, PNG ou WebP. Máximo: 5 MB.
+  </small>
+
+  {imagePreview && (
+
+    <div className="provider-create-image-preview">
+
+      <img
+        src={imagePreview}
+        alt="Pré-visualização da fotografia do serviço"
+      />
+
+      <div className="provider-create-image-preview-info">
+
+        <span>
+          {image.name}
+        </span>
+
+        <button
+          type="button"
+          onClick={handleRemoveImage}
+          disabled={loading}
+        >
+          Remover fotografia
+        </button>
+
+      </div>
+
+    </div>
+
+  )}
+
+</div>
 
 
             {/* CATEGORIA + PREÇO */}
@@ -1096,7 +1235,7 @@ function ProviderServiceCreate() {
 
                     <span className="provider-create-button-spinner"></span>
 
-                    Criando serviço...
+                    Publicando serviço...
 
                   </>
 

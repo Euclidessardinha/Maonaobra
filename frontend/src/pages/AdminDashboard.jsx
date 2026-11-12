@@ -20,8 +20,12 @@ import {
   getAdminPlans,
   updateAdminPlan,
   getAdminSubscriptionStats,
+  getAdminPayments,
+  getAdminPaymentStats,
+  createAdminPayment,
+  confirmAdminPayment,
+  rejectAdminPayment,
 } from "../api/admin";
-
 
 function AdminDashboard() {
 
@@ -116,6 +120,35 @@ function AdminDashboard() {
 
   const [subscriptionStats, setSubscriptionStats] = useState(null);
   const [subscriptionStatsLoading, setSubscriptionStatsLoading] = useState(false);
+
+  // =========================================================
+// PAGAMENTOS MANUAIS
+// =========================================================
+
+const [payments, setPayments] = useState([]);
+const [paymentStats, setPaymentStats] = useState(null);
+
+const [paymentLoading, setPaymentLoading] = useState(false);
+const [paymentActionLoading, setPaymentActionLoading] = useState(null);
+const [paymentFormLoading, setPaymentFormLoading] = useState(false);
+
+const [paymentError, setPaymentError] = useState("");
+const [paymentSuccess, setPaymentSuccess] = useState("");
+
+const [paymentStatusFilter, setPaymentStatusFilter] = useState("ALL");
+const [paymentTypeFilter, setPaymentTypeFilter] = useState("ALL");
+
+const [paymentForm, setPaymentForm] = useState({
+  user_id: "",
+  payment_type: "SUBSCRIPTION",
+  amount: "",
+  payment_method: "M-Pesa",
+  reference: "",
+  plan_id: "",
+  promotion_id: "",
+  notes: "",
+  confirm_immediately: false,
+});
 
 
   // =========================================================
@@ -311,6 +344,214 @@ async function loadSubscriptionStats() {
     }
   }
 
+  // =========================================================
+// CARREGAR PAGAMENTOS
+// =========================================================
+
+async function loadPaymentData() {
+  try {
+    setPaymentLoading(true);
+    setPaymentError("");
+
+    const [
+      paymentsData,
+      paymentStatsData
+    ] = await Promise.all([
+      getAdminPayments(),
+      getAdminPaymentStats()
+    ]);
+
+    setPayments(
+      Array.isArray(paymentsData)
+        ? paymentsData
+        : []
+    );
+
+    setPaymentStats(paymentStatsData);
+
+  } catch (err) {
+    console.error("Erro ao carregar pagamentos:", err);
+
+    setPaymentError(
+      err.message ||
+      "Não foi possível carregar os pagamentos."
+    );
+
+  } finally {
+    setPaymentLoading(false);
+  }
+}
+
+
+
+async function handlePaymentSubmit(event) {
+  event.preventDefault();
+
+  try {
+    setPaymentFormLoading(true);
+    setPaymentError("");
+    setPaymentSuccess("");
+
+    const payload = {
+      user_id: Number(paymentForm.user_id),
+      payment_type: "SUBSCRIPTION",
+      amount: Number(paymentForm.amount),
+      payment_method: paymentForm.payment_method,
+      reference: paymentForm.reference.trim() || null,
+      plan_id: Number(paymentForm.plan_id),
+      promotion_id: null,
+      notes: paymentForm.notes.trim() || null,
+      confirm_immediately: paymentForm.confirm_immediately,
+    };
+
+    if (!payload.user_id) {
+      throw new Error("Selecione o usuário que efetuou o pagamento.");
+    }
+
+    if (!payload.amount || payload.amount <= 0) {
+      throw new Error("Informe um valor de pagamento válido.");
+    }
+
+    if (!payload.plan_id) {
+      throw new Error("Selecione o plano da assinatura.");
+    }
+
+    const result = await createAdminPayment(payload);
+
+    setPaymentSuccess(
+      result.message || "Pagamento registado com sucesso."
+    );
+
+    setPaymentForm({
+      user_id: "",
+      payment_type: "SUBSCRIPTION",
+      amount: "",
+      payment_method: "M-Pesa",
+      reference: "",
+      plan_id: "",
+      promotion_id: "",
+      notes: "",
+      confirm_immediately: false,
+    });
+
+    await Promise.all([
+      loadPaymentData(),
+      loadSubscriptionStats(),
+    ]);
+
+  } catch (err) {
+    console.error("Erro ao registar pagamento:", err);
+
+    setPaymentError(
+      err.message || "Não foi possível registar o pagamento."
+    );
+
+  } finally {
+    setPaymentFormLoading(false);
+  }
+}
+
+
+
+// =========================================================
+// CONFIRMAR PAGAMENTO
+// =========================================================
+
+async function handleConfirmPayment(paymentId) {
+
+
+  const payment = payments.find(
+    (item) => String(item.id) === String(paymentId)
+  );
+
+  if (payment?.payment_type === "PROMOTION") {
+    setPaymentError(
+      "Os pagamentos antigos de promoções não podem ativar promoções."
+    );
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "Confirma que o dinheiro foi recebido e que deseja ativar o benefício?"
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setPaymentActionLoading(paymentId);
+    setPaymentError("");
+    setPaymentSuccess("");
+
+    const result = await confirmAdminPayment(paymentId);
+
+    setPaymentSuccess(
+      result.message ||
+      "Pagamento confirmado e benefício ativado."
+    );
+
+    await Promise.all([
+      loadPaymentData(),
+      loadPromotionData(),
+      loadSubscriptionStats(),
+    ]);
+
+  } catch (err) {
+    console.error("Erro ao confirmar pagamento:", err);
+
+    setPaymentError(
+      err.message ||
+      "Não foi possível confirmar o pagamento."
+    );
+
+  } finally {
+    setPaymentActionLoading(null);
+  }
+}
+
+
+// =========================================================
+// REJEITAR PAGAMENTO
+// =========================================================
+
+async function handleRejectPayment(paymentId) {
+  const confirmed = window.confirm(
+    "Tem certeza de que deseja rejeitar este pagamento?"
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setPaymentActionLoading(paymentId);
+    setPaymentError("");
+    setPaymentSuccess("");
+
+    const result = await rejectAdminPayment(paymentId);
+
+    setPaymentSuccess(
+      result.message ||
+      "Pagamento rejeitado."
+    );
+
+    await Promise.all([
+      loadPaymentData(),
+      loadPromotionData(),
+    ]);
+
+  } catch (err) {
+    console.error("Erro ao rejeitar pagamento:", err);
+
+    setPaymentError(
+      err.message ||
+      "Não foi possível rejeitar o pagamento."
+    );
+
+  } finally {
+    setPaymentActionLoading(null);
+  }
+}
+
+  
+
 
   // =========================================================
 // ATUALIZAR PLANO
@@ -405,6 +646,7 @@ async function handlePlanUpdate(plan) {
       loadPromotionData();
       loadPlans();
       loadSubscriptionStats();
+      loadPaymentData();
     }
   }, [activeSection]);
 
@@ -1240,6 +1482,43 @@ async function handlePlanUpdate(plan) {
 
       default:
         return "default";
+    }
+  }
+
+  function getPaymentStatusName(status) {
+    switch (status) {
+      case "PENDING":
+        return "Pendente";
+      case "CONFIRMED":
+        return "Confirmado";
+      case "REJECTED":
+        return "Rejeitado";
+      default:
+        return status || "Desconhecido";
+    }
+  }
+
+  function getPaymentStatusClass(status) {
+    switch (status) {
+      case "PENDING":
+        return "pending";
+      case "CONFIRMED":
+        return "active";
+      case "REJECTED":
+        return "rejected";
+      default:
+        return "default";
+    }
+  }
+
+  function getPaymentTypeName(type) {
+    switch (type) {
+      case "SUBSCRIPTION":
+        return "Assinatura";
+      case "PROMOTION":
+        return "Promoção";
+      default:
+        return type || "-";
     }
   }
 
@@ -3304,29 +3583,28 @@ async function handlePlanUpdate(plan) {
             {/* RESUMO */}
 <div className="admin-monetization-stats-grid">
 
-  {/* VALOR DAS PROMOÇÕES */}
-  <div className="admin-monetization-stat-card revenue">
-    <div className="admin-monetization-stat-icon">
-      💰
-    </div>
-
-    <div>
-      <span>VALOR APROVADO</span>
-
-      <strong>
-        {promotionLoading
-          ? "..."
-          : `${Number(
-              promotionStats?.revenue || 0
-            ).toLocaleString("pt-MZ")} MT`}
-      </strong>
-
-      <small>
-        Promoções ativas e expiradas
-      </small>
-    </div>
+  {/* RECEITA CONFIRMADA */}
+<div className="admin-monetization-stat-card revenue">
+  <div className="admin-monetization-stat-icon">
+    💰
   </div>
 
+  <div>
+    <span>RECEITA CONFIRMADA</span>
+
+    <strong>
+      {paymentLoading
+        ? "..."
+        : `${Number(
+            paymentStats?.total_revenue || 0
+          ).toLocaleString("pt-MZ")} MT`}
+    </strong>
+
+    <small>
+      Pagamentos recebidos e confirmados
+    </small>
+  </div>
+</div>
 
   {/* TOTAL DE PROMOÇÕES */}
   <div className="admin-monetization-stat-card promotion">
@@ -3441,10 +3719,14 @@ async function handlePlanUpdate(plan) {
     <div>
       <span>ASSINATURAS</span>
 
-      <strong>—</strong>
+      <strong>
+        {subscriptionStatsLoading
+          ? "..."
+          : subscriptionStats?.total ?? 0}
+      </strong>
 
       <small>
-        Planos pagos ainda não integrados
+        Assinaturas ativas
       </small>
     </div>
   </div>
@@ -3932,6 +4214,291 @@ async function handlePlanUpdate(plan) {
 
 </div>
 
+{/* ===================================================== */}
+{/* REGISTAR PAGAMENTO MANUAL */}
+{/* ===================================================== */}
+
+<div
+  className="admin-monetization-panel admin-transactions-panel"
+  id="admin-payment-form"
+>
+  <div className="admin-monetization-panel-header">
+    <div>
+      <span className="admin-monetization-eyebrow">
+        REGISTO FINANCEIRO
+      </span>
+
+      <h2>Registar pagamento manual</h2>
+
+      <p>
+        Registe pagamentos recebidos fora da plataforma.
+        A ativação só acontece após confirmação administrativa.
+      </p>
+    </div>
+  </div>
+
+  {paymentError && (
+    <div className="admin-promotion-error">
+      {paymentError}
+    </div>
+  )}
+
+  {paymentSuccess && (
+    <div className="admin-payment-success">
+      {paymentSuccess}
+    </div>
+  )}
+
+  <form
+    onSubmit={handlePaymentSubmit}
+    className="admin-payment-form"
+  >
+    <div className="admin-payment-form-grid">
+
+      {/* UTILIZADOR */}
+      <div className="admin-payment-field">
+        <label>Utilizador que efetuou o pagamento</label>
+
+        <select
+          required
+          className="admin-filter-select"
+          value={paymentForm.user_id}
+          onChange={(event) =>
+            setPaymentForm((current) => ({
+              ...current,
+              user_id: event.target.value,
+            }))
+          }
+        >
+          <option value="">Selecionar utilizador</option>
+
+          {users.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.name} — {item.email}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* TIPO */}
+      <div className="admin-payment-field">
+        <label>Tipo de pagamento</label>
+
+        
+<select
+  className="admin-filter-select"
+  value={paymentForm.payment_type}
+  onChange={(event) =>
+    setPaymentForm((current) => ({
+      ...current,
+      payment_type: "SUBSCRIPTION",
+      amount: "",
+      plan_id: "",
+      promotion_id: "",
+      confirm_immediately: false,
+    }))
+  }
+>
+  <option value="SUBSCRIPTION">Assinatura de plano</option>
+</select>
+
+      </div>
+
+      {/* PLANO */}
+      {paymentForm.payment_type === "SUBSCRIPTION" && (
+        <div className="admin-payment-field">
+          <label>Plano</label>
+
+          <select
+            required
+            className="admin-filter-select"
+            value={paymentForm.plan_id}
+            onChange={(event) => {
+              const selectedPlan = plans.find(
+                (item) =>
+                  String(item.id) === event.target.value
+              );
+
+              setPaymentForm((current) => ({
+                ...current,
+                plan_id: event.target.value,
+                amount: selectedPlan
+                  ? String(selectedPlan.price)
+                  : "",
+              }));
+            }}
+          >
+            <option value="">Selecionar plano</option>
+
+            {plans
+              .filter((plan) => plan.is_active)
+              .map((plan) => (
+                <option key={plan.id} value={plan.id}>
+                  {plan.name} — {Number(plan.price).toLocaleString("pt-MZ")} MT
+                </option>
+              ))}
+          </select>
+        </div>
+      )}
+
+      {/* PROMOÇÃO 
+      {paymentForm.payment_type === "PROMOTION" && (
+        <div className="admin-payment-field">
+          <label>Promoção</label>
+
+          <select
+            required
+            className="admin-filter-select"
+            value={paymentForm.promotion_id}
+            onChange={(event) => {
+              const selectedPromotion = promotions.find(
+                (item) =>
+                  String(item.id) === event.target.value
+              );
+
+              setPaymentForm((current) => ({
+                ...current,
+                promotion_id: event.target.value,
+                amount: selectedPromotion
+                  ? String(selectedPromotion.price)
+                  : "",
+              }));
+            }}
+          >
+            <option value="">Selecionar promoção pendente</option>
+
+            {promotions
+              .filter((item) => item.status === "PENDING")
+              .map((promotion) => (
+                <option key={promotion.id} value={promotion.id}>
+                  {promotion.service_title} — {promotion.provider_name}
+                </option>
+              ))}
+          </select>
+        </div>
+      )}*/}
+
+      {/* VALOR */}
+      <div className="admin-payment-field">
+        <label>Valor recebido (MT)</label>
+
+        <input
+          type="number"
+          min="0.01"
+          step="0.01"
+          required
+          className="admin-filter-select"
+          value={paymentForm.amount}
+          onChange={(event) =>
+            setPaymentForm((current) => ({
+              ...current,
+              amount: event.target.value,
+            }))
+          }
+          placeholder="Ex.: 499"
+        />
+      </div>
+
+      {/* MÉTODO */}
+      <div className="admin-payment-field">
+        <label>Método de pagamento</label>
+
+        <select
+          className="admin-filter-select"
+          value={paymentForm.payment_method}
+          onChange={(event) =>
+            setPaymentForm((current) => ({
+              ...current,
+              payment_method: event.target.value,
+            }))
+          }
+        >
+          <option value="M-Pesa">M-Pesa</option>
+          <option value="e-Mola">e-Mola</option>
+          <option value="mKesh">mKesh</option>
+          <option value="Transferência bancária">
+            Transferência bancária
+          </option>
+          <option value="Dinheiro">Dinheiro</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+
+      {/* REFERÊNCIA */}
+      <div className="admin-payment-field">
+        <label>Referência da operação (opcional)</label>
+
+        <input
+          type="text"
+          className="admin-filter-select"
+          value={paymentForm.reference}
+          onChange={(event) =>
+            setPaymentForm((current) => ({
+              ...current,
+              reference: event.target.value,
+            }))
+          }
+          placeholder="Número da transação ou referência"
+        />
+      </div>
+
+      {/* OBSERVAÇÕES */}
+      <div className="admin-payment-field">
+        <label>Observações (opcional)</label>
+
+        <input
+          type="text"
+          className="admin-filter-select"
+          value={paymentForm.notes}
+          onChange={(event) =>
+            setPaymentForm((current) => ({
+              ...current,
+              notes: event.target.value,
+            }))
+          }
+          placeholder="Informações adicionais"
+        />
+      </div>
+
+    </div>
+
+    {/* CONFIRMAÇÃO IMEDIATA */}
+    <label className="admin-payment-confirm-option">
+      <input
+        type="checkbox"
+        checked={paymentForm.confirm_immediately}
+        onChange={(event) =>
+          setPaymentForm((current) => ({
+            ...current,
+            confirm_immediately: event.target.checked,
+          }))
+        }
+      />
+
+      <span>
+        Já confirmei que recebi o dinheiro. Registar e ativar imediatamente.
+      </span>
+    </label>
+
+    <p className="admin-payment-help">
+      Se não selecionar esta opção, o pagamento ficará pendente.
+      Só será ativado quando o administrador o confirmar posteriormente.
+    </p>
+
+    <button
+      type="submit"
+      className="admin-promotion-approve"
+      disabled={paymentFormLoading}
+    >
+      {paymentFormLoading
+        ? "A registar..."
+        : paymentForm.confirm_immediately
+        ? "Registar e confirmar pagamento"
+        : "Registar pagamento pendente"}
+    </button>
+  </form>
+</div>
+
             {/* ===================================================== */}
 {/* PROMOÇÕES DE SERVIÇOS */}
 {/* ===================================================== */}
@@ -4133,21 +4700,15 @@ async function handlePlanUpdate(plan) {
                     <div className="admin-promotion-actions">
 
                       <button
-                        type="button"
-                        className="admin-promotion-approve"
-                        disabled={isActionLoading}
-                        onClick={() =>
-                          handlePromotionStatus(
-                            promotion.id,
-                            "ACTIVE"
-                          )
-                        }
-                      >
-                        {isActionLoading
-                          ? "..."
-                          : "Aprovar"}
-                      </button>
-
+  type="button"
+  className="admin-promotion-approve"
+  disabled={isActionLoading}
+  onClick={() =>
+    handlePromotionStatus(promotion.id, "ACTIVE")
+  }
+>
+    {isActionLoading ? "A ativar..." : "Ativar promoção"}
+</button>
                       <button
                         type="button"
                         className="admin-promotion-reject"
@@ -4239,91 +4800,389 @@ async function handlePlanUpdate(plan) {
             </div>
 
 
-            {/* TRANSAÇÕES */}
+            
+{/* ===================================================== */}
+{/* HISTÓRICO DE PAGAMENTOS */}
+{/* ===================================================== */}
 
-            <div className="admin-monetization-panel admin-transactions-panel">
+<div className="admin-monetization-panel admin-transactions-panel">
 
-              <div className="admin-monetization-panel-header">
+  <div className="admin-monetization-panel-header">
+    <div>
+      <span>HISTÓRICO FINANCEIRO</span>
 
-                <div>
+      <h2>Pagamentos registados</h2>
 
-                  <span>
-                    HISTÓRICO
-                  </span>
+      <p>
+        Consulte, confirme e acompanhe os pagamentos efetuados pelos usuários.
+      </p>
+    </div>
 
-                  <h2>
-                    Transações recentes
-                  </h2>
+    <button
+      type="button"
+      className="admin-promotion-refresh"
+      onClick={loadPaymentData}
+      disabled={paymentLoading}
+    >
+      {paymentLoading ? "A atualizar..." : "↻ Atualizar"}
+    </button>
+  </div>
 
-                </div>
+  {paymentError && (
+    <div className="admin-promotion-error">
+      {paymentError}
+    </div>
+  )}
+
+  {paymentSuccess && (
+    <div className="admin-payment-success">
+      {paymentSuccess}
+    </div>
+  )}
+
+  {/* ESTATÍSTICAS DOS PAGAMENTOS */}
+  <div className="admin-promotion-performance-grid">
+
+    <div>
+      <span>🧾</span>
+      <strong>{paymentStats?.total_payments ?? 0}</strong>
+      <small>Total de pagamentos</small>
+    </div>
+
+    <div>
+      <span>⏳</span>
+      <strong>{paymentStats?.pending_count ?? 0}</strong>
+      <small>Pendentes</small>
+    </div>
+
+    <div>
+      <span>✓</span>
+      <strong>{paymentStats?.confirmed_count ?? 0}</strong>
+      <small>Confirmados</small>
+    </div>
+
+    <div>
+      <span>✕</span>
+      <strong>{paymentStats?.rejected_count ?? 0}</strong>
+      <small>Rejeitados</small>
+    </div>
+
+  </div>
+
+  {/* RECEITAS POR TIPO */}
+  <div className="admin-promotion-performance-grid">
+
+    <div>
+      <span>💰</span>
+      <strong>
+        {Number(
+          paymentStats?.total_revenue || 0
+        ).toLocaleString("pt-MZ")} MT
+      </strong>
+      <small>Receita total confirmada</small>
+    </div>
+
+    <div>
+      <span>👥</span>
+      <strong>
+        {Number(
+          paymentStats?.subscription_revenue || 0
+        ).toLocaleString("pt-MZ")} MT
+      </strong>
+      <small>Receita de assinaturas</small>
+    </div>
+
+    <div>
+      <span>🚀</span>
+      <strong>
+        {Number(
+          paymentStats?.promotion_revenue || 0
+        ).toLocaleString("pt-MZ")} MT
+      </strong>
+      <small>Receita de promoções</small>
+    </div>
+
+  </div>
+
+  {/* FILTROS */}
+  <div className="admin-provider-filters">
+
+    <select
+      className="admin-filter-select"
+      value={paymentStatusFilter}
+      onChange={(event) =>
+        setPaymentStatusFilter(event.target.value)
+      }
+    >
+      <option value="ALL">Todos os estados</option>
+      <option value="PENDING">Pendentes</option>
+      <option value="CONFIRMED">Confirmados</option>
+      <option value="REJECTED">Rejeitados</option>
+    </select>
+
+    <select
+      className="admin-filter-select"
+      value={paymentTypeFilter}
+      onChange={(event) =>
+        setPaymentTypeFilter(event.target.value)
+      }
+    >
+      <option value="ALL">Todos os tipos</option>
+      <option value="SUBSCRIPTION">Assinaturas</option>
+      <option value="PROMOTION">Promoções</option>
+    </select>
+
+  </div>
+
+  {/* TABELA */}
+  {paymentLoading && payments.length === 0 ? (
+
+    <div className="admin-transactions-empty">
+      <strong>A carregar pagamentos...</strong>
+      <p>Estamos a consultar os registos financeiros.</p>
+    </div>
+
+  ) : (
+
+    <div className="admin-promotions-table-wrapper">
+
+      <table className="admin-promotions-table">
+
+        <thead>
+          <tr>
+            <th>Usuário</th>
+            <th>Tipo</th>
+            <th>Valor</th>
+            <th>Método</th>
+            <th>Referência</th>
+            <th>Estado</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {payments
+            .filter((payment) =>
+              paymentStatusFilter === "ALL" ||
+              payment.status === paymentStatusFilter
+            )
+            .filter((payment) =>
+              paymentTypeFilter === "ALL" ||
+              payment.payment_type === paymentTypeFilter
+            )
+            .map((payment) => {
+
+              const paymentUser = users.find(
+                (item) =>
+                  String(item.id) === String(payment.user_id)
+              );
+
+              const paymentPlan = plans.find(
+                (item) =>
+                  String(item.id) === String(payment.plan_id)
+              );
+
+              const paymentPromotion = promotions.find(
+                (item) =>
+                  String(item.id) === String(payment.promotion_id)
+              );
+
+              const isActionLoading =
+                paymentActionLoading === payment.id;
+
+              return (
+                <tr key={payment.id}>
+
+                  <td>
+                    <div className="admin-promotion-provider">
+                      <strong>
+                        {paymentUser?.name || `Usuário #${payment.user_id}`}
+                      </strong>
+
+                      <small>
+                        {paymentUser?.email || `ID ${payment.user_id}`}
+                      </small>
+                    </div>
+                  </td>
+
+                  <td>
+                    <div className="admin-promotion-service">
+                      <strong>
+                        {getPaymentTypeName(payment.payment_type)}
+                      </strong>
+
+                      <small>
+                        {payment.payment_type === "SUBSCRIPTION"
+                          ? paymentPlan?.name || `Plano #${payment.plan_id}`
+                          : paymentPromotion?.service_title ||
+                            `Promoção #${payment.promotion_id}`}
+                      </small>
+                    </div>
+                  </td>
+
+                  <td>
+                    <strong>
+                      {Number(payment.amount || 0).toLocaleString("pt-MZ")} MT
+                    </strong>
+                  </td>
+
+                  <td>
+                    {payment.payment_method || "-"}
+                  </td>
+
+                  <td>
+                    {payment.reference || "-"}
+                  </td>
+
+                  <td>
+                    <span
+                      className={`admin-promotion-status-badge ${getPaymentStatusClass(
+                        payment.status
+                      )}`}
+                    >
+                      {getPaymentStatusName(payment.status)}
+                    </span>
+                  </td>
+
+                  <td>
+                    {formatDate(payment.created_at)}
+                  </td>
+
+                  <td>
+                    {payment.status === "PENDING" ? (
+  <div className="admin-promotion-actions">
+
+    {payment.payment_type === "SUBSCRIPTION" && (
+      <button
+        type="button"
+        className="admin-promotion-approve"
+        disabled={isActionLoading}
+        onClick={() => handleConfirmPayment(payment.id)}
+      >
+        {isActionLoading ? "..." : "Confirmar"}
+      </button>
+    )}
+
+                        <button
+                          type="button"
+                          className="admin-promotion-reject"
+                          disabled={isActionLoading}
+                          onClick={() =>
+                            handleRejectPayment(payment.id)
+                          }
+                        >
+                          {isActionLoading ? "..." : "Rejeitar"}
+                        </button>
+
+                      </div>
+
+                    ) : (
+                      <span className="admin-promotion-no-action">
+                        —
+                      </span>
+                    )}
+                  </td>
+
+                </tr>
+              );
+            })}
+
+        </tbody>
+
+      </table>
+
+      {payments.filter((payment) =>
+        (paymentStatusFilter === "ALL" ||
+          payment.status === paymentStatusFilter) &&
+        (paymentTypeFilter === "ALL" ||
+          payment.payment_type === paymentTypeFilter)
+      ).length === 0 && (
+
+        <div className="admin-transactions-empty">
+          <div>🧾</div>
+
+          <strong>Nenhum pagamento encontrado</strong>
+
+          <p>
+            Ainda não existem pagamentos correspondentes aos filtros selecionados.
+          </p>
+        </div>
+
+      )}
+
+        </div>
+
+  )}
+
+  </div>
+
+  </section>
+
+)}
 
 
-                <button
-                  type="button"
-                  className="admin-monetization-filter-button"
-                >
-                  Todas as transações ▾
-                </button>
+{/* =====================================================
+    RELATÓRIOS
+===================================================== */}
 
-              </div>
+{activeSection === "reports" && (
 
+  <section>
 
-              <div className="admin-transactions-empty">
+    <div className="admin-placeholder">
 
-                <div>
-                  🧾
-                </div>
+      <div className="admin-placeholder-icon">
+        📊
+      </div>
 
-                <strong>
-                  Nenhuma transação registada
-                </strong>
+      <h2>
+        Relatórios
+      </h2>
 
-                <p>
-                  As transações aparecerão aqui quando o sistema de pagamentos estiver integrado.
-                </p>
+      <p>
+        A área de relatórios será adicionada
+        numa próxima etapa, com indicadores
+        de crescimento e atividade da plataforma.
+      </p>
 
-              </div>
+    </div>
 
-            </div>
+  </section>
 
-          </section>
+)}
 
-        )}
+{/* =====================================================
+    CONFIGURAÇÕES
+===================================================== */}
 
+{activeSection === "settings" && (
 
-        {/* =====================================================
-            RELATÓRIOS
-        ===================================================== */}
+  <section>
 
-        {activeSection === "reports" && (
+    <div className="admin-placeholder">
 
-          <section>
+      <div className="admin-placeholder-icon">
+        ⚙️
+      </div>
 
-            <div className="admin-placeholder">
+      <h2>
+        Configurações
+      </h2>
 
-              <div className="admin-placeholder-icon">
-                📊
-              </div>
+      <p>
+        As configurações administrativas da
+        plataforma serão adicionadas numa próxima etapa.
+      </p>
 
+    </div>
 
-              <h2>
-                Relatórios
-              </h2>
+  </section>
 
+)}
 
-              <p>
-                A área de relatórios será adicionada
-                numa próxima etapa, com indicadores
-                de crescimento e atividade da plataforma.
-              </p>
-
-            </div>
-
-          </section>
-
-        )}
-
-
+</main>
         {/* =====================================================
             CONFIGURAÇÕES
         ===================================================== */}
@@ -4355,7 +5214,7 @@ async function handlePlanUpdate(plan) {
 
         )}
 
-      </main>
+
 
 
       {/* =====================================================

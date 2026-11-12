@@ -517,3 +517,89 @@ export async function updateMyProviderProfile(
   return data;
 }
 
+
+// ============================================================
+// PROMOÇÕES DE SERVIÇOS
+// ============================================================
+
+// SOLICITAR PROMOÇÃO
+export async function createServicePromotion(serviceId) {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `${API_URL}/service-promotions/?service_id=${serviceId}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : "Não foi possível solicitar a promoção."
+    );
+  }
+
+  return data;
+}
+
+
+// CONSULTAR AS MINHAS PROMOÇÕES
+export async function getMyServicePromotions() {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `${API_URL}/service-promotions/my`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : "Não foi possível carregar as suas promoções."
+    );
+  }
+
+  return data;
+}
+
+
+// CANCELAR PROMOÇÃO
+export async function cancelServicePromotion(promotionId) {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `${API_URL}/service-promotions/${promotionId}/cancel`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : "Não foi possível cancelar a promoção."
+    );
+  }
+
+  return data;
+}

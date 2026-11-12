@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta, timezone
+
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -11,6 +12,7 @@ from app.models.service import Service
 from app.models.service_promotion import ServicePromotion
 from app.models.user import User
 from app.models.promotion_event import PromotionEvent
+from app.models.payment import Payment
 
 
 router = APIRouter(
@@ -51,10 +53,7 @@ def create_service_promotion(
             detail="Perfil profissional não encontrado."
         )
 
-    # -----------------------------------------------------
     # Verificar se o serviço pertence ao prestador
-    # -----------------------------------------------------
-
     service = (
         db.query(Service)
         .filter(
@@ -70,20 +69,14 @@ def create_service_promotion(
             detail="Serviço não encontrado ou não pertence ao seu perfil."
         )
 
-    # -----------------------------------------------------
     # O serviço precisa estar ativo
-    # -----------------------------------------------------
-
     if not service.is_active:
         raise HTTPException(
             status_code=400,
             detail="Não é possível promover um serviço desativado."
         )
 
-    # -----------------------------------------------------
     # Verificar se já existe promoção pendente ou ativa
-    # -----------------------------------------------------
-
     existing_promotion = (
         db.query(ServicePromotion)
         .filter(
@@ -99,38 +92,27 @@ def create_service_promotion(
             detail="Este serviço já possui uma promoção pendente ou ativa."
         )
 
-    # -----------------------------------------------------
-    # Datas da promoção
-    # -----------------------------------------------------
-
-    now = datetime.now(timezone.utc)
-
-    expires_at = now + timedelta(
-        days=PROMOTION_DURATION_DAYS
-    )
-
-    # -----------------------------------------------------
-    # Criar promoção
-    #
-    # Por enquanto fica PENDING porque ainda não temos
-    # integração de pagamento.
-    # -----------------------------------------------------
-
+    # Criar promoção sem iniciar a contagem dos dias
     promotion = ServicePromotion(
         service_id=service.id,
         price=PROMOTION_PRICE,
         duration_days=PROMOTION_DURATION_DAYS,
-        starts_at=now,
-        expires_at=expires_at,
+        starts_at=None,
+        expires_at=None,
         status="PENDING"
     )
 
-    db.add(promotion)
-    db.commit()
-    db.refresh(promotion)
+    try:
+        db.add(promotion)
+        db.commit()
+        db.refresh(promotion)
+
+    except Exception:
+        db.rollback()
+        raise
 
     return {
-        "message": "Pedido de promoção criado com sucesso!",
+        "message": "Pedido de promoção criado com sucesso! Aguarda a confirmação do pagamento.",
         "promotion": {
             "id": promotion.id,
             "service_id": promotion.service_id,
@@ -181,20 +163,20 @@ def list_my_promotions(
     )
 
     now = datetime.now(timezone.utc)
+    updated = False
 
     result = []
 
     for promotion in promotions:
 
-        # -------------------------------------------------
         # Atualizar automaticamente promoções expiradas
-        # -------------------------------------------------
-
         if (
             promotion.status == "ACTIVE"
+            and promotion.expires_at is not None
             and promotion.expires_at <= now
         ):
             promotion.status = "EXPIRED"
+            updated = True
 
         result.append({
             "id": promotion.id,
@@ -208,7 +190,8 @@ def list_my_promotions(
             "created_at": promotion.created_at
         })
 
-    db.commit()
+    if updated:
+        db.commit()
 
     return result
 
@@ -257,6 +240,7 @@ def get_service_promotion(
 
     if (
         promotion.status == "ACTIVE"
+        and promotion.expires_at is not None
         and promotion.expires_at <= now
     ):
         promotion.status = "EXPIRED"
@@ -274,6 +258,8 @@ def get_service_promotion(
         "status": promotion.status,
         "created_at": promotion.created_at
     }
+
+
 
 
 # =========================================================
@@ -307,6 +293,7 @@ def cancel_service_promotion(
             ServicePromotion.id == promotion_id,
             Service.provider_id == provider.id
         )
+        .with_for_update()
         .first()
     )
 
@@ -328,20 +315,69 @@ def cancel_service_promotion(
             detail="Não é possível cancelar uma promoção expirada."
         )
 
-    promotion.status = "CANCELLED"
+    try:
+        now = datetime.now(timezone.utc)
 
-    db.commit()
-    db.refresh(promotion)
+        # Guardar o estado original antes do cancelamento
+        original_status = promotion.status
 
-    return {
-        "message": "Promoção cancelada com sucesso!",
-        "promotion": {
-            "id": promotion.id,
-            "service_id": promotion.service_id,
-            "service_title": promotion.service.title,
-            "status": promotion.status
+        # Cancelar a promoção
+        promotion.status = "CANCELLED"
+
+        rejected_payments = 0
+
+        # Rejeitar pagamentos apenas quando a promoção
+        # estava PENDING antes de ser cancelada.
+        if original_status == "PENDING":
+
+            pending_payments = (
+                db.query(Payment)
+                .filter(
+                    Payment.promotion_id == promotion.id,
+                    Payment.payment_type == "PROMOTION",
+                    Payment.status == "PENDING"
+                )
+                .with_for_update()
+                .all()
+            )
+
+            for payment in pending_payments:
+
+                payment.status = "REJECTED"
+                payment.processed_at = now
+
+                cancellation_note = (
+                    "Pagamento rejeitado automaticamente porque "
+                    "o prestador cancelou a promoção."
+                )
+
+                if payment.notes:
+                    payment.notes += f"\n{cancellation_note}"
+                else:
+                    payment.notes = cancellation_note
+
+                # Não foi uma ação administrativa.
+                payment.processed_by_admin_id = None
+
+                rejected_payments += 1
+
+        db.commit()
+        db.refresh(promotion)
+
+        return {
+            "message": "Promoção cancelada com sucesso.",
+            "rejected_payments": rejected_payments,
+            "promotion": {
+                "id": promotion.id,
+                "service_id": promotion.service_id,
+                "service_title": promotion.service.title,
+                "status": promotion.status
+            }
         }
-    }
+
+    except Exception:
+        db.rollback()
+        raise
 
 
 # =========================================================
@@ -374,7 +410,10 @@ def register_promotion_view(
             detail="Esta promoção não está ativa."
         )
 
-    if promotion.expires_at <= now:
+    if (
+        promotion.expires_at is None
+        or promotion.expires_at <= now
+    ):
         raise HTTPException(
             status_code=400,
             detail="Esta promoção já expirou."

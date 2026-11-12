@@ -1,3 +1,4 @@
+
 from datetime import datetime, timezone
 
 from sqlalchemy import (
@@ -46,6 +47,11 @@ class Service(Base):
     price: Mapped[float] = mapped_column(
         Float,
         nullable=False
+    )
+
+    image_url: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True
     )
 
     is_active: Mapped[bool] = mapped_column(

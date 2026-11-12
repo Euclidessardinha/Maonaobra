@@ -17,6 +17,7 @@ from app.models.category import Category
 from app.models.subscription import Subscription
 from app.models.plan import Plan
 from app.models.promotion_event import PromotionEvent
+from app.models.payment import Payment
 
 router = APIRouter(
     prefix="/admin",
@@ -541,6 +542,7 @@ def get_admin_service_promotions(
         # Atualizar automaticamente promoções expiradas
         if (
             promotion.status == "ACTIVE"
+            and promotion.expires_at is not None
             and promotion.expires_at <= now
         ):
             promotion.status = "EXPIRED"
@@ -607,6 +609,7 @@ def get_admin_service_promotion_stats(
 
         if (
             promotion.status == "ACTIVE"
+            and promotion.expires_at is not None
             and promotion.expires_at <= now
         ):
             promotion.status = "EXPIRED"
@@ -646,13 +649,19 @@ def get_admin_service_promotion_stats(
     )
 
     # Receita apenas das promoções aprovadas/ativas/expiradas
-    revenue = sum(
-        promotion.price
-        for promotion in promotions
-        if promotion.status in [
-            "ACTIVE",
-            "EXPIRED"
-        ]
+    # Receita apenas dos pagamentos de promoções confirmados
+    revenue = (
+        db.query(
+            func.coalesce(
+                func.sum(Payment.amount),
+                0
+            )
+        )
+        .filter(
+            Payment.payment_type == "PROMOTION",
+            Payment.status == "CONFIRMED"
+        )
+        .scalar()
     )
 
     views = (
@@ -678,11 +687,13 @@ def get_admin_service_promotion_stats(
         "expired": expired,
         "cancelled": cancelled,
         "rejected": rejected,
-        "revenue": revenue, 
+        "revenue": float(revenue), 
         "promoted_services": promoted_services,
         "views": views,
         "contacts": contacts,
     }
+
+
 
 
 # =========================================================
@@ -697,20 +708,12 @@ def update_service_promotion_status(
     db: Session = Depends(get_db)
 ):
 
-    allowed_statuses = [
-        "ACTIVE",
-        "REJECTED"
-    ]
-
     status = status.upper()
 
-    if status not in allowed_statuses:
+    if status not in ["ACTIVE", "REJECTED"]:
         raise HTTPException(
             status_code=400,
-            detail=(
-                "Status inválido. "
-                "Use ACTIVE ou REJECTED."
-            )
+            detail="Status inválido. Use ACTIVE ou REJECTED."
         )
 
     promotion = (
@@ -718,6 +721,7 @@ def update_service_promotion_status(
         .filter(
             ServicePromotion.id == promotion_id
         )
+        .with_for_update()
         .first()
     )
 
@@ -730,56 +734,76 @@ def update_service_promotion_status(
     if promotion.status != "PENDING":
         raise HTTPException(
             status_code=400,
-            detail=(
-                "Apenas promoções pendentes "
-                "podem ser aprovadas ou rejeitadas."
-            )
+            detail="Apenas promoções pendentes podem ser atualizadas."
         )
 
-    # -----------------------------------------------------
-    # Aprovar
-    # -----------------------------------------------------
-
-    if status == "ACTIVE":
-
+    try:
         now = datetime.now(timezone.utc)
 
-        promotion.starts_at = now
+        if status == "ACTIVE":
 
-        promotion.expires_at = (
-            now
-            + timedelta(
+            # Ativação manual pelo administrador
+            promotion.status = "ACTIVE"
+            promotion.starts_at = now
+            promotion.expires_at = now + timedelta(
                 days=promotion.duration_days
             )
-        )
 
-        promotion.status = "ACTIVE"
+            message = "Promoção ativada manualmente com sucesso."
 
-    # -----------------------------------------------------
-    # Rejeitar
-    # -----------------------------------------------------
+        else:
 
-    elif status == "REJECTED":
+            # Rejeição manual pelo administrador
+            promotion.status = "REJECTED"
 
-        promotion.status = "REJECTED"
+            # Rejeitar eventuais pagamentos pendentes associados.
+            # Nesta fase, os pagamentos não fazem parte do fluxo
+            # de ativação das promoções.
+            pending_payments = (
+                db.query(Payment)
+                .filter(
+                    Payment.promotion_id == promotion.id,
+                    Payment.payment_type == "PROMOTION",
+                    Payment.status == "PENDING"
+                )
+                .with_for_update()
+                .all()
+            )
 
-    db.commit()
-    db.refresh(promotion)
+            for payment in pending_payments:
+                payment.status = "REJECTED"
+                payment.processed_by_admin_id = current_user.id
+                payment.processed_at = now
 
-    return {
-        "message": (
-            "Promoção ativada com sucesso."
-            if status == "ACTIVE"
-            else "Promoção rejeitada com sucesso."
-        ),
-        "promotion": {
-            "id": promotion.id,
-            "service_id": promotion.service_id,
-            "price": promotion.price,
-            "duration_days": promotion.duration_days,
-            "starts_at": promotion.starts_at,
-            "expires_at": promotion.expires_at,
-            "status": promotion.status,
-            "created_at": promotion.created_at
+                rejection_note = (
+                    "Pagamento rejeitado devido à rejeição "
+                    "manual da promoção pelo administrador."
+                )
+
+                if payment.notes:
+                    payment.notes += f"\n{rejection_note}"
+                else:
+                    payment.notes = rejection_note
+
+            message = "Promoção rejeitada com sucesso."
+
+        db.commit()
+        db.refresh(promotion)
+
+        return {
+            "message": message,
+            "promotion": {
+                "id": promotion.id,
+                "service_id": promotion.service_id,
+                "price": promotion.price,
+                "duration_days": promotion.duration_days,
+                "starts_at": promotion.starts_at,
+                "expires_at": promotion.expires_at,
+                "status": promotion.status,
+                "created_at": promotion.created_at
+            }
         }
-    }
+
+    except Exception:
+        db.rollback()
+        raise

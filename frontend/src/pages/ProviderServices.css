@@ -2078,3 +2078,122 @@ RESPONSIVO — AÇÕES
 
 }
 
+
+/* =========================================================
+   PROMOÇÕES DE SERVIÇOS
+========================================================= */
+
+.provider-service-promotion {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  background: #fffaf5;
+}
+
+.provider-service-promotion > strong {
+  display: block;
+  color: #c2410c;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.provider-service-promotion > p {
+  margin: 7px 0 10px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.provider-service-promotion > small {
+  display: block;
+  margin-top: 9px;
+  color: #94a3b8;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.provider-service-promotion-create,
+.provider-service-promotion-cancel {
+  width: 100%;
+  min-height: 39px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.provider-service-promotion-create {
+  border: none;
+  background: #f97316;
+  color: #ffffff;
+}
+
+.provider-service-promotion-create:hover:not(:disabled) {
+  background: #ea580c;
+  transform: translateY(-1px);
+}
+
+.provider-service-promotion-cancel {
+  border: 1px solid #fecaca;
+  background: #ffffff;
+  color: #dc2626;
+}
+
+.provider-service-promotion-cancel:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #f87171;
+}
+
+.provider-service-promotion-create:disabled,
+.provider-service-promotion-cancel:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* SUCESSO */
+
+.provider-services-promotion-success {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.provider-services-promotion-success > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.provider-services-promotion-success p {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.provider-services-promotion-success button {
+  border: none;
+  background: transparent;
+  color: #166534;
+  font-size: 20px;
+  cursor: pointer;
+}

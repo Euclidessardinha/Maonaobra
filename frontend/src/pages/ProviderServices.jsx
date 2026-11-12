@@ -3,11 +3,15 @@ import { useEffect, useState } from "react";
 
 import { useAuth } from "../context/AuthContext";
 
+
 import {
   getMyServices,
   updateService,
   toggleServiceStatus,
-  deleteService
+  deleteService,
+  createServicePromotion,
+  getMyServicePromotions,
+  cancelServicePromotion
 } from "../api/provider";
 
 import "./ProviderServices.css";
@@ -27,6 +31,15 @@ function ProviderServices() {
   const [updatingStatus, setUpdatingStatus] = useState(null);
 
   const [statusError, setStatusError] = useState("");
+
+
+  const [promotions, setPromotions] = useState([]); 
+  const [promotionLoading, setPromotionLoading] = useState(false);
+  const [promotionActionLoading, setPromotionActionLoading] = useState(null);
+  const [promotionError, setPromotionError] = useState("");
+  const [promotionSuccess, setPromotionSuccess] = useState();
+
+
 
   /* =========================================================
      EDIÇÃO
@@ -104,6 +117,36 @@ function ProviderServices() {
     loadServices();
 
   }, []);
+
+
+
+  useEffect(() => {
+    async function loadPromotions() {
+      try {
+        setPromotionLoading(true);
+        setPromotionError("");
+
+        const data = await getMyServicePromotions();
+
+        setPromotions(
+          Array.isArray(data) ? data : []
+        );
+      } catch (err) {
+        console.error("Erro ao carregar promoções:", err);
+
+        setPromotionError(
+          err instanceof Error
+            ? err.message
+            : "Não foi possível carregar as promoções."
+        );
+      } finally {
+        setPromotionLoading(false);
+      }
+    }
+
+    loadPromotions();
+  }, []);
+
 
   /* =========================================================
      ESTATÍSTICAS
@@ -542,6 +585,126 @@ function ProviderServices() {
 
   }
 
+
+
+/* =========================================================
+   ENCONTRAR PROMOÇÃO DE UM SERVIÇO
+========================================================= */
+
+  function getServicePromotion(serviceId) {
+    const servicePromotions = promotions.filter(
+      (promotion) =>
+        String(promotion.service_id) === String(serviceId)
+    );
+
+    return (
+      servicePromotions.find(
+        (promotion) =>
+          promotion.status === "PENDING" ||
+          promotion.status === "ACTIVE"
+      ) ||
+      servicePromotions[0] ||
+      null
+    );
+  }
+
+/* =========================================================
+   FORMATAR ESTADO DA PROMOÇÃO
+========================================================= */
+
+  function getPromotionStatusLabel(status) {
+    const labels = {
+      PENDING: "Pendente de aprovação",
+      ACTIVE: "Promoção ativa",
+      EXPIRED: "Promoção expirada",
+      REJECTED: "Promoção rejeitada",
+      CANCELLED: "Promoção cancelada",
+    };
+
+    return labels[status] || status;
+  }
+
+  function formatPromotionDate(date) {
+    if (!date) return "-";
+
+    return new Date(date).toLocaleDateString("pt-MZ", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  }
+
+/* =========================================================
+   SOLICITAR PROMOÇÃO
+========================================================= */
+
+  async function handleCreatePromotion(service) {
+    try {
+      setPromotionActionLoading(service.id);
+      setPromotionError("");
+      setPromotionSuccess("");
+
+      await createServicePromotion(service.id);
+
+      const data = await getMyServicePromotions();
+
+      setPromotions(Array.isArray(data) ? data : []);
+
+      setPromotionSuccess(
+        `Pedido de promoção do serviço "${service.title}" enviado com   sucesso.`
+      );
+    } catch (err) {
+      console.error("Erro ao solicitar promoção:", err);
+
+      setPromotionError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível solicitar a promoção."
+      );
+    } finally {
+      setPromotionActionLoading(null);
+    }
+  }
+
+/* =========================================================
+   CANCELAR PROMOÇÃO
+========================================================= */
+
+  async function handleCancelPromotion(promotion) {
+    const confirmed = window.confirm(
+      "Tem certeza de que deseja cancelar esta promoção?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setPromotionActionLoading(promotion.service_id);
+      setPromotionError("");
+      setPromotionSuccess("");
+
+      await cancelServicePromotion(promotion.id);
+
+      const data = await getMyServicePromotions();
+
+      setPromotions(Array.isArray(data) ? data : []);
+
+      setPromotionSuccess(
+        "Promoção cancelada com sucesso."
+      );
+    } catch (err) {
+      console.error("Erro ao cancelar promoção:", err);
+
+      setPromotionError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível cancelar a promoção."
+      );
+    } finally {
+      setPromotionActionLoading(null);
+    }
+  }
+
+
   /* =========================================================
      RENDER
   ========================================================= */
@@ -705,6 +868,34 @@ function ProviderServices() {
       ===================================================== */}
 
       <main className="provider-services-content">
+
+
+{promotionError && (
+  <div className="provider-services-status-error">
+    <span>!</span>
+    <p>{promotionError}</p>
+    <button
+      type="button"
+      onClick={() => setPromotionError("")}
+    >
+      ×
+    </button>
+  </div>
+)}
+
+{promotionSuccess && (
+  <div className="provider-services-promotion-success">
+    <span>✓</span>
+    <p>{promotionSuccess}</p>
+    <button
+      type="button"
+      onClick={() => setPromotionSuccess("")}
+    >
+      ×
+    </button>
+  </div>
+)}
+
 
         {statusError && (
 
@@ -938,6 +1129,81 @@ function ProviderServices() {
                       </strong>
 
                     </div>
+
+
+{/* PROMOÇÃO DO SERVIÇO */}
+
+{(() => {
+  const promotion = getServicePromotion(service.id);
+
+  if (
+    promotion &&
+    ["PENDING", "ACTIVE"].includes(promotion.status)
+  ) {
+    return (
+      <div className="provider-service-promotion">
+
+        <strong>
+          {getPromotionStatusLabel(promotion.status)}
+        </strong>
+
+        {promotion.status === "ACTIVE" && (
+          <p>
+            Expira em: {formatPromotionDate(promotion.expires_at)}
+          </p>
+        )}
+
+        {promotion.status === "PENDING" && (
+          <p>
+            O pedido aguarda aprovação do administrador.
+          </p>
+        )}
+
+        <button
+          type="button"
+          className="provider-service-promotion-cancel"
+          onClick={() => handleCancelPromotion(promotion)}
+          disabled={promotionActionLoading === service.id}
+        >
+          {promotionActionLoading === service.id
+            ? "A cancelar..."
+            : "Cancelar promoção"}
+        </button>
+
+      </div>
+    );
+  }
+
+  return (
+    <div className="provider-service-promotion">
+
+      <p>
+        Destaque este serviço para alcançar mais clientes.
+      </p>
+
+      <button
+        type="button"
+        className="provider-service-promotion-create"
+        onClick={() => handleCreatePromotion(service)}
+        disabled={
+          service.is_active === false ||
+          promotionActionLoading === service.id ||
+          promotionLoading
+        }
+      >
+        {promotionActionLoading === service.id
+          ? "A enviar pedido..."
+          : "★ Promover serviço"}
+      </button>
+
+      <small>
+        100 MT por 7 dias, sujeito à aprovação administrativa.
+      </small>
+
+    </div>
+  );
+})()}
+
 
                   </div>
 

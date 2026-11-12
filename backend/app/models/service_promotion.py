@@ -39,14 +39,14 @@ class ServicePromotion(Base):
         default=7
     )
 
-    starts_at: Mapped[datetime] = mapped_column(
+    starts_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
-        nullable=False
+        nullable=True
     )
 
-    expires_at: Mapped[datetime] = mapped_column(
+    expires_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
-        nullable=False
+        nullable=True
     )
 
     status: Mapped[str] = mapped_column(

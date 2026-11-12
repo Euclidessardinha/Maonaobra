@@ -12,7 +12,8 @@ function ClientDashboard() {
 
   const {
     user,
-    logout
+    logout,
+    selectOnboardingArea
   } = useAuth();
 
 
@@ -41,57 +42,40 @@ function ClientDashboard() {
      MUDAR PARA ÁREA DO PRESTADOR
   ========================================================= */
 
-  async function handleProviderMode() {
+ 
+async function handleProviderMode() {
+  if (switchingToProvider) {
+    return;
+  }
 
-    if (switchingToProvider) {
+  try {
+    setSwitchingToProvider(true);
+
+    // Guardar a escolha inicial, se ainda não existir
+    await selectOnboardingArea("PROVIDER");
+
+    // Se ainda não concluiu o onboarding profissional
+    if (!user?.provider_onboarding_completed) {
+      window.location.href = "/onboarding/provider";
       return;
     }
 
+    // Verificar se já existe perfil profissional
     try {
-
-      setSwitchingToProvider(true);
-
-      /*
-       * Verifica se o utilizador já possui
-       * um perfil de prestador.
-       *
-       * Se existir:
-       *    vai para o Dashboard do Prestador.
-       *
-       * Se não existir:
-       *    vai para a página de criação do
-       *    perfil de prestador.
-       */
-
       await getMyProviderProfile();
-
       window.location.href = "/provider";
-
     } catch (error) {
+      console.log("Perfil profissional ainda não existe.", error);
 
-      /*
-       * O endpoint /providers/me retorna erro
-       * quando o utilizador ainda não possui
-       * um perfil de prestador.
-       *
-       * Nesse caso, encaminhamos para
-       * a criação do perfil.
-       */
-
-      console.log(
-        "Utilizador ainda não possui perfil de prestador.",
-        error
-      );
-
-      window.location.href =
-        "/provider/profile/create";
-
-    } finally {
-
-      setSwitchingToProvider(false);
-
+      window.location.href = "/provider/profile/create";
     }
+
+  } catch (error) {
+    console.error("Erro ao mudar para prestador:", error);
+    alert(error.message || "Não foi possível mudar de área.");
+    setSwitchingToProvider(false);
   }
+}
 
 
   /* =========================================================

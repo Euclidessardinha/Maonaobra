@@ -184,7 +184,12 @@ export default function ServicesPage() {
         ) : (
           <div className="all-services-grid">
             {filteredServices.map((service) => (
-              <article className="all-service-card" key={service.id}>
+              <article
+  className={`all-service-card ${
+    service.is_promoted ? "all-service-card-promoted" : ""
+  }`}
+  key={service.id}
+>
                 {service.image_url ? (
                   <img
                     src={service.image_url}
@@ -199,7 +204,7 @@ export default function ServicesPage() {
                 <div className="all-service-content">
                   {service.is_promoted && (
                     <span className="all-service-promoted">
-                      ★ Em destaque
+                      ★ EM DESTAQUE
                     </span>
                   )}
 

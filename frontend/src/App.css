@@ -5261,9 +5261,9 @@ footer p {
 }
 
 
-/* =========================================================
-   SERVIÇOS EM DESTAQUE — PÁGINA INICIAL
-========================================================= */
+
+
+/* SERVIÇOS EM DESTAQUE — PÁGINA INICIAL */
 
 .home-services {
   padding: 90px 8%;
@@ -5287,19 +5287,39 @@ footer p {
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
 
 .home-service-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.09);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .09);
 }
 
+/* Cartões promovidos */
+.home-service-card-promoted {
+  border: 2px solid #16a34a;
+  background: linear-gradient(180deg, #f0fdf4 0%, #fff 45%);
+  box-shadow: 0 7px 22px rgba(22, 163, 74, .13);
+}
+
+.home-service-card-promoted:hover {
+  transform: translateY(-7px);
+  border-color: #15803d;
+  box-shadow: 0 16px 32px rgba(22, 163, 74, .2);
+}
+
+/* Imagens */
 .home-service-image,
 .home-service-placeholder {
+  display: block;
   width: 100%;
   height: 190px;
   object-fit: cover;
+}
+
+.home-service-card-promoted .home-service-image,
+.home-service-card-promoted .home-service-placeholder {
+  border-bottom: 3px solid #16a34a;
 }
 
 .home-service-placeholder {
@@ -5310,19 +5330,35 @@ footer p {
   font-size: 45px;
 }
 
+.home-service-card-promoted .home-service-placeholder {
+  background: #f0fdf4;
+}
+
+/* Conteúdo dos cartões */
 .home-service-content {
   padding: 20px;
 }
 
+.home-service-card-promoted .home-service-content {
+  background: linear-gradient(180deg, #f0fdf4 0%, #fff 100%);
+}
+
+/* Etiqueta de promoção */
 .promoted-badge {
-  display: inline-block;
-  padding: 6px 10px;
-  margin-bottom: 12px;
-  border-radius: 20px;
-  background: #fff7ed;
-  color: #ea580c;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 13px;
+  margin-bottom: 13px;
+  border: 1px solid #166534;
+  border-radius: 7px;
+  background: #15803d;
+  color: #fff;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 900;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  box-shadow: 0 3px 8px rgba(22, 163, 74, .17);
 }
 
 .home-service-category {
@@ -5330,6 +5366,11 @@ footer p {
   color: #64748b;
   font-size: 12px;
   margin-bottom: 8px;
+}
+
+.home-service-card-promoted .home-service-category {
+  color: #15803d;
+  font-weight: 700;
 }
 
 .home-service-content h3 {
@@ -5358,6 +5399,7 @@ footer p {
   margin-top: 15px;
 }
 
+/* Preço e ligação */
 .home-service-footer {
   display: flex;
   justify-content: space-between;
@@ -5369,9 +5411,17 @@ footer p {
   border-top: 1px solid #f1f5f9;
 }
 
+.home-service-card-promoted .home-service-footer {
+  border-top-color: #bbf7d0;
+}
+
 .home-service-footer strong {
   color: #f97316;
   font-size: 17px;
+}
+
+.home-service-card-promoted .home-service-footer strong {
+  color: #15803d;
 }
 
 .home-service-footer a {
@@ -5397,6 +5447,7 @@ footer p {
   margin-top: 35px;
 }
 
+/* Responsividade */
 @media (max-width: 900px) {
   .home-service-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5415,5 +5466,490 @@ footer p {
   .home-service-image,
   .home-service-placeholder {
     height: 200px;
+  }
+}
+
+
+/* ===================================================
+   CARROSSEL PROFISSIONAL DE SERVIÇOS
+=================================================== */
+
+.service-showcase {
+  padding: 85px 8%;
+  background: #ffffff;
+}
+
+.showcase-header {
+  max-width: 1200px;
+  margin: 0 auto 30px;
+}
+
+.showcase-header h2 {
+  color: #0f172a;
+  font-size: 30px;
+  font-weight: 850;
+  margin: 10px 0;
+}
+
+.showcase-header p {
+  color: #64748b;
+  font-size: 15px;
+}
+
+.showcase-carousel {
+  position: relative;
+  max-width: 1200px;
+  height: 440px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 22px;
+  background: #0f172a;
+  box-shadow: 0 15px 40px rgba(15, 23, 42, .16);
+}
+
+.showcase-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: showcaseFade .8s ease;
+}
+
+@keyframes showcaseFade {
+  from {
+    opacity: .35;
+    transform: scale(1.025);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.showcase-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 55px 65px;
+  background: linear-gradient(
+    90deg,
+    rgba(8, 25, 20, .88) 0%,
+    rgba(8, 25, 20, .55) 50%,
+    rgba(8, 25, 20, .05) 100%
+  );
+  color: white;
+}
+
+.showcase-tag {
+  display: inline-block;
+  padding: 9px 14px;
+  margin-bottom: 18px;
+  border-radius: 6px;
+  background: #15803d;
+  color: white;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 1px;
+}
+
+.showcase-overlay h2 {
+  max-width: 550px;
+  color: white;
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1.2;
+  margin: 0 0 12px;
+}
+
+.showcase-overlay p {
+  color: #e2e8f0;
+  font-size: 16px;
+  margin-bottom: 25px;
+}
+
+.showcase-button {
+  display: inline-block;
+  padding: 13px 23px;
+  border-radius: 8px;
+  background: #16a34a;
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: background .25s ease, transform .25s ease;
+}
+
+.showcase-button:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+}
+
+.showcase-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255,255,255,.5);
+  border-radius: 50%;
+  background: rgba(15,23,42,.45);
+  color: white;
+  font-size: 30px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.showcase-arrow:hover {
+  background: #15803d;
+}
+
+.showcase-prev {
+  left: 18px;
+}
+
+.showcase-next {
+  right: 18px;
+}
+
+.showcase-dots {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 9px;
+  z-index: 3;
+}
+
+.showcase-dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255,255,255,.55);
+  cursor: pointer;
+  transition: all .25s ease;
+}
+
+.showcase-dot.active {
+  width: 27px;
+  border-radius: 8px;
+  background: #22c55e;
+}
+
+.showcase-message {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 35px;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #64748b;
+  text-align: center;
+}
+
+/* Responsividade */
+
+@media (max-width: 768px) {
+  .service-showcase {
+    padding: 60px 5%;
+  }
+
+  .showcase-header h2 {
+    font-size: 24px;
+  }
+
+  .showcase-carousel {
+    height: 380px;
+    border-radius: 15px;
+  }
+
+  .showcase-overlay {
+    padding: 35px 25px;
+    background: linear-gradient(
+      90deg,
+      rgba(8,25,20,.85),
+      rgba(8,25,20,.35)
+    );
+  }
+
+  .showcase-overlay h2 {
+    font-size: 27px;
+  }
+
+  .showcase-overlay p {
+    font-size: 14px;
+  }
+
+  .showcase-arrow {
+    width: 36px;
+    height: 36px;
+    font-size: 25px;
+  }
+
+  .showcase-prev {
+    left: 10px;
+  }
+
+  .showcase-next {
+    right: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .showcase-carousel {
+    height: 340px;
+  }
+
+  .showcase-overlay {
+    padding: 25px 20px;
+  }
+
+  .showcase-overlay h2 {
+    font-size: 23px;
+  }
+}
+
+
+
+/* ===================================================
+   GALERIA PROFISSIONAL DE SERVIÇOS
+=================================================== */
+
+.service-showcase {
+  padding: 85px 8%;
+  background: #ffffff;
+}
+
+.showcase-header {
+  max-width: 1200px;
+  margin: 0 auto 32px;
+}
+
+.showcase-header h2 {
+  color: #0f172a;
+  font-size: 30px;
+  font-weight: 850;
+  line-height: 1.3;
+  margin: 10px 0;
+}
+
+.showcase-header p {
+  color: #64748b;
+  font-size: 15px;
+}
+
+.showcase-carousel {
+  position: relative;
+  max-width: 1200px;
+  height: 450px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 22px;
+  background: #0f172a;
+  box-shadow: 0 15px 40px rgba(15, 23, 42, .13);
+}
+
+.showcase-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  animation: showcaseFade .9s ease;
+}
+
+@keyframes showcaseFade {
+  from {
+    opacity: .3;
+    transform: scale(1.035);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.showcase-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 55px 70px;
+  background: linear-gradient(
+    90deg,
+    rgba(8, 25, 20, .88) 0%,
+    rgba(8, 25, 20, .58) 48%,
+    rgba(8, 25, 20, .05) 100%
+  );
+  color: white;
+}
+
+.showcase-tag {
+  display: inline-block;
+  padding: 9px 15px;
+  margin-bottom: 18px;
+  border-radius: 6px;
+  background: #15803d;
+  color: white;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.showcase-overlay h2 {
+  max-width: 560px;
+  color: white;
+  font-size: 40px;
+  line-height: 1.2;
+  font-weight: 900;
+  margin: 0 0 14px;
+}
+
+.showcase-overlay p {
+  max-width: 470px;
+  color: #f1f5f9;
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 25px;
+}
+
+.showcase-button {
+  display: inline-block;
+  padding: 14px 23px;
+  border-radius: 8px;
+  background: #16a34a;
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: background .25s, transform .25s;
+}
+
+.showcase-button:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+}
+
+.showcase-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 45px;
+  height: 45px;
+  border: 1px solid rgba(255,255,255,.5);
+  border-radius: 50%;
+  background: rgba(15,23,42,.45);
+  color: white;
+  font-size: 30px;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.showcase-arrow:hover {
+  background: #15803d;
+}
+
+.showcase-prev {
+  left: 18px;
+}
+
+.showcase-next {
+  right: 18px;
+}
+
+.showcase-dots {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 9px;
+  z-index: 3;
+}
+
+.showcase-dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255,255,255,.55);
+  cursor: pointer;
+  transition: all .25s;
+}
+
+.showcase-dot.active {
+  width: 27px;
+  background: #22c55e;
+}
+
+/* Tablets e telemóveis */
+
+@media (max-width: 768px) {
+  .service-showcase {
+    padding: 60px 5%;
+  }
+
+  .showcase-header h2 {
+    font-size: 24px;
+  }
+
+  .showcase-carousel {
+    height: 380px;
+    border-radius: 15px;
+  }
+
+  .showcase-overlay {
+    padding: 35px 25px;
+    background: linear-gradient(
+      90deg,
+      rgba(8,25,20,.88),
+      rgba(8,25,20,.35)
+    );
+  }
+
+  .showcase-overlay h2 {
+    font-size: 28px;
+  }
+
+  .showcase-overlay p {
+    font-size: 14px;
+  }
+
+  .showcase-arrow {
+    width: 36px;
+    height: 36px;
+    font-size: 25px;
+  }
+
+  .showcase-prev {
+    left: 10px;
+  }
+
+  .showcase-next {
+    right: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .showcase-carousel {
+    height: 340px;
+  }
+
+  .showcase-overlay {
+    padding: 25px 20px;
+  }
+
+  .showcase-overlay h2 {
+    font-size: 24px;
   }
 }

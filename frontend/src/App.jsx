@@ -43,6 +43,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ProviderProjects from "./pages/ProviderProjects";
 
 import ProviderRequests from "./pages/ProviderRequests";
+import Onboarding from "./pages/Onboarding";
 
 
 import "./App.css";
@@ -50,6 +51,71 @@ import "./App.css";
 import ClientFavorites from "./pages/ClientFavorites";
 import ClientProfile from "./pages/ClientProfile";
 import ProviderProfile from "./pages/ProviderProfile";
+
+
+
+const showcaseSlides = [
+  {
+    title: "Instalações elétricas",
+    subtitle: "Eletricistas para instalações, manutenção e reparações.",
+    category: "ELETRICIDADE",
+    image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1800&q=85"
+  },
+  {
+    title: "Canalização profissional",
+    subtitle: "Soluções para tubagens, torneiras e sistemas de água.",
+    category: "CANALIZAÇÃO",
+    image: "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=1800&q=85"
+  },
+  {
+    title: "Pintura de edifícios",
+    subtitle: "Transforme os seus espaços com serviços de pintura.",
+    category: "PINTURA",
+    image: "https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=1800&q=85"
+  },
+  {
+    title: "Carpintaria e mobiliário",
+    subtitle: "Trabalhos em madeira, portas, móveis e acabamentos.",
+    category: "CARPINTARIA",
+    image: "https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&w=1800&q=85"
+  },
+  {
+    title: "Construção civil",
+    subtitle: "Profissionais para obras, remodelações e construção.",
+    category: "CONSTRUÇÃO",
+    image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1800&q=85"
+  },
+  {
+    title: "Limpeza profissional",
+    subtitle: "Serviços de limpeza para casas, escritórios e empresas.",
+    category: "LIMPEZA",
+    image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1800&q=85"
+  },
+  {
+    title: "Jardinagem e paisagismo",
+    subtitle: "Cuidados com jardins, espaços verdes e exteriores.",
+    category: "JARDINAGEM",
+    image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1800&q=85"
+  },
+  {
+    title: "Reparação automóvel",
+    subtitle: "Mecânicos para manutenção e reparação de veículos.",
+    category: "MECÂNICA",
+    image: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1800&q=85"
+  },
+  {
+    title: "Climatização e ar condicionado",
+    subtitle: "Instalação e manutenção de equipamentos de climatização.",
+    category: "CLIMATIZAÇÃO",
+    image: "https://images.unsplash.com/photo-1631545806609-7d1c2f4a7c7e?auto=format&fit=crop&w=1800&q=85"
+  },
+  {
+    title: "Decoração de interiores",
+    subtitle: "Dê personalidade aos seus espaços com profissionais especializados.",
+    category: "DECORAÇÃO",
+    image: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1800&q=85"
+  }
+];
 
 
 
@@ -70,6 +136,9 @@ const [categories, setCategories] = useState([]);
 const [loadingCategories, setLoadingCategories] = useState(true);
 const [services, setServices] = useState([]);
 const [loadingServices, setLoadingServices] = useState(true);
+
+const [activeSlide, setActiveSlide] = useState(0);
+
 
 /* =======================================================
 CARREGAR CATEGORIAS
@@ -104,6 +173,17 @@ async function loadCategories() {
 loadCategories();
 
 
+}, []);
+
+// Transição automática das imagens
+useEffect(() => {
+  const timer = window.setInterval(() => {
+    setActiveSlide((current) =>
+      (current + 1) % showcaseSlides.length
+    );
+  }, 5500);
+
+  return () => window.clearInterval(timer);
 }, []);
 
 /* =======================================================
@@ -210,6 +290,57 @@ const orderedServices = [...services].sort(
     Number(Boolean(b.is_promoted)) -
     Number(Boolean(a.is_promoted))
 );
+
+
+const currentShowcase = showcaseSlides[activeSlide];
+
+function nextShowcase() {
+  setActiveSlide((current) =>
+    (current + 1) % showcaseSlides.length
+  );
+}
+
+function previousShowcase() {
+  setActiveSlide((current) =>
+    (current - 1 + showcaseSlides.length) % showcaseSlides.length
+  );
+}
+
+
+// Fotografias dos serviços publicados
+const carouselServices = services
+  .filter((service) => service.image_url)
+  .slice(0, 8);
+
+// Serviço atualmente apresentado
+const activeCarouselService =
+  carouselServices[activeSlide] || carouselServices[0];
+
+// Transição automática a cada 5 segundos
+useEffect(() => {
+  if (carouselServices.length <= 1) {
+    setActiveSlide(0);
+    return;
+  }
+
+  const timer = window.setInterval(() => {
+    setActiveSlide((current) => (current + 1) % carouselServices.length);
+  }, 5000);
+
+  return () => window.clearInterval(timer);
+}, [carouselServices.length]);
+
+function nextSlide() {
+  setActiveSlide((current) =>
+    (current + 1) % carouselServices.length
+  );
+}
+
+function previousSlide() {
+  setActiveSlide((current) =>
+    (current - 1 + carouselServices.length) % carouselServices.length
+  );
+}
 
 /* =======================================================
 RENDER
@@ -525,7 +656,7 @@ return (
       ) : (
 
         categories
-          .slice(0, 6)
+          .slice(0, 2)
           .map((category) => (
 
             <a
@@ -565,11 +696,11 @@ return (
     </div>
 
 
-    {/* =================================================
+    {/* =======================================  ==========
         VER TODAS AS CATEGORIAS
     ================================================= */}
 
-    {categories.length > 6 && (
+    {categories.length > 2 && (
 
       <div className="categories-action">
 
@@ -585,6 +716,199 @@ return (
     )}
 
   </section>
+
+
+
+{/* ===================================================
+    CARROSSEL DE SERVIÇOS
+=================================================== */}
+
+<section className="service-showcase">
+
+  <div className="showcase-header">
+    <span className="section-label">MÃO NA OBRA</span>
+    <h2>Há sempre um profissional para ajudar.</h2>
+    <p>
+      Descubra alguns dos serviços disponíveis na nossa plataforma.
+    </p>
+  </div>
+
+  {loadingServices ? (
+
+    <p className="showcase-message">A carregar imagens...</p>
+
+  ) : activeCarouselService ? (
+
+    <div className="showcase-carousel">
+
+      <img
+        key={activeCarouselService.id}
+        src={activeCarouselService.image_url}
+        alt={activeCarouselService.title}
+        className="showcase-image"
+      />
+
+      <div className="showcase-overlay">
+
+        <span className="showcase-tag">
+          DESCUBRA OS NOSSOS SERVIÇOS
+        </span>
+
+        <h2>{activeCarouselService.title}</h2>
+
+        <p>
+          {activeCarouselService.category?.name || "Serviços profissionais"}
+        </p>
+
+        <a href="/servicos" className="showcase-button">
+          Explorar serviços →
+        </a>
+
+      </div>
+
+      {carouselServices.length > 1 && (
+        <>
+          <button
+            type="button"
+            className="showcase-arrow showcase-prev"
+            onClick={previousSlide}
+            aria-label="Imagem anterior"
+          >
+            ‹
+          </button>
+
+          <button
+            type="button"
+            className="showcase-arrow showcase-next"
+            onClick={nextSlide}
+            aria-label="Imagem seguinte"
+          >
+            ›
+          </button>
+
+          <div className="showcase-dots">
+
+            {carouselServices.map((service, index) => (
+              <button
+                type="button"
+                key={service.id}
+                className={`showcase-dot ${
+                  activeSlide === index ? "active" : ""
+                }`}
+                onClick={() => setActiveSlide(index)}
+                aria-label={`Mostrar imagem ${index + 1}`}
+              />
+            ))}
+
+          </div>
+        </>
+      )}
+
+    </div>
+
+  ) : (
+
+    <div className="showcase-message">
+      <p>
+        As fotografias dos serviços aparecerão aqui à medida
+        que os profissionais publicarem os seus serviços.
+      </p>
+    </div>
+
+  )}
+
+</section>
+
+
+
+
+{/* ===================================================
+    GALERIA DE SERVIÇOS
+=================================================== */}
+
+<section className="service-showcase">
+
+  <div className="showcase-header">
+
+    <span className="section-label">
+      O QUE PODE ENCONTRAR
+    </span>
+
+    <h2>Temos profissionais para diferentes necessidades.</h2>
+
+    <p>
+      Descubra algumas das áreas de serviços disponíveis
+      no MãoNaObra.
+    </p>
+
+  </div>
+
+  <div className="showcase-carousel">
+
+    <img
+      key={currentShowcase.image}
+      src={currentShowcase.image}
+      alt={currentShowcase.category}
+      className="showcase-image"
+    />
+
+    <div className="showcase-overlay">
+
+      <span className="showcase-tag">
+        {currentShowcase.category}
+      </span>
+
+      <h2>{currentShowcase.title}</h2>
+
+      <p>{currentShowcase.subtitle}</p>
+
+      <a href="/servicos" className="showcase-button">
+        Explorar serviços →
+      </a>
+
+    </div>
+
+    <button
+      type="button"
+      className="showcase-arrow showcase-prev"
+      onClick={previousShowcase}
+      aria-label="Imagem anterior"
+    >
+      ‹
+    </button>
+
+    <button
+      type="button"
+      className="showcase-arrow showcase-next"
+      onClick={nextShowcase}
+      aria-label="Imagem seguinte"
+    >
+      ›
+    </button>
+
+    <div className="showcase-dots">
+
+      {showcaseSlides.map((slide, index) => (
+
+        <button
+          type="button"
+          key={slide.category}
+          className={`showcase-dot ${
+            activeSlide === index ? "active" : ""
+          }`}
+          onClick={() => setActiveSlide(index)}
+          aria-label={`Mostrar ${slide.category}`}
+        />
+
+      ))}
+
+    </div>
+
+  </div>
+
+</section>
+
+
 
 
 
@@ -628,9 +952,11 @@ return (
       {orderedServices.slice(0, 6).map((service) => (
 
         <article
-          className="home-service-card"
-          key={service.id}
-        >
+  className={`home-service-card ${
+    service.is_promoted ? "home-service-card-promoted" : ""
+  }`}
+  key={service.id}
+>
 
           {service.image_url ? (
 
@@ -652,7 +978,7 @@ return (
 
             {service.is_promoted && (
               <span className="promoted-badge">
-                ★ Em destaque
+                ★ EM DESTAQUE
               </span>
             )}
 
@@ -912,6 +1238,51 @@ return <Register />;
 
 
 }
+
+
+/* =======================================================
+ONBOARDING — ESCOLHA E CONFIGURAÇÃO DAS ÁREAS
+======================================================= */
+
+if (user && user.role !== "ADMIN") {
+
+  // Nova conta: ainda não escolheu entre Cliente e Prestador.
+  const firstChoicePending =
+    user.onboarding_type == null &&
+    user.client_onboarding_completed === false &&
+    user.provider_onboarding_completed === false;
+
+  if (firstChoicePending) {
+    return <Onboarding />;
+  }
+
+  // Cliente: apresentar o onboarding enquanto não estiver concluído.
+  if (
+    user.client_onboarding_completed === false &&
+    (
+      path.startsWith("/client") ||
+      path === "/onboarding/client"
+    )
+  ) {
+    return <Onboarding />;
+  }
+
+  // Prestador: apresentar o onboarding enquanto não estiver concluído.
+  // A criação do perfil profissional deve continuar acessível.
+  if (
+    user.provider_onboarding_completed === false &&
+    (
+      path.startsWith("/provider") ||
+      path === "/onboarding/provider"
+    ) &&
+    path !== "/provider/profile/create"
+  ) {
+    return <Onboarding />;
+  }
+
+}
+
+
 
 /* =======================================================
 CLIENTE — CRIAR PROJETO

@@ -1,103 +1,134 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState
-} from "react";
+
+import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
-
 const API_URL = import.meta.env.VITE_API_URL;
 
 export function AuthProvider({ children }) {
-
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-
   async function loadUser() {
-
-    const token =
-      localStorage.getItem("access_token");
-
+    const token = localStorage.getItem("access_token");
 
     if (!token) {
-
       setUser(null);
       setLoading(false);
-
       return null;
     }
 
-
     try {
-
-      const response = await fetch(
-        `${API_URL}/auth/me`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+      const response = await fetch(`${API_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`
         }
-      );
-
+      });
 
       if (!response.ok) {
-
-        localStorage.removeItem(
-          "access_token"
-        );
+        if (response.status === 401) {
+          localStorage.removeItem("access_token");
+        }
 
         setUser(null);
-
         return null;
       }
 
-
       const data = await response.json();
-
       setUser(data);
 
       return data;
 
     } catch (error) {
-
-      console.error(
-        "Erro ao carregar usuário:",
-        error
-      );
-
+      console.error("Erro ao carregar usuário:", error);
       setUser(null);
-
       return null;
 
     } finally {
-
       setLoading(false);
-
     }
   }
 
+  // =====================================================
+  // ESCOLHER ÁREA DO ONBOARDING
+  // =====================================================
 
-  useEffect(() => {
+  async function selectOnboardingArea(area) {
+    const token = localStorage.getItem("access_token");
 
-    loadUser();
+    if (!token) {
+      throw new Error("Sessão não encontrada. Faça login novamente.");
+    }
 
-  }, []);
-
-
-  function logout() {
-
-    localStorage.removeItem(
-      "access_token"
+    const response = await fetch(
+      `${API_URL}/auth/onboarding/select`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ area })
+      }
     );
 
-    setUser(null);
+    const data = await response.json();
 
-    window.location.href = "/";
+    if (!response.ok) {
+      throw new Error(data.detail || "Não foi possível selecionar a área.");
+    }
 
+    await loadUser();
+
+    return data;
   }
 
+  // =====================================================
+  // CONCLUIR ONBOARDING
+  // =====================================================
+
+  async function completeOnboarding(area) {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      throw new Error("Sessão não encontrada. Faça login novamente.");
+    }
+
+    const response = await fetch(
+      `${API_URL}/auth/onboarding/complete`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ area })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Não foi possível concluir o onboarding.");
+    }
+
+    await loadUser();
+
+    return data;
+  }
+
+  // =====================================================
+  // LOGOUT
+  // =====================================================
+
+  function logout() {
+    localStorage.removeItem("access_token");
+    setUser(null);
+    window.location.href = "/";
+  }
+
+  useEffect(() => {
+    loadUser();
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -105,7 +136,9 @@ export function AuthProvider({ children }) {
         user,
         loading,
         logout,
-        loadUser
+        loadUser,
+        selectOnboardingArea,
+        completeOnboarding
       }}
     >
       {children}
@@ -113,9 +146,6 @@ export function AuthProvider({ children }) {
   );
 }
 
-
 export function useAuth() {
-
   return useContext(AuthContext);
-
 }

@@ -11,43 +11,44 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(
-        Integer,
-        primary_key=True,
-        index=True
+        Integer, primary_key=True, index=True
     )
 
     name: Mapped[str] = mapped_column(
-        String(100),
-        nullable=False
+        String(100), nullable=False
     )
 
     email: Mapped[str] = mapped_column(
-        String(150),
-        unique=True,
-        index=True,
-        nullable=False
+        String(150), unique=True, index=True, nullable=False
     )
 
     phone: Mapped[str] = mapped_column(
-        String(30),
-        nullable=False
+        String(30), nullable=False
     )
 
     password_hash: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False
+        String(255), nullable=False
     )
 
     role: Mapped[str] = mapped_column(
-        String(20),
-        nullable=False,
-        default="CLIENT"
+        String(20), nullable=False, default="CLIENT"
     )
 
     is_active: Mapped[bool] = mapped_column(
-        Boolean,
-        default=True,
-        nullable=False
+        Boolean, default=True, nullable=False
+    )
+
+    # Controlo do onboarding
+    onboarding_type: Mapped[str | None] = mapped_column(
+        String(20), nullable=True, default=None
+    )
+
+    client_onboarding_completed: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
+
+    provider_onboarding_completed: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
     )
 
     created_at: Mapped[datetime] = mapped_column(

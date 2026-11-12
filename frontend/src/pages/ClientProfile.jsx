@@ -24,6 +24,8 @@ const [saving, setSaving] = useState(false);
 const [error, setError] = useState("");
 const [success, setSuccess] = useState("");
 
+const [uploadingImage, setUploadingImage] = useState(false);
+
 // =======================================================
 // CARREGAR DADOS DO USUÁRIO
 // =======================================================
@@ -206,6 +208,84 @@ try {
 }
 
 // =======================================================
+// ATUALIZAR FOTOGRAFIA DE PERFIL
+// =======================================================
+
+async function handleProfileImageUpload(event) {
+  const file = event.target.files?.[0];
+
+  if (!file) return;
+
+  setError("");
+  setSuccess("");
+
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+  ];
+
+  if (!allowedTypes.includes(file.type)) {
+    setError("Formato inválido. Utilize JPEG, PNG ou WebP.");
+    event.target.value = "";
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    setError("A fotografia não pode ultrapassar 5 MB.");
+    event.target.value = "";
+    return;
+  }
+
+  try {
+    setUploadingImage(true);
+
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      throw new Error("Sua sessão expirou. Faça login novamente.");
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(
+      `${API_URL}/auth/me/profile-image`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      }
+    );
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        data?.detail || "Não foi possível atualizar a fotografia."
+      );
+    }
+
+    await loadUser();
+
+    setSuccess("Fotografia de perfil atualizada com sucesso!");
+
+  } catch (error) {
+    console.error("Erro ao atualizar fotografia:", error);
+
+    setError(
+      error.message || "Ocorreu um erro ao atualizar a fotografia."
+    );
+  } finally {
+    setUploadingImage(false);
+    event.target.value = "";
+  }
+}
+
+
+// =======================================================
 // INICIAIS
 // =======================================================
 
@@ -307,11 +387,37 @@ return (
 
       <div className="client-profile-hero-content">
 
-        <div className="client-profile-avatar">
+        <div className="client-profile-avatar-wrapper">
 
-          {getInitials(user.name)}
+  <div className="client-profile-avatar">
 
-        </div>
+    {user.profile_image ? (
+      <img
+        src={user.profile_image}
+        alt="Fotografia de perfil"
+        className="client-profile-avatar-image"
+      />
+    ) : (
+      getInitials(user.name)
+    )}
+
+  </div>
+
+  <label className="client-profile-photo-button">
+
+    {uploadingImage ? "A enviar..." : "📷 Alterar fotografia"}
+
+    <input
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      onChange={handleProfileImageUpload}
+      disabled={uploadingImage}
+      hidden
+    />
+
+  </label>
+
+</div>
 
 
         <div className="client-profile-hero-info">

@@ -28,9 +28,35 @@ export default function ProviderChat() {
 
   const [menuOpen, setMenuOpen] = useState(false);
 
-  function handleClientMode() {
+  
+async function handleClientMode() {
+  try {
+    // Seleciona a área de Cliente.
+    await selectOnboardingArea("CLIENT");
+
+    // Verifica se o utilizador já concluiu
+    // a configuração da área de Cliente.
+    if (!user?.client_onboarding_completed) {
+      window.location.href = "/onboarding/client";
+      return;
+    }
+
+    // Se já concluiu, entra diretamente.
     window.location.href = "/client";
+
+  } catch (error) {
+    console.error(
+      "Erro ao mudar para a área de Cliente:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "Não foi possível mudar para a área de Cliente."
+    );
   }
+}
+
 
   function closeMenu() {
     setMenuOpen(false);

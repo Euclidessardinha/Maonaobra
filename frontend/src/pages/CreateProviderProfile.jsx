@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { createProviderProfile } from "../api/provider";
 
 function CreateProviderProfile() {
-  const { user, loadUser } = useAuth();
+  const { user, completeOnboarding } = useAuth();
 
   const [profession, setProfession] = useState("");
   const [bio, setBio] = useState("");
@@ -53,18 +54,13 @@ function CreateProviderProfile() {
             : Number(hourlyRate)
       });
 
+      // Marca o onboarding do prestador como concluído.
+      // Esta função também atualiza o utilizador no AuthContext.
+      await completeOnboarding("PROVIDER");
+
       setSuccess(
         "Perfil profissional criado com sucesso!"
       );
-
-      /*
-       * Atualiza o usuário no AuthContext.
-       * O /auth/me agora devolve:
-       *
-       * is_provider: true
-       * provider_profile_id: ID do perfil
-       */
-      await loadUser();
 
       setTimeout(() => {
         window.location.href = "/provider";
@@ -142,7 +138,6 @@ function CreateProviderProfile() {
             required
           />
 
-
           <label>
             Localização
           </label>
@@ -157,7 +152,6 @@ function CreateProviderProfile() {
             disabled={loading}
             required
           />
-
 
           <label>
             Anos de experiência
@@ -175,7 +169,6 @@ function CreateProviderProfile() {
             disabled={loading}
             required
           />
-
 
           <label>
             Valor por hora (MT)
@@ -197,7 +190,6 @@ function CreateProviderProfile() {
             Este campo é opcional.
           </small>
 
-
           <label>
             Sobre você
           </label>
@@ -212,7 +204,6 @@ function CreateProviderProfile() {
             disabled={loading}
           />
 
-
           <button
             type="submit"
             className="register-btn"
@@ -224,7 +215,6 @@ function CreateProviderProfile() {
           </button>
 
         </form>
-
 
         <p className="auth-footer">
           <a href="/client">

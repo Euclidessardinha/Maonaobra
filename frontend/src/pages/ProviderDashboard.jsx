@@ -19,7 +19,7 @@ import "./ProviderDashboard.css";
 
 function ProviderDashboard() {
 
-  const { user, logout } = useAuth();
+  const { user, logout, selectOnboardingArea } = useAuth();
 
   function handleClientMode() {
     window.location.href = "/client";

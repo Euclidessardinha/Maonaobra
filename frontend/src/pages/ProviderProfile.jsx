@@ -11,10 +11,11 @@ import NotificationBell from "../components/NotificationBell";
 
 import "./ProviderProfile.css";
 
+const API_URL = import.meta.env.VITE_API_URL;
 
 function ProviderProfile() {
 
-  const { user } = useAuth();
+  const { user, loadUser } = useAuth();
 
   const [profile, setProfile] = useState(null);
 
@@ -33,6 +34,7 @@ function ProviderProfile() {
   const [hourlyRate, setHourlyRate] = useState("");
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
 
   // ============================================================
@@ -331,6 +333,80 @@ function ProviderProfile() {
     }
 
   }
+
+
+  async function handleProfileImageUpload(event) {
+  const file = event.target.files?.[0];
+
+  if (!file) return;
+
+  setError("");
+  setSuccess("");
+
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+  ];
+
+  if (!allowedTypes.includes(file.type)) {
+    setError("Formato inválido. Utilize JPEG, PNG ou WebP.");
+    event.target.value = "";
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    setError("A fotografia não pode ultrapassar 5 MB.");
+    event.target.value = "";
+    return;
+  }
+
+  try {
+    setUploadingImage(true);
+
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      throw new Error("Sessão expirada. Entre novamente na sua conta.");
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(
+      `${API_URL}/auth/me/profile-image`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      }
+    );
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        data.detail || "Não foi possível atualizar a fotografia."
+      );
+    }
+
+    await loadUser();
+
+    setSuccess("Fotografia de perfil atualizada com sucesso!");
+
+  } catch (error) {
+    console.error("Erro ao atualizar fotografia:", error);
+
+    setError(
+      error.message || "Ocorreu um erro ao atualizar a fotografia."
+    );
+  } finally {
+    setUploadingImage(false);
+    event.target.value = "";
+  }
+}
 
 
   // ============================================================
@@ -739,11 +815,37 @@ function ProviderProfile() {
             <div className="provider-profile-hero-decoration provider-profile-hero-decoration-two" />
 
 
-            <div className="provider-profile-hero-avatar">
+            <div className="provider-profile-avatar-wrapper">
 
-              {initials}
+  <div className="provider-profile-hero-avatar">
 
-            </div>
+    {user?.profile_image ? (
+      <img
+        src={user.profile_image}
+        alt="Fotografia de perfil"
+        className="provider-profile-avatar-image"
+      />
+    ) : (
+      initials
+    )}
+
+  </div>
+
+  <label className="provider-profile-photo-button">
+
+    {uploadingImage ? "A enviar..." : "📷 Alterar fotografia"}
+
+    <input
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      onChange={handleProfileImageUpload}
+      disabled={uploadingImage}
+      hidden
+    />
+
+  </label>
+
+</div>
 
 
             <div className="provider-profile-hero-content">

@@ -1,7 +1,7 @@
 
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -9,6 +9,12 @@ from app.core.dependencies import (
     get_current_user,
     require_role
 )
+
+from app.core.storage import (
+    upload_profile_image,
+    delete_profile_image
+)
+
 
 from app.database.connection import get_db
 
@@ -306,6 +312,7 @@ def get_me(
         "phone": current_user.phone,
         "role": current_user.role,
         "is_active": current_user.is_active,
+        "profile_image": current_user.profile_image,
 
         # CONTROLO DO ONBOARDING
         "onboarding_type": current_user.onboarding_type,
@@ -381,6 +388,7 @@ def update_me(
             "phone": current_user.phone,
             "role": current_user.role,
             "is_active": current_user.is_active,
+            "profile_image": current_user.profile_image,
 
             # CONTROLO DO ONBOARDING
             "onboarding_type": current_user.onboarding_type,
@@ -399,4 +407,103 @@ def update_me(
                 else None
             )
         }
+    }
+
+
+# =========================================================
+# CARREGAR OU SUBSTITUIR FOTOGRAFIA DE PERFIL
+# =========================================================
+
+MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024
+
+
+def detect_profile_image_type(file_bytes: bytes):
+    if file_bytes.startswith(b"\xff\xd8\xff"):
+        return "jpeg"
+
+    if file_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png"
+
+    if (
+        len(file_bytes) >= 12
+        and file_bytes[:4] == b"RIFF"
+        and file_bytes[8:12] == b"WEBP"
+    ):
+        return "webp"
+
+    return None
+
+
+@router.post("/me/profile-image")
+def upload_my_profile_image(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    file_bytes = file.file.read(
+        MAX_PROFILE_IMAGE_SIZE + 1
+    )
+
+    if not file_bytes:
+        raise HTTPException(
+            status_code=400,
+            detail="O ficheiro enviado está vazio."
+        )
+
+    if len(file_bytes) > MAX_PROFILE_IMAGE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail="A fotografia não pode ultrapassar 5 MB."
+        )
+
+    extension = detect_profile_image_type(file_bytes)
+
+    if not extension:
+        raise HTTPException(
+            status_code=400,
+            detail="Formato inválido. Envie JPEG, PNG ou WebP."
+        )
+
+    content_types = {
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "webp": "image/webp"
+    }
+
+    old_image_url = current_user.profile_image
+
+    try:
+        new_image_url = upload_profile_image(
+            user_id=current_user.id,
+            file_bytes=file_bytes,
+            content_type=content_types[extension],
+            extension=extension
+        )
+
+    except RuntimeError:
+        raise HTTPException(
+            status_code=502,
+            detail="Não foi possível guardar a fotografia. Tente novamente."
+        )
+
+    try:
+        current_user.profile_image = new_image_url
+        db.commit()
+        db.refresh(current_user)
+
+    except Exception:
+        db.rollback()
+        delete_profile_image(new_image_url)
+
+        raise HTTPException(
+            status_code=500,
+            detail="Não foi possível atualizar a fotografia do perfil."
+        )
+
+    if old_image_url and old_image_url != new_image_url:
+        delete_profile_image(old_image_url)
+
+    return {
+        "message": "Fotografia de perfil atualizada com sucesso!",
+        "profile_image": current_user.profile_image
     }

@@ -1,7 +1,7 @@
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, Integer, String
+from sqlalchemy import Boolean, DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database.connection import Base
@@ -49,6 +49,10 @@ class User(Base):
 
     provider_onboarding_completed: Mapped[bool] = mapped_column(
         Boolean, default=True, nullable=False
+    )
+
+    profile_image: Mapped[str | None] = mapped_column(
+        Text, nullable=True, default=None
     )
 
     created_at: Mapped[datetime] = mapped_column(

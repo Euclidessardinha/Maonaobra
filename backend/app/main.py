@@ -25,6 +25,9 @@ from app.models.conversation import Conversation
 from app.models.message import Message
 from app.models.notification import Notification
 
+from app.models.portfolio_item import PortfolioItem
+
+
 
 import asyncio
 
@@ -50,6 +53,7 @@ from app.routes import service_promotions
 from app.routes import plans
 from app.routes import subscriptions
 from app.routes import payments
+from app.routes.portfolio import router as portfolio_router
 
 # Criar as tabelas
 Base.metadata.create_all(bind=engine)
@@ -87,6 +91,7 @@ app.include_router(chat_router)
 app.include_router(notifications_router)
 app.include_router(admin_router)
 app.include_router(payments.router)
+app.include_router(portfolio_router)
 app.include_router(
     service_promotions.router
 )

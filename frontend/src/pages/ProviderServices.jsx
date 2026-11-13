@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
 
+
 import {
   getMyServices,
   updateService,
@@ -11,8 +12,14 @@ import {
   deleteService,
   createServicePromotion,
   getMyServicePromotions,
-  cancelServicePromotion
+  cancelServicePromotion,
+  getMyPortfolio,
+  createPortfolioItem,
+  uploadPortfolioImage,
+  updatePortfolioItem,
+  deletePortfolioItem
 } from "../api/provider";
+
 
 import "./ProviderServices.css";
 
@@ -38,6 +45,40 @@ function ProviderServices() {
   const [promotionActionLoading, setPromotionActionLoading] = useState(null);
   const [promotionError, setPromotionError] = useState("");
   const [promotionSuccess, setPromotionSuccess] = useState();
+
+
+  /* =========================================================
+     PORTFÓLIO
+  ========================================================= */
+
+  const [portfolioItems, setPortfolioItems] = useState([]);
+  const [portfolioLimit, setPortfolioLimit] = useState(0);
+  const [portfolioRemaining, setPortfolioRemaining] = useState(0);
+  const [portfolioLoading, setPortfolioLoading] = useState(true);
+  const [portfolioError, setPortfolioError] = useState("");
+  const [portfolioSuccess, setPortfolioSuccess] = useState("");
+  const [portfolioSaving, setPortfolioSaving] = useState(false);
+  const [portfolioDeleting, setPortfolioDeleting] = useState(null);
+
+  const [portfolioForm, setPortfolioForm] = useState({
+    title: "",
+    description: "",
+    category: "",
+    location: "",
+    completed_at: "",
+    image: null
+  });
+
+  const [editingPortfolioItem, setEditingPortfolioItem] = useState(null);
+
+  const [portfolioEditForm, setPortfolioEditForm] = useState({
+    title: "",
+    description: "",
+    category: "",
+    location: "",
+    completed_at: ""
+  });
+
 
 
 
@@ -146,6 +187,44 @@ function ProviderServices() {
 
     loadPromotions();
   }, []);
+
+
+
+  /* =========================================================
+     CARREGAR PORTFÓLIO
+  ========================================================= */
+
+  useEffect(() => {
+    async function loadPortfolio() {
+      try {
+        setPortfolioLoading(true);
+        setPortfolioError("");
+
+        const data = await getMyPortfolio();
+
+        setPortfolioItems(
+          Array.isArray(data.items) ? data.items : []
+        );
+
+        setPortfolioLimit(data.portfolio_limit ?? 0);
+        setPortfolioRemaining(data.remaining ?? 0);
+
+      } catch (err) {
+        console.error("Erro ao carregar portfólio:", err);
+
+        setPortfolioError(
+          err instanceof Error
+            ? err.message
+            : "Não foi possível carregar o portfólio."
+        );
+      } finally {
+        setPortfolioLoading(false);
+      }
+    }
+
+    loadPortfolio();
+  }, []);
+
 
 
   /* =========================================================
@@ -703,6 +782,264 @@ function ProviderServices() {
       setPromotionActionLoading(null);
     }
   }
+
+
+
+  /* =========================================================
+     ALTERAR FORMULÁRIO DO PORTFÓLIO
+  ========================================================= */
+
+  function handlePortfolioChange(event) {
+    const { name, value, files } = event.target;
+
+    setPortfolioForm((current) => ({
+      ...current,
+      [name]: name === "image" ? files?.[0] || null : value
+    }));
+  }
+
+
+  /* =========================================================
+     CRIAR TRABALHO NO PORTFÓLIO
+  ========================================================= */
+
+
+async function handleCreatePortfolioItem(event) {
+  event.preventDefault();
+
+  setPortfolioError("");
+  setPortfolioSuccess("");
+
+  if (portfolioItems.length >= portfolioLimit) {
+    setPortfolioError(
+      "Já atingiu o limite de trabalhos do seu plano."
+    );
+    return;
+  }
+
+  if (portfolioForm.title.trim().length < 2) {
+    setPortfolioError("Informe um título válido.");
+    return;
+  }
+
+  if (portfolioForm.description.trim().length < 2) {
+    setPortfolioError("Informe uma descrição.");
+    return;
+  }
+
+  if (portfolioForm.category.trim().length < 2) {
+    setPortfolioError("Informe a categoria do trabalho.");
+    return;
+  }
+
+  try {
+    setPortfolioSaving(true);
+
+    const created = await createPortfolioItem({
+      title: portfolioForm.title.trim(),
+      description: portfolioForm.description.trim(),
+      category: portfolioForm.category.trim(),
+      location: portfolioForm.location.trim() || null,
+      completed_at: portfolioForm.completed_at || null
+    });
+
+    const newItem = created.item;
+
+    if (!newItem?.id) {
+      throw new Error(
+        "O servidor não devolveu os dados do trabalho."
+      );
+    }
+
+    // O trabalho já foi criado na base de dados.
+    setPortfolioItems((current) => [
+      newItem,
+      ...current
+    ]);
+
+    setPortfolioRemaining((current) =>
+      Math.max(0, current - 1)
+    );
+
+    const selectedImage = portfolioForm.image;
+
+    setPortfolioForm({
+      title: "",
+      description: "",
+      category: "",
+      location: "",
+      completed_at: "",
+      image: null
+    });
+
+    const fileInput = document.getElementById(
+      "portfolio-image"
+    );
+
+    if (fileInput) fileInput.value = "";
+
+    // Upload separado para evitar duplicação do trabalho.
+    if (selectedImage) {
+      try {
+        const imageData = await uploadPortfolioImage(
+          newItem.id,
+          selectedImage
+        );
+
+        setPortfolioItems((current) =>
+          current.map((item) =>
+            item.id === newItem.id
+              ? { ...item, image_url: imageData.image_url }
+              : item
+          )
+        );
+
+        setPortfolioSuccess(
+          "Trabalho e fotografia publicados com sucesso!"
+        );
+
+      } catch (imageError) {
+        console.error("Erro no upload da fotografia:", imageError);
+
+        setPortfolioError(
+          `O trabalho foi criado, mas a fotografia não foi carregada: ${imageError.message}`
+        );
+      }
+    } else {
+      setPortfolioSuccess(
+        "Trabalho adicionado com sucesso!"
+      );
+    }
+
+  } catch (err) {
+    console.error("Erro ao adicionar trabalho:", err);
+
+    setPortfolioError(
+      err instanceof Error
+        ? err.message
+        : "Não foi possível adicionar o trabalho."
+    );
+  } finally {
+    setPortfolioSaving(false);
+  }
+}
+
+
+  /* =========================================================
+     ABRIR EDIÇÃO DO TRABALHO
+  ========================================================= */
+
+  function handleEditPortfolio(item) {
+    setEditingPortfolioItem(item);
+
+    setPortfolioEditForm({
+      title: item.title || "",
+      description: item.description || "",
+      category: item.category || "",
+      location: item.location || "",
+      completed_at: item.completed_at || ""
+    });
+
+    setPortfolioError("");
+    setPortfolioSuccess("");
+  }
+
+
+  /* =========================================================
+     GUARDAR EDIÇÃO DO TRABALHO
+  ========================================================= */
+
+  async function handleSavePortfolioEdit(event) {
+    event.preventDefault();
+
+    if (!editingPortfolioItem) return;
+
+    try {
+      setPortfolioSaving(true);
+      setPortfolioError("");
+      setPortfolioSuccess("");
+
+      const updated = await updatePortfolioItem(
+        editingPortfolioItem.id,
+        {
+          title: portfolioEditForm.title.trim(),
+          description: portfolioEditForm.description.trim(),
+          category: portfolioEditForm.category.trim(),
+          location: portfolioEditForm.location.trim() || null,
+          completed_at: portfolioEditForm.completed_at || null
+        }
+      );
+
+      const updatedItem = updated.item || updated;
+
+      setPortfolioItems((current) =>
+        current.map((item) =>
+          item.id === editingPortfolioItem.id
+            ? { ...item, ...updatedItem }
+            : item
+        )
+      );
+
+      setEditingPortfolioItem(null);
+      setPortfolioSuccess("Trabalho atualizado com sucesso!");
+
+    } catch (err) {
+      console.error("Erro ao editar trabalho:", err);
+
+      setPortfolioError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível atualizar o trabalho."
+      );
+    } finally {
+      setPortfolioSaving(false);
+    }
+  }
+
+
+  /* =========================================================
+     EXCLUIR TRABALHO
+  ========================================================= */
+
+  async function handleDeletePortfolio(item) {
+    const confirmed = window.confirm(
+      `Tem certeza de que deseja excluir "${item.title}" do portfólio?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setPortfolioDeleting(item.id);
+      setPortfolioError("");
+      setPortfolioSuccess("");
+
+      await deletePortfolioItem(item.id);
+
+      setPortfolioItems((current) =>
+        current.filter((currentItem) =>
+          currentItem.id !== item.id
+        )
+      );
+
+      setPortfolioRemaining((current) =>
+        Math.min(portfolioLimit, current + 1)
+      );
+
+      setPortfolioSuccess("Trabalho excluído com sucesso!");
+
+    } catch (err) {
+      console.error("Erro ao excluir trabalho:", err);
+
+      setPortfolioError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível excluir o trabalho."
+      );
+    } finally {
+      setPortfolioDeleting(null);
+    }
+  }
+
 
 
   /* =========================================================
@@ -1327,7 +1664,405 @@ function ProviderServices() {
 
           )}
 
+
+        {/* ===================================================
+            PORTFÓLIO — TRABALHOS REALIZADOS
+        =================================================== */}
+
+        <section className="provider-portfolio-section">
+
+          <div className="provider-services-section-header">
+            <div>
+              <span>OS SEUS TRABALHOS</span>
+              <h2>Meu Portfólio</h2>
+              <p>
+                Mostre aos clientes exemplos dos trabalhos que já realizou.
+              </p>
+            </div>
+
+            <span className="provider-services-count">
+              {portfolioItems.length} / {portfolioLimit} trabalhos
+            </span>
+          </div>
+
+          <div className="provider-portfolio-plan-info">
+            <div>
+              <strong>Limite do seu plano</strong>
+              <p>
+                Pode apresentar até {portfolioLimit} trabalhos.
+                Ainda tem {portfolioRemaining} vaga(s) disponível(is).
+              </p>
+            </div>
+            <span>📁</span>
+          </div>
+
+          {portfolioError && (
+            <div className="provider-services-status-error">
+              <span>!</span>
+              <p>{portfolioError}</p>
+              <button
+                type="button"
+                onClick={() => setPortfolioError("")}
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          {portfolioSuccess && (
+            <div className="provider-services-promotion-success">
+              <span>✓</span>
+              <p>{portfolioSuccess}</p>
+              <button
+                type="button"
+                onClick={() => setPortfolioSuccess("")}
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          {/* FORMULÁRIO PARA ADICIONAR TRABALHO */}
+
+          {portfolioLimit > 0 && portfolioItems.length < portfolioLimit && (
+            <form
+              className="provider-portfolio-form"
+              onSubmit={handleCreatePortfolioItem}
+            >
+              <h3>+ Adicionar trabalho realizado</h3>
+
+              <div className="provider-portfolio-form-grid">
+
+                <div className="provider-service-form-group">
+                  <label htmlFor="portfolio-title">Título do trabalho</label>
+                  <input
+                    id="portfolio-title"
+                    name="title"
+                    type="text"
+                    value={portfolioForm.title}
+                    onChange={handlePortfolioChange}
+                    maxLength={150}
+                    placeholder="Ex.: Instalação elétrica residencial"
+                    required
+                    disabled={portfolioSaving}
+                  />
+                </div>
+
+                <div className="provider-service-form-group">
+                  <label htmlFor="portfolio-category">Categoria</label>
+                  <input
+                    id="portfolio-category"
+                    name="category"
+                    type="text"
+                    value={portfolioForm.category}
+                    onChange={handlePortfolioChange}
+                    maxLength={100}
+                    placeholder="Ex.: Eletricidade"
+                    required
+                    disabled={portfolioSaving}
+                  />
+                </div>
+
+                <div className="provider-service-form-group">
+                  <label htmlFor="portfolio-location">Localização</label>
+                  <input
+                    id="portfolio-location"
+                    name="location"
+                    type="text"
+                    value={portfolioForm.location}
+                    onChange={handlePortfolioChange}
+                    maxLength={150}
+                    placeholder="Ex.: Beira, Sofala"
+                    disabled={portfolioSaving}
+                  />
+                </div>
+
+                <div className="provider-service-form-group">
+                  <label htmlFor="portfolio-date">Data de conclusão</label>
+                  <input
+                    id="portfolio-date"
+                    name="completed_at"
+                    type="date"
+                    value={portfolioForm.completed_at}
+                    onChange={handlePortfolioChange}
+                    disabled={portfolioSaving}
+                  />
+                </div>
+
+              </div>
+
+              <div className="provider-service-form-group">
+                <label htmlFor="portfolio-description">Descrição do trabalho</label>
+                <textarea
+                  id="portfolio-description"
+                  name="description"
+                  value={portfolioForm.description}
+                  onChange={handlePortfolioChange}
+                  rows={4}
+                  placeholder="Descreva o trabalho realizado..."
+                  required
+                  disabled={portfolioSaving}
+                />
+              </div>
+
+              <div className="provider-service-form-group">
+                <label htmlFor="portfolio-image">
+                  Fotografia do trabalho
+                </label>
+                <input
+                  id="portfolio-image"
+                  name="image"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handlePortfolioChange}
+                  disabled={portfolioSaving}
+                />
+                <small>Formatos: JPG, PNG ou WebP. Máximo: 5 MB.</small>
+              </div>
+
+              <button
+                type="submit"
+                className="provider-portfolio-submit"
+                disabled={portfolioSaving}
+              >
+                {portfolioSaving
+                  ? "A guardar trabalho..."
+                  : "+ Publicar trabalho"}
+              </button>
+            </form>
+          )}
+
+          {portfolioLimit === 0 && (
+            <div className="provider-portfolio-empty">
+              <h3>O seu plano atual não inclui portfólio</h3>
+              <p>
+                Para apresentar trabalhos realizados, será necessário
+                um plano Profissional ou Premium.
+              </p>
+            </div>
+          )}
+
+          {/* CARREGAMENTO */}
+
+          {portfolioLoading && (
+            <div className="provider-services-loading">
+              <div className="provider-services-spinner"></div>
+              <p>A carregar os seus trabalhos...</p>
+            </div>
+          )}
+
+          {/* LISTA DE TRABALHOS */}
+
+          {!portfolioLoading && portfolioItems.length > 0 && (
+            <div className="provider-portfolio-grid">
+              {portfolioItems.map((item) => (
+                <article
+                  className="provider-portfolio-card"
+                  key={item.id}
+                >
+                  {item.image_url ? (
+                    <img
+                      src={item.image_url}
+                      alt={item.title}
+                      className="provider-portfolio-image"
+                    />
+                  ) : (
+                    <div className="provider-portfolio-no-image">
+                      📷
+                      <span>Sem fotografia</span>
+                    </div>
+                  )}
+
+                  <div className="provider-portfolio-card-body">
+                    <span className="provider-service-category">
+                      {item.category}
+                    </span>
+
+                    <h3>{item.title}</h3>
+
+                    <p>{item.description}</p>
+
+                    {item.location && (
+                      <span>📍 {item.location}</span>
+                    )}
+
+                    {item.completed_at && (
+                      <small>
+                        Concluído em:{" "}
+                        {new Date(
+                          `${item.completed_at}T00:00:00`
+                        ).toLocaleDateString("pt-MZ")}
+                      </small>
+                    )}
+
+                    <div className="provider-portfolio-actions">
+                      <button
+                        type="button"
+                        onClick={() => handleEditPortfolio(item)}
+                        disabled={portfolioDeleting === item.id}
+                      >
+                        ✏️ Editar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePortfolio(item)}
+                        disabled={portfolioDeleting === item.id}
+                      >
+                        {portfolioDeleting === item.id
+                          ? "A excluir..."
+                          : "🗑️ Excluir"}
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+
+          {!portfolioLoading && portfolioItems.length === 0 && portfolioLimit > 0 && (
+            <div className="provider-portfolio-empty">
+              <span>📁</span>
+              <h3>Ainda não tem trabalhos no portfólio</h3>
+              <p>
+                Adicione fotografias e informações dos trabalhos que já realizou.
+              </p>
+            </div>
+          )}
+
+        </section>
+
+        {/* MODAL DE EDIÇÃO DO PORTFÓLIO */}
+
+        {editingPortfolioItem && (
+          <div className="provider-service-modal-overlay">
+            <div
+              className="provider-service-modal"
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="provider-service-modal-header">
+                <div>
+                  <span>GESTÃO DO PORTFÓLIO</span>
+                  <h2>Editar trabalho</h2>
+                </div>
+
+                <button
+                  type="button"
+                  className="provider-service-modal-close"
+                  onClick={() => setEditingPortfolioItem(null)}
+                  disabled={portfolioSaving}
+                >
+                  ×
+                </button>
+              </div>
+
+              <form
+                className="provider-service-edit-form"
+                onSubmit={handleSavePortfolioEdit}
+              >
+                <div className="provider-service-form-group">
+                  <label>Título</label>
+                  <input
+                    value={portfolioEditForm.title}
+                    onChange={(event) =>
+                      setPortfolioEditForm((current) => ({
+                        ...current,
+                        title: event.target.value
+                      }))
+                    }
+                    maxLength={150}
+                    required
+                  />
+                </div>
+
+                <div className="provider-service-form-group">
+                  <label>Categoria</label>
+                  <input
+                    value={portfolioEditForm.category}
+                    onChange={(event) =>
+                      setPortfolioEditForm((current) => ({
+                        ...current,
+                        category: event.target.value
+                      }))
+                    }
+                    maxLength={100}
+                    required
+                  />
+                </div>
+
+                <div className="provider-service-form-group">
+                  <label>Descrição</label>
+                  <textarea
+                    rows={4}
+                    value={portfolioEditForm.description}
+                    onChange={(event) =>
+                      setPortfolioEditForm((current) => ({
+                        ...current,
+                        description: event.target.value
+                      }))
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="provider-service-form-group">
+                  <label>Localização</label>
+                  <input
+                    value={portfolioEditForm.location}
+                    onChange={(event) =>
+                      setPortfolioEditForm((current) => ({
+                        ...current,
+                        location: event.target.value
+                      }))
+                    }
+                    maxLength={150}
+                  />
+                </div>
+
+                <div className="provider-service-form-group">
+                  <label>Data de conclusão</label>
+                  <input
+                    type="date"
+                    value={portfolioEditForm.completed_at}
+                    onChange={(event) =>
+                      setPortfolioEditForm((current) => ({
+                        ...current,
+                        completed_at: event.target.value
+                      }))
+                    }
+                  />
+                </div>
+
+                <div className="provider-service-modal-actions">
+                  <button
+                    type="button"
+                    className="provider-service-modal-cancel"
+                    onClick={() => setEditingPortfolioItem(null)}
+                    disabled={portfolioSaving}
+                  >
+                    Cancelar
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="provider-service-modal-save"
+                    disabled={portfolioSaving}
+                  >
+                    {portfolioSaving
+                      ? "A guardar..."
+                      : "✓ Guardar alterações"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+
       </main>
+
+
 
 
       {/* =====================================================

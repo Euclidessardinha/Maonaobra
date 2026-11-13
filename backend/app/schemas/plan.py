@@ -16,4 +16,6 @@ class PlanUpdate(BaseModel):
 
     badge: str | None = None
 
+    portfolio_limit: int | None = Field(default=None, ge=0)
+
     is_active: bool | None = None

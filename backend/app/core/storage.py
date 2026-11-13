@@ -224,3 +224,103 @@ def delete_profile_image(image_url: str | None) -> None:
         logger.exception(
             "Não foi possível eliminar a fotografia de perfil antiga."
         )
+
+
+
+# =========================================================
+# FOTOGRAFIAS DO PORTFÓLIO
+# =========================================================
+
+PORTFOLIO_BUCKET_NAME = "portfolio-images"
+
+
+def upload_portfolio_image(
+    provider_id: int,
+    portfolio_id: int,
+    file_bytes: bytes,
+    content_type: str,
+    extension: str
+) -> str:
+    import uuid
+
+    filename = f"{uuid.uuid4().hex}.{extension}"
+    file_path = (
+        f"providers/{provider_id}/portfolio/{portfolio_id}/{filename}"
+    )
+
+    encoded_path = quote(file_path, safe="/")
+
+    url = (
+        f"{SUPABASE_URL}/storage/v1/object/"
+        f"{PORTFOLIO_BUCKET_NAME}/{encoded_path}"
+    )
+
+    try:
+        response = requests.post(
+            url,
+            headers=_get_headers(content_type),
+            data=file_bytes,
+            timeout=30
+        )
+
+        if not response.ok:
+            logger.error(
+                "Erro no upload da fotografia do portfólio: "
+                "HTTP %s | %s",
+                response.status_code,
+                response.text[:1000]
+            )
+            response.raise_for_status()
+
+    except requests.RequestException as exc:
+        logger.exception(
+            "Erro ao enviar fotografia do portfólio."
+        )
+        raise RuntimeError(
+            "Não foi possível enviar a fotografia do portfólio."
+        ) from exc
+
+    return (
+        f"{SUPABASE_URL}/storage/v1/object/public/"
+        f"{PORTFOLIO_BUCKET_NAME}/{encoded_path}"
+    )
+
+
+def delete_portfolio_image(image_url: str | None) -> None:
+    if not image_url or not SUPABASE_URL:
+        return
+
+    public_prefix = (
+        f"{SUPABASE_URL}/storage/v1/object/public/"
+        f"{PORTFOLIO_BUCKET_NAME}/"
+    )
+
+    if not image_url.startswith(public_prefix):
+        return
+
+    file_path = unquote(image_url[len(public_prefix):])
+
+    if not file_path or ".." in file_path.split("/"):
+        return
+
+    encoded_path = quote(file_path, safe="/")
+
+    url = (
+        f"{SUPABASE_URL}/storage/v1/object/"
+        f"{PORTFOLIO_BUCKET_NAME}/{encoded_path}"
+    )
+
+    try:
+        response = requests.delete(
+            url,
+            headers=_get_headers(),
+            timeout=30
+        )
+        response.raise_for_status()
+
+    except requests.RequestException:
+        logger.exception(
+            "Não foi possível eliminar a fotografia do portfólio."
+        )
+
+

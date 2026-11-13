@@ -603,3 +603,155 @@ export async function cancelServicePromotion(promotionId) {
 
   return data;
 }
+
+
+
+// ============================================================
+// PORTFÓLIO — GESTÃO DOS TRABALHOS DO PRESTADOR
+// ============================================================
+
+// CARREGAR OS MEUS TRABALHOS
+export async function getMyPortfolio() {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `${API_URL}/portfolio/my`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : "Não foi possível carregar o portfólio."
+    );
+  }
+
+  return data;
+}
+
+
+// CRIAR UM TRABALHO
+export async function createPortfolioItem(portfolioData) {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `${API_URL}/portfolio/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(portfolioData),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : "Não foi possível adicionar o trabalho."
+    );
+  }
+
+  return data;
+}
+
+
+// CARREGAR FOTOGRAFIA DO TRABALHO
+export async function uploadPortfolioImage(itemId, imageFile) {
+  const token = localStorage.getItem("access_token");
+
+  const formData = new FormData();
+  formData.append("file", imageFile);
+
+  const response = await fetch(
+    `${API_URL}/portfolio/${itemId}/image`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : "Não foi possível carregar a fotografia."
+    );
+  }
+
+  return data;
+}
+
+
+// EDITAR UM TRABALHO
+export async function updatePortfolioItem(itemId, portfolioData) {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `${API_URL}/portfolio/${itemId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(portfolioData),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : "Não foi possível atualizar o trabalho."
+    );
+  }
+
+  return data;
+}
+
+
+// EXCLUIR UM TRABALHO
+export async function deletePortfolioItem(itemId) {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `${API_URL}/portfolio/${itemId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : "Não foi possível excluir o trabalho."
+    );
+  }
+
+  return data;
+}

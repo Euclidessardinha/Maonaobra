@@ -43,6 +43,14 @@ class Plan(Base):
         nullable=False
     )
 
+
+    portfolio_limit: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0
+    )
+
+
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=True,

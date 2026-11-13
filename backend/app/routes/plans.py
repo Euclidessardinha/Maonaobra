@@ -36,6 +36,7 @@ def get_admin_plans(
             "is_active": plan.is_active,
             "created_at": plan.created_at,
             "updated_at": plan.updated_at,
+            "portfolio_limit": plan.portfolio_limit,
         }
         for plan in plans
     ]
@@ -61,6 +62,7 @@ def initialize_admin_plans(
             period="mês",
             description="Recursos essenciais para começar.",
             badge="Plano base",
+            portfolio_limit=0,
             is_active=True
         ),
         Plan(
@@ -69,6 +71,7 @@ def initialize_admin_plans(
             period="mês",
             description="Mais visibilidade e estatísticas.",
             badge="Mais utilizado",
+            portfolio_limit=5,
             is_active=True
         ),
         Plan(
@@ -77,6 +80,7 @@ def initialize_admin_plans(
             period="mês",
             description="Mais recursos para ganhar visibilidade.",
             badge="Mais recursos",
+            portfolio_limit=15,
             is_active=True
         )
     ]
@@ -200,6 +204,20 @@ def update_admin_plan(
 
 
     # =========================================================
+    # LIMITE DO PORTFÓLIO
+    # =========================================================
+
+    if data.portfolio_limit is not None:
+
+        if data.portfolio_limit < 0:
+            raise HTTPException(
+                status_code=400,
+                detail="O limite do portfólio não pode ser negativo."
+            )
+
+        plan.portfolio_limit = data.portfolio_limit
+
+    # =========================================================
     # ESTADO
     # =========================================================
 
@@ -229,6 +247,7 @@ def update_admin_plan(
             "badge": plan.badge,
             "is_active": plan.is_active,
             "created_at": plan.created_at,
+            "portfolio_limit": plan.portfolio_limit,
             "updated_at": plan.updated_at,
         }
     }

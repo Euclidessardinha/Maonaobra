@@ -277,6 +277,26 @@ function ProviderServices() {
 
   }
 
+
+    /* =========================================================
+     PLANO ATUAL DO PRESTADOR
+  ========================================================= */
+
+  const currentPlan =
+    portfolioLimit >= 15
+      ? "Premium"
+      : portfolioLimit >= 5
+        ? "Profissional"
+        : "Gratuito";
+
+  const currentPlanPrice =
+    currentPlan === "Premium"
+      ? "999"
+      : currentPlan === "Profissional"
+        ? "499"
+        : "0";
+
+
   /* =========================================================
      VOLTAR
   ========================================================= */
@@ -1127,6 +1147,149 @@ async function handleCreatePortfolioItem(event) {
         </div>
 
       </section>
+
+
+            {/* =====================================================
+          PLANOS E BENEFÍCIOS
+      ===================================================== */}
+
+      {!portfolioLoading && (
+        <section className="provider-plans-section">
+
+          <div className="provider-plans-heading">
+            <span>PLANOS MÃONAOBRA</span>
+            <h2>Escolha o plano ideal para si</h2>
+            <p>
+              Apresente mais trabalhos aos clientes e aproveite
+              os limites disponíveis em cada plano.
+            </p>
+          </div>
+
+          <div className="provider-current-plan">
+            <div>
+              <span>O SEU PLANO ATUAL</span>
+              <h3>{currentPlan}</h3>
+              <p>
+                {currentPlanPrice} MT/mês
+                {" · "}
+                {portfolioLimit} trabalhos no portfólio
+              </p>
+            </div>
+
+            <span className="provider-current-plan-icon">
+              ✓
+            </span>
+          </div>
+
+          <div className="provider-plans-grid">
+
+            <article className={`provider-plan-card ${
+              currentPlan === "Gratuito" ? "current" : ""
+            }`}>
+              <span className="provider-plan-label">
+                PLANO GRATUITO
+              </span>
+
+              <h3>Gratuito</h3>
+
+              <div className="provider-plan-price">
+                0 <small>MT/mês</small>
+              </div>
+
+              <ul>
+                <li>Gestão dos seus serviços</li>
+                <li>Perfil de prestador</li>
+                <li>0 trabalhos no portfólio</li>
+              </ul>
+
+              {currentPlan === "Gratuito" && (
+                <span className="provider-plan-current-label">
+                  Plano atual
+                </span>
+              )}
+            </article>
+
+            <article className={`provider-plan-card provider-plan-featured ${
+              currentPlan === "Profissional" ? "current" : ""
+            }`}>
+              <span className="provider-plan-label">
+                PLANO PROFISSIONAL
+              </span>
+
+              <h3>Profissional</h3>
+
+              <div className="provider-plan-price">
+                499 <small>MT/mês</small>
+              </div>
+
+              <ul>
+                <li>Gestão dos seus serviços</li>
+                <li>Perfil de prestador</li>
+                <li>Até 5 trabalhos no portfólio</li>
+              </ul>
+
+              {currentPlan === "Profissional" ? (
+                <span className="provider-plan-current-label">
+                  Plano atual
+                </span>
+              ) : (
+                <span className="provider-plan-action-label">
+                  Disponível para adesão
+                </span>
+              )}
+            </article>
+
+            <article className={`provider-plan-card ${
+              currentPlan === "Premium" ? "current" : ""
+            }`}>
+              <span className="provider-plan-label">
+                PLANO PREMIUM
+              </span>
+
+              <h3>Premium</h3>
+
+              <div className="provider-plan-price">
+                999 <small>MT/mês</small>
+              </div>
+
+              <ul>
+                <li>Gestão dos seus serviços</li>
+                <li>Perfil de prestador</li>
+                <li>Até 15 trabalhos no portfólio</li>
+              </ul>
+
+              {currentPlan === "Premium" ? (
+                <span className="provider-plan-current-label">
+                  Plano atual
+                </span>
+              ) : (
+                <span className="provider-plan-action-label">
+                  Disponível para adesão
+                </span>
+              )}
+            </article>
+
+          </div>
+
+          {currentPlan !== "Premium" && (
+            <div className="provider-plans-notice">
+              <span>💡</span>
+
+              <div>
+                <strong>Quer desbloquear mais espaço no portfólio?</strong>
+
+                <p>
+                  Contacte a administração para receber as instruções
+                  de pagamento e solicitar a adesão ao plano Profissional
+                  ou Premium. A ativação será feita após confirmação
+                  administrativa. Contacto: 86 626 6266/ 84 174 9151
+                </p>
+              </div>
+            </div>
+          )}
+
+        </section>
+      )}
 
 
       {/* =====================================================

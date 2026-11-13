@@ -2531,3 +2531,213 @@ RESPONSIVO — AÇÕES
     width: 100%;
   }
 }
+
+
+
+/* =========================================================
+   PLANOS E BENEFÍCIOS DO PRESTADOR
+========================================================= */
+
+.provider-plans-section {
+  margin: 40px 0;
+  padding: 28px;
+  background: #ffffff;
+  border: 1px solid #e5eaf0;
+  border-radius: 18px;
+}
+
+.provider-plans-heading {
+  margin-bottom: 24px;
+}
+
+.provider-plans-heading > span,
+.provider-current-plan > div > span {
+  color: #0788c9;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.provider-plans-heading h2 {
+  margin: 8px 0;
+  color: #172b43;
+  font-size: 25px;
+}
+
+.provider-plans-heading p {
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.provider-current-plan {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  background: #f0f8ff;
+  border: 1px solid #cfe8fa;
+  border-radius: 14px;
+}
+
+.provider-current-plan h3 {
+  margin: 6px 0;
+  color: #173b5e;
+  font-size: 22px;
+}
+
+.provider-current-plan p {
+  margin: 0;
+  color: #52677d;
+  font-size: 14px;
+}
+
+.provider-current-plan-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #d7f5e5;
+  color: #16834c;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.provider-plans-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.provider-plan-card {
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+  border: 1px solid #e2e8f0;
+  border-radius: 15px;
+  background: #ffffff;
+}
+
+.provider-plan-card.current {
+  border: 2px solid #168bca;
+  background: #f7fbff;
+}
+
+.provider-plan-featured {
+  border-color: #168bca;
+}
+
+.provider-plan-label {
+  color: #168bca;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.provider-plan-card h3 {
+  margin: 12px 0 6px;
+  color: #172b43;
+  font-size: 21px;
+}
+
+.provider-plan-price {
+  margin: 8px 0 16px;
+  color: #172b43;
+  font-size: 29px;
+  font-weight: 800;
+}
+
+.provider-plan-price small {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.provider-plan-card ul {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.provider-plan-card li {
+  color: #52677d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.provider-plan-card li::before {
+  content: "✓";
+  margin-right: 8px;
+  color: #15945b;
+  font-weight: 800;
+}
+
+.provider-plan-current-label,
+.provider-plan-action-label {
+  display: block;
+  margin-top: auto;
+  padding: 10px;
+  border-radius: 8px;
+  background: #e8f5ff;
+  color: #087bb8;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.provider-plan-action-label {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.provider-plans-notice {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-top: 24px;
+  padding: 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.provider-plans-notice > span {
+  font-size: 24px;
+}
+
+.provider-plans-notice strong {
+  color: #172b43;
+}
+
+.provider-plans-notice p {
+  margin: 7px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .provider-plans-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .provider-plans-section {
+    padding: 18px;
+  }
+
+  .provider-plans-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .provider-plans-heading h2 {
+    font-size: 21px;
+  }
+}

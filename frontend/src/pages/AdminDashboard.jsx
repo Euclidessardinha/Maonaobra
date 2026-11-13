@@ -390,7 +390,36 @@ async function loadPaymentData() {
   }
 }
 
+// =========================================================
+// CARREGAR PEDIDOS DE ADESÃO A PLANOS
+// =========================================================
 
+async function loadPlanChangeRequests() {
+  try {
+    setPlanChangeRequestsLoading(true);
+    setPlanChangeRequestsError("");
+
+    const data = await getAdminPlanChangeRequests();
+
+    setPlanChangeRequests(
+      Array.isArray(data) ? data : []
+    );
+
+  } catch (err) {
+    console.error(
+      "Erro ao carregar pedidos de adesão:",
+      err
+    );
+
+    setPlanChangeRequestsError(
+      err.message ||
+      "Não foi possível carregar os pedidos de adesão."
+    );
+
+  } finally {
+    setPlanChangeRequestsLoading(false);
+  }
+}
 
 async function handlePaymentSubmit(event) {
   event.preventDefault();
@@ -559,7 +588,89 @@ async function handleRejectPayment(paymentId) {
 }
 
   
+// =========================================================
+// APROVAR PEDIDO DE ADESÃO A PLANO
+// =========================================================
 
+async function handleApprovePlanChangeRequest(requestId) {
+  const confirmed = window.confirm(
+    "Deseja aprovar este pedido? A assinatura atual do prestador será substituída pelo novo plano."
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setPlanChangeRequestActionLoading(requestId);
+    setPlanChangeRequestsError("");
+    setPlanChangeRequestsSuccess("");
+
+    const result = await approveAdminPlanChangeRequest(requestId);
+
+    setPlanChangeRequestsSuccess(
+      result.message || "Pedido aprovado e plano ativado com sucesso."
+    );
+
+    await Promise.all([
+      loadPlanChangeRequests(),
+      loadSubscriptionStats(),
+    ]);
+
+  } catch (err) {
+    console.error("Erro ao aprovar pedido:", err);
+
+    setPlanChangeRequestsError(
+      err.message || "Não foi possível aprovar o pedido."
+    );
+
+  } finally {
+    setPlanChangeRequestActionLoading(null);
+  }
+}
+
+// =========================================================
+// REJEITAR PEDIDO DE ADESÃO A PLANO
+// =========================================================
+
+async function handleRejectPlanChangeRequest(requestId) {
+  const adminNotes = window.prompt(
+    "Indique o motivo da rejeição (opcional):"
+  );
+
+  if (adminNotes === null) return;
+
+  const confirmed = window.confirm(
+    "Tem certeza de que deseja rejeitar este pedido?"
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setPlanChangeRequestActionLoading(requestId);
+    setPlanChangeRequestsError("");
+    setPlanChangeRequestsSuccess("");
+
+    const result = await rejectAdminPlanChangeRequest(
+      requestId,
+      adminNotes.trim()
+    );
+
+    setPlanChangeRequestsSuccess(
+      result.message || "Pedido rejeitado com sucesso."
+    );
+
+    await loadPlanChangeRequests();
+
+  } catch (err) {
+    console.error("Erro ao rejeitar pedido:", err);
+
+    setPlanChangeRequestsError(
+      err.message || "Não foi possível rejeitar o pedido."
+    );
+
+  } finally {
+    setPlanChangeRequestActionLoading(null);
+  }
+}
 
   // =========================================================
 // ATUALIZAR PLANO
@@ -655,6 +766,7 @@ async function handlePlanUpdate(plan) {
       loadPlans();
       loadSubscriptionStats();
       loadPaymentData();
+      loadPlanChangeRequests();
     }
   }, [activeSection]);
 
@@ -3634,6 +3746,116 @@ async function handlePlanUpdate(plan) {
       </small>
     </div>
   </div>
+
+
+{/* =========================================================
+    PEDIDOS DE ADESÃO A PLANOS
+========================================================= */}
+
+<div className="admin-section-card">
+  <div className="admin-section-header">
+    <div>
+      <h3>Pedidos de adesão a planos</h3>
+      <p>Analise e aprove os pedidos enviados pelos prestadores.</p>
+    </div>
+
+    <button
+      type="button"
+      onClick={loadPlanChangeRequests}
+      disabled={planChangeRequestsLoading}
+    >
+      {planChangeRequestsLoading ? "A carregar..." : "Atualizar"}
+    </button>
+  </div>
+
+  {planChangeRequestsError && (
+    <div className="admin-error">
+      {planChangeRequestsError}
+    </div>
+  )}
+
+  {planChangeRequestsSuccess && (
+    <div className="admin-success">
+      {planChangeRequestsSuccess}
+    </div>
+  )}
+
+  {planChangeRequestsLoading ? (
+    <p>A carregar pedidos de adesão...</p>
+  ) : planChangeRequests.length === 0 ? (
+    <p>Não existem pedidos de adesão registados.</p>
+  ) : (
+    <div className="admin-table-container">
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>Prestador</th>
+            <th>Plano solicitado</th>
+            <th>Preço</th>
+            <th>Data do pedido</th>
+            <th>Estado</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {planChangeRequests.map((request) => (
+            <tr key={request.id}>
+              <td>
+                {request.user_email || `Utilizador #${request.user_id}`}
+              </td>
+
+              <td>{request.plan_name}</td>
+
+              <td>{formatCurrency(request.plan_price)}</td>
+
+              <td>{formatDate(request.requested_at)}</td>
+
+              <td>
+                <span className={`admin-status-badge ${request.status?.toLowerCase()}`}>
+                  {request.status === "PENDING"
+                    ? "Pendente"
+                    : request.status === "APPROVED"
+                    ? "Aprovado"
+                    : "Rejeitado"}
+                </span>
+              </td>
+
+              <td>
+                {request.status === "PENDING" && (
+                  <div className="admin-action-buttons">
+                    <button
+                      type="button"
+                      onClick={() => handleApprovePlanChangeRequest(request.id)}
+                      disabled={planChangeRequestActionLoading === request.id}
+                    >
+                      {planChangeRequestActionLoading === request.id
+                        ? "A processar..."
+                        : "Aprovar"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRejectPlanChangeRequest(request.id)}
+                      disabled={planChangeRequestActionLoading === request.id}
+                    >
+                      Rejeitar
+                    </button>
+                  </div>
+                )}
+
+                {request.status !== "PENDING" && (
+                  <span>Processado</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
+
 
   {/* STATUS DAS PROMOÇÕES */}
 <div className="admin-promotion-status-grid">

@@ -3748,113 +3748,7 @@ async function handlePlanUpdate(plan) {
   </div>
 
 
-{/* =========================================================
-    PEDIDOS DE ADESÃO A PLANOS
-========================================================= */}
 
-<div className="admin-section-card">
-  <div className="admin-section-header">
-    <div>
-      <h3>Pedidos de adesão a planos</h3>
-      <p>Analise e aprove os pedidos enviados pelos prestadores.</p>
-    </div>
-
-    <button
-      type="button"
-      onClick={loadPlanChangeRequests}
-      disabled={planChangeRequestsLoading}
-    >
-      {planChangeRequestsLoading ? "A carregar..." : "Atualizar"}
-    </button>
-  </div>
-
-  {planChangeRequestsError && (
-    <div className="admin-error">
-      {planChangeRequestsError}
-    </div>
-  )}
-
-  {planChangeRequestsSuccess && (
-    <div className="admin-success">
-      {planChangeRequestsSuccess}
-    </div>
-  )}
-
-  {planChangeRequestsLoading ? (
-    <p>A carregar pedidos de adesão...</p>
-  ) : planChangeRequests.length === 0 ? (
-    <p>Não existem pedidos de adesão registados.</p>
-  ) : (
-    <div className="admin-table-container">
-      <table className="admin-table">
-        <thead>
-          <tr>
-            <th>Prestador</th>
-            <th>Plano solicitado</th>
-            <th>Preço</th>
-            <th>Data do pedido</th>
-            <th>Estado</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {planChangeRequests.map((request) => (
-            <tr key={request.id}>
-              <td>
-                {request.user_email || `Utilizador #${request.user_id}`}
-              </td>
-
-              <td>{request.plan_name}</td>
-
-              <td>{formatCurrency(request.plan_price)}</td>
-
-              <td>{formatDate(request.requested_at)}</td>
-
-              <td>
-                <span className={`admin-status-badge ${request.status?.toLowerCase()}`}>
-                  {request.status === "PENDING"
-                    ? "Pendente"
-                    : request.status === "APPROVED"
-                    ? "Aprovado"
-                    : "Rejeitado"}
-                </span>
-              </td>
-
-              <td>
-                {request.status === "PENDING" && (
-                  <div className="admin-action-buttons">
-                    <button
-                      type="button"
-                      onClick={() => handleApprovePlanChangeRequest(request.id)}
-                      disabled={planChangeRequestActionLoading === request.id}
-                    >
-                      {planChangeRequestActionLoading === request.id
-                        ? "A processar..."
-                        : "Aprovar"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleRejectPlanChangeRequest(request.id)}
-                      disabled={planChangeRequestActionLoading === request.id}
-                    >
-                      Rejeitar
-                    </button>
-                  </div>
-                )}
-
-                {request.status !== "PENDING" && (
-                  <span>Processado</span>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )}
-</div>
 
 
   {/* STATUS DAS PROMOÇÕES */}
@@ -3872,6 +3766,7 @@ async function handlePlanUpdate(plan) {
       </strong>
     </div>
   </div>
+
 
 
   <div className="admin-promotion-status-card active">
@@ -4095,6 +3990,114 @@ async function handlePlanUpdate(plan) {
               </div>
 
             </div>
+
+            {/* =========================================================
+    PEDIDOS DE ADESÃO A PLANOS
+========================================================= */}
+
+<div className="admin-section-card">
+  <div className="admin-section-header">
+    <div>
+      <h3>Pedidos de adesão a planos</h3>
+      <p>Analise e aprove os pedidos enviados pelos prestadores.</p>
+    </div>
+
+    <button
+      type="button"
+      onClick={loadPlanChangeRequests}
+      disabled={planChangeRequestsLoading}
+    >
+      {planChangeRequestsLoading ? "A carregar..." : "Atualizar"}
+    </button>
+  </div>
+
+  {planChangeRequestsError && (
+    <div className="admin-error">
+      {planChangeRequestsError}
+    </div>
+  )}
+
+  {planChangeRequestsSuccess && (
+    <div className="admin-success">
+      {planChangeRequestsSuccess}
+    </div>
+  )}
+
+  {planChangeRequestsLoading ? (
+    <p>A carregar pedidos de adesão...</p>
+  ) : planChangeRequests.length === 0 ? (
+    <p>Não existem pedidos de adesão registados.</p>
+  ) : (
+    <div className="admin-table-container">
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>Prestador</th>
+            <th>Plano solicitado</th>
+            <th>Preço</th>
+            <th>Data do pedido</th>
+            <th>Estado</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {planChangeRequests.map((request) => (
+            <tr key={request.id}>
+              <td>
+                {request.user_email || `Utilizador #${request.user_id}`}
+              </td>
+
+              <td>{request.plan_name}</td>
+
+              <td>{formatCurrency(request.plan_price)}</td>
+
+              <td>{formatDate(request.requested_at)}</td>
+
+              <td>
+                <span className={`admin-status-badge ${request.status?.toLowerCase()}`}>
+                  {request.status === "PENDING"
+                    ? "Pendente"
+                    : request.status === "APPROVED"
+                    ? "Aprovado"
+                    : "Rejeitado"}
+                </span>
+              </td>
+
+              <td>
+                {request.status === "PENDING" && (
+                  <div className="admin-action-buttons">
+                    <button
+                      type="button"
+                      onClick={() => handleApprovePlanChangeRequest(request.id)}
+                      disabled={planChangeRequestActionLoading === request.id}
+                    >
+                      {planChangeRequestActionLoading === request.id
+                        ? "A processar..."
+                        : "Aprovar"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRejectPlanChangeRequest(request.id)}
+                      disabled={planChangeRequestActionLoading === request.id}
+                    >
+                      Rejeitar
+                    </button>
+                  </div>
+                )}
+
+                {request.status !== "PENDING" && (
+                  <span>Processado</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
 
 
             {/* PLANOS */}

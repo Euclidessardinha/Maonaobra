@@ -13,7 +13,7 @@ from app.models.plan import Plan
 from app.models.subscription import Subscription
 from app.models.promotion_event import PromotionEvent
 from app.models.payment import Payment
-
+from app.models.plan_change_request import PlanChangeRequest
 
 from app.models.service_request import ServiceRequest
 from app.models.review import Review
@@ -54,6 +54,7 @@ from app.routes import plans
 from app.routes import subscriptions
 from app.routes import payments
 from app.routes.portfolio import router as portfolio_router
+from app.routes.plan_change_requests import router as plan_change_requests_router
 
 # Criar as tabelas
 Base.metadata.create_all(bind=engine)
@@ -92,6 +93,7 @@ app.include_router(notifications_router)
 app.include_router(admin_router)
 app.include_router(payments.router)
 app.include_router(portfolio_router)
+app.include_router(plan_change_requests_router)
 app.include_router(
     service_promotions.router
 )

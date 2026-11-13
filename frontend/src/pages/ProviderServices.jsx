@@ -17,7 +17,9 @@ import {
   createPortfolioItem,
   uploadPortfolioImage,
   updatePortfolioItem,
-  deletePortfolioItem
+  deletePortfolioItem,
+  getMyPlanChangeRequests,
+  createPlanChangeRequest
 } from "../api/provider";
 
 
@@ -79,7 +81,15 @@ function ProviderServices() {
     completed_at: ""
   });
 
+  /* =========================================================
+   PEDIDOS DE ADESÃO A PLANOS
+========================================================= */
 
+  const [planRequests, setPlanRequests] = useState([]);
+  const [planRequestsLoading, setPlanRequestsLoading] = useState(true);
+  const [planRequestActionLoading, setPlanRequestActionLoading] = useState(null);
+  const [planRequestError, setPlanRequestError] = useState("");
+  const [planRequestSuccess, setPlanRequestSuccess] = useState("");
 
 
   /* =========================================================
@@ -224,6 +234,38 @@ function ProviderServices() {
 
     loadPortfolio();
   }, []);
+
+
+  /* =========================================================
+   CARREGAR PEDIDOS DE ADESÃO
+========================================================= */
+
+useEffect(() => {
+  async function loadPlanRequests() {
+    try {
+      setPlanRequestsLoading(true);
+      setPlanRequestError("");
+
+      const data = await getMyPlanChangeRequests();
+
+      setPlanRequests(
+        Array.isArray(data) ? data : []
+      );
+    } catch (err) {
+      console.error("Erro ao carregar pedidos de adesão:", err);
+
+      setPlanRequestError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível carregar os pedidos."
+      );
+    } finally {
+      setPlanRequestsLoading(false);
+    }
+  }
+
+  loadPlanRequests();
+}, []);
 
 
 
@@ -1061,6 +1103,63 @@ async function handleCreatePortfolioItem(event) {
   }
 
 
+  /* =========================================================
+   PEDIDOS DE ADESÃO A PLANOS
+========================================================= */
+
+const pendingPlanRequest = planRequests.find(
+  (request) => request.status === "PENDING"
+);
+
+function getPlanRequestStatusLabel(status) {
+  const labels = {
+    PENDING: "A aguardar aprovação",
+    APPROVED: "Pedido aprovado",
+    REJECTED: "Pedido rejeitado"
+  };
+
+  return labels[status] || status;
+}
+
+async function handleRequestPlan(planId, planName) {
+  if (pendingPlanRequest) {
+    setPlanRequestError(
+      "Já possui um pedido de adesão pendente."
+    );
+    return;
+  }
+
+  try {
+    setPlanRequestActionLoading(planId);
+    setPlanRequestError("");
+    setPlanRequestSuccess("");
+
+    await createPlanChangeRequest(planId);
+
+    const updatedRequests = await getMyPlanChangeRequests();
+
+    setPlanRequests(
+      Array.isArray(updatedRequests) ? updatedRequests : []
+    );
+
+    setPlanRequestSuccess(
+      `O seu pedido de adesão ao plano ${planName} foi enviado com sucesso. Aguarde a aprovação da administração.`
+    );
+
+  } catch (err) {
+    console.error("Erro ao solicitar adesão:", err);
+
+    setPlanRequestError(
+      err instanceof Error
+        ? err.message
+        : "Não foi possível enviar o pedido."
+    );
+
+  } finally {
+    setPlanRequestActionLoading(null);
+  }
+}
+
 
   /* =========================================================
      RENDER
@@ -1183,6 +1282,56 @@ async function handleCreatePortfolioItem(event) {
 
           <div className="provider-plans-grid">
 
+          {/* MENSAGENS DOS PEDIDOS DE ADESÃO */}
+
+{planRequestError && (
+  <div className="provider-services-status-error">
+    <span>!</span>
+    <p>{planRequestError}</p>
+    <button
+      type="button"
+      onClick={() => setPlanRequestError("")}
+    >
+      ×
+    </button>
+  </div>
+)}
+
+{planRequestSuccess && (
+  <div className="provider-services-promotion-success">
+    <span>✓</span>
+    <p>{planRequestSuccess}</p>
+    <button
+      type="button"
+      onClick={() => setPlanRequestSuccess("")}
+    >
+      ×
+    </button>
+  </div>
+)}
+
+{/* HISTÓRICO DOS PEDIDOS */}
+
+{!planRequestsLoading && planRequests.length > 0 && (
+  <div className="provider-plans-notice">
+    <div>
+      <strong>Histórico dos pedidos de adesão</strong>
+
+      {planRequests.map((request) => (
+        <p key={request.id}>
+          Plano {request.plan_name} —{" "}
+          <strong>
+            {getPlanRequestStatusLabel(request.status)}
+          </strong>
+          {request.admin_notes && (
+            <> · Observação: {request.admin_notes}</>
+          )}
+        </p>
+      ))}
+    </div>
+  </div>
+)}
+
             <article className={`provider-plan-card ${
               currentPlan === "Gratuito" ? "current" : ""
             }`}>
@@ -1228,15 +1377,29 @@ async function handleCreatePortfolioItem(event) {
                 <li>Até 5 trabalhos no portfólio</li>
               </ul>
 
-              {currentPlan === "Profissional" ? (
-                <span className="provider-plan-current-label">
-                  Plano atual
-                </span>
-              ) : (
-                <span className="provider-plan-action-label">
-                  Disponível para adesão
-                </span>
-              )}
+               {currentPlan === "Profissional" ? (
+  <span className="provider-plan-current-label">
+    Plano atual
+  </span>
+) : pendingPlanRequest ? (
+  <span className="provider-plan-action-label">
+    Já existe um pedido pendente
+  </span>
+) : (
+  <button
+    type="button"
+    className="provider-service-promotion-create"
+    onClick={() => handleRequestPlan(2, "Profissional")}
+    disabled={
+      planRequestsLoading ||
+      planRequestActionLoading !== null
+    }
+  >
+    {planRequestActionLoading === 2
+      ? "A enviar pedido..."
+      : "Solicitar adesão"}
+  </button>
+)}
             </article>
 
             <article className={`provider-plan-card ${
@@ -1259,34 +1422,46 @@ async function handleCreatePortfolioItem(event) {
               </ul>
 
               {currentPlan === "Premium" ? (
-                <span className="provider-plan-current-label">
-                  Plano atual
-                </span>
-              ) : (
-                <span className="provider-plan-action-label">
-                  Disponível para adesão
-                </span>
-              )}
+  <span className="provider-plan-current-label">
+    Plano atual
+  </span>
+) : pendingPlanRequest ? (
+  <span className="provider-plan-action-label">
+    Já existe um pedido pendente
+  </span>
+) : (
+  <button
+    type="button"
+    className="provider-service-promotion-create"
+    onClick={() => handleRequestPlan(3, "Premium")}
+    disabled={
+      planRequestsLoading ||
+      planRequestActionLoading !== null
+    }
+  >
+    {planRequestActionLoading === 3
+      ? "A enviar pedido..."
+      : "Solicitar adesão"}
+  </button>
+)}
             </article>
 
           </div>
 
           {currentPlan !== "Premium" && (
-            <div className="provider-plans-notice">
-              <span>💡</span>
-
-              <div>
-                <strong>Quer desbloquear mais espaço no portfólio?</strong>
-
-                <p>
-                  Contacte a administração para receber as instruções
-                  de pagamento e solicitar a adesão ao plano Profissional
-                  ou Premium. A ativação será feita após confirmação
-                  administrativa. Contacto: 86 626 6266/ 84 174 9151
-                </p>
-              </div>
-            </div>
-          )}
+  <div className="provider-plans-notice">
+    <span>💡</span>
+    <div>
+      <strong>Como funciona a adesão?</strong>
+      <p>
+        Escolha o plano pretendido e envie o seu pedido.
+        A administração irá analisar e aprovar ou rejeitar
+        a solicitação. Se for aprovado, o novo plano será
+        ativado imediatamente por um mês.
+      </p>
+    </div>
+  </div>
+)}
 
         </section>
       )}

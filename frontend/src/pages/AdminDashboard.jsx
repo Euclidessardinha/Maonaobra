@@ -25,6 +25,9 @@ import {
   createAdminPayment,
   confirmAdminPayment,
   rejectAdminPayment,
+  getAdminPlanChangeRequests,
+  approveAdminPlanChangeRequest,
+  rejectAdminPlanChangeRequest,
 } from "../api/admin";
 
 function AdminDashboard() {
@@ -111,6 +114,11 @@ function AdminDashboard() {
 
   const [editingPlan, setEditingPlan] = useState(null);
 
+  const [planChangeRequests, setPlanChangeRequests] = useState([]);
+  const [planChangeRequestsLoading, setPlanChangeRequestsLoading] = useState(false);
+  const [planChangeRequestsError, setPlanChangeRequestsError] = useState("");
+  const [planChangeRequestsSuccess, setPlanChangeRequestsSuccess] = useState("");
+  const [planChangeRequestActionLoading, setPlanChangeRequestActionLoading] = useState(null);
 
 
   const [plans, setPlans] = useState([]);

@@ -381,3 +381,66 @@ export async function rejectAdminPayment(paymentId, notes = null) {
     "Erro ao rejeitar pagamento."
   );
 }
+
+
+// PEDIDOS DE ADESÃO A PLANOS
+
+export async function getAdminPlanChangeRequests() {
+  const token = getToken();
+
+  const response = await fetch(
+    `${API_URL}/plan-change-requests/admin`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return handleResponse(
+    response,
+    "Erro ao carregar os pedidos de adesão."
+  );
+}
+
+export async function approveAdminPlanChangeRequest(requestId) {
+  const token = getToken();
+
+  const response = await fetch(
+    `${API_URL}/plan-change-requests/admin/${requestId}/approve`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return handleResponse(
+    response,
+    "Erro ao aprovar o pedido de adesão."
+  );
+}
+
+export async function rejectAdminPlanChangeRequest(requestId, adminNotes = "") {
+  const token = getToken();
+
+  const response = await fetch(
+    `${API_URL}/plan-change-requests/admin/${requestId}/reject`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        admin_notes: adminNotes,
+      }),
+    }
+  );
+
+  return handleResponse(
+    response,
+    "Erro ao rejeitar o pedido de adesão."
+  );
+}

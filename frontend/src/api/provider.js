@@ -755,3 +755,67 @@ export async function deletePortfolioItem(itemId) {
 
   return data;
 }
+
+
+// ============================================================
+// PEDIDOS DE ADESÃO A PLANOS
+// ============================================================
+
+// CONSULTAR OS MEUS PEDIDOS DE ADESÃO
+export async function getMyPlanChangeRequests() {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `${API_URL}/plan-change-requests/my`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : "Não foi possível carregar os pedidos de adesão."
+    );
+  }
+
+  return data;
+}
+
+
+// SOLICITAR ADESÃO A UM PLANO
+export async function createPlanChangeRequest(planId) {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `${API_URL}/plan-change-requests/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        plan_id: planId,
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : "Não foi possível solicitar a adesão ao plano."
+    );
+  }
+
+  return data;
+}
+
